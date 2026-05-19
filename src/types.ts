@@ -1,6 +1,7 @@
 export type Score = number | null
 
 export interface Match {
+  id: string
   homeTeam: string
   awayTeam: string
 }
@@ -8,4 +9,22 @@ export interface Match {
 export interface MatchScores {
   home: Score
   away: Score
+}
+
+export interface Prediction {
+  matchId: string
+  home: Score
+  away: Score
+}
+
+export interface Standing {
+  team: string
+  played: number
+  won: number
+  drawn: number
+  lost: number
+  goalsFor: number
+  goalsAgainst: number
+  goalDifference: number
+  points: number
 }

@@ -1,0 +1,10 @@
+import type { Match } from '../types'
+
+export const GROUP_A_MATCHES: Match[] = [
+  { id: 'A1', homeTeam: 'Mexico',       awayTeam: 'South Africa' },
+  { id: 'A2', homeTeam: 'South Korea',  awayTeam: 'Czech Republic' },
+  { id: 'A3', homeTeam: 'Czech Republic', awayTeam: 'South Africa' },
+  { id: 'A4', homeTeam: 'Mexico',       awayTeam: 'South Korea' },
+  { id: 'A5', homeTeam: 'Czech Republic', awayTeam: 'Mexico' },
+  { id: 'A6', homeTeam: 'South Africa', awayTeam: 'South Korea' },
+]
