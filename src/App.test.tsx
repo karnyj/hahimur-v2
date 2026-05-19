@@ -15,8 +15,8 @@ describe('Slice 2 — one match, fillable', () => {
     await user.type(screen.getByLabelText('Mexico score'), '2')
     await user.type(screen.getByLabelText('South Africa score'), '1')
 
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(2)
-    expect(screen.getByLabelText('South Africa score')).toHaveValue(1)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('2')
+    expect(screen.getByLabelText('South Africa score')).toHaveValue('1')
   })
 
   test('valid input: zero is accepted', async () => {
@@ -24,56 +24,62 @@ describe('Slice 2 — one match, fillable', () => {
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), '0')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(0)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('0')
   })
 
-  test('invalid input: negative number is rejected', async () => {
+  test('non-digit characters are blocked: minus sign is ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), '-1')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(null)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('1')
   })
 
-  test('invalid input: decimal is rejected', async () => {
+  test('non-digit characters are blocked: decimal point is ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), '1.5')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(null)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('15')
   })
 
-  test('invalid input: letters are rejected', async () => {
+  test('non-digit characters are blocked: letters are ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), 'abc')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(null)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('')
   })
 
-  test('invalid input: letters after a digit are dropped by the number input', async () => {
+  test('non-digit characters are blocked: letter after digit is ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
-    // Typing "1a" in a number input: "1" is accepted, "a" is silently ignored
-    // The field ends up with the valid prefix — this is correct browser behaviour
     await user.type(screen.getByLabelText('Mexico score'), '1a')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(1)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('1')
   })
 
-  test('invalid input: space is rejected', async () => {
+  test('non-digit characters are blocked: space is ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), ' ')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(null)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('')
   })
 
-  test('invalid input: special character is rejected', async () => {
+  test('non-digit characters are blocked: special character is ignored', async () => {
     const user = userEvent.setup()
     render(<App />)
 
     await user.type(screen.getByLabelText('Mexico score'), '!')
-    expect(screen.getByLabelText('Mexico score')).toHaveValue(null)
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('')
+  })
+
+  test('leading zeros are stripped: 0123 becomes 123', async () => {
+    const user = userEvent.setup()
+    render(<App />)
+
+    await user.type(screen.getByLabelText('Mexico score'), '0123')
+    expect(screen.getByLabelText('Mexico score')).toHaveValue('123')
   })
 })

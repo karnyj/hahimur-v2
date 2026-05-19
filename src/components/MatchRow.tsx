@@ -19,14 +19,20 @@ function ScoreInput({
     <label>
       {team} score
       <input
-        type="number"
+        type="text"
+        inputMode="numeric"
         aria-label={`${team} score`}
-        min="0"
-        step="1"
-        value={value !== null ? value : ''}
+        value={value !== null ? String(value) : ''}
+        onKeyDown={(e) => {
+          const isDigit = /^\d$/.test(e.key)
+          const isControl = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End'].includes(e.key)
+          if (!isDigit && !isControl) e.preventDefault()
+        }}
         onChange={(e) => {
           const raw = e.target.value
-          onChange(/^\d+$/.test(raw) ? Number(raw) : null)
+          if (raw === '') { onChange(null); return }
+          const stripped = raw.replace(/^0+(\d)/, '$1')
+          onChange(Number(stripped))
         }}
       />
     </label>
