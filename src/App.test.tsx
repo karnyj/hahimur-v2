@@ -13,7 +13,7 @@ function setup() {
 
 test('predictions page shows title', () => {
   render(<App />)
-  expect(screen.getByText('ניחושים למונדיאל 2026')).toBeInTheDocument()
+  expect(screen.getByText('ההימור 2026')).toBeInTheDocument()
 })
 
 describe('Slice 2 — one match, fillable', () => {

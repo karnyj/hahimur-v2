@@ -14,22 +14,21 @@ interface Props {
 
 export default function ScoreInput({ label, value, onChange }: Props) {
   return (
-    <label>
-      {label}
-      <input
-        className="score-input"
-        type="text"
-        inputMode="numeric"
-        value={value !== null ? String(value) : ''}
-        onKeyDown={(e) => {
-          if (!isDigit(e.key) && !isControlKey(e.key)) e.preventDefault()
-        }}
-        onChange={(e) => {
-          const raw = e.target.value
-          if (raw === '') { onChange(null); return }
-          onChange(Number(stripLeadingZeros(raw)))
-        }}
-      />
-    </label>
+    <input
+      className="score-input"
+      type="text"
+      inputMode="numeric"
+      placeholder="—"
+      aria-label={label}
+      value={value !== null ? String(value) : ''}
+      onKeyDown={(e) => {
+        if (!isDigit(e.key) && !isControlKey(e.key)) e.preventDefault()
+      }}
+      onChange={(e) => {
+        const raw = e.target.value
+        if (raw === '') { onChange(null); return }
+        onChange(Number(stripLeadingZeros(raw)))
+      }}
+    />
   )
 }

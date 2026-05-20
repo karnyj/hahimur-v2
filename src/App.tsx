@@ -14,7 +14,6 @@ const initialPredictions: PredictionsState = Object.fromEntries(
 
 export default function App() {
   const [predictions, setPredictions] = useState<PredictionsState>(initialPredictions)
-
   const standings = useMemo(() => calculateStandings(GROUP_A_MATCHES, predictions), [predictions])
 
   function updateScores(matchId: string, scores: MatchScores) {
@@ -22,17 +21,35 @@ export default function App() {
   }
 
   return (
-    <main>
-      <h1>ניחושים למונדיאל 2026</h1>
-      {GROUP_A_MATCHES.map(match => (
-        <MatchRow
-          key={match.id}
-          match={match}
-          scores={predictions[match.id]}
-          onChange={(scores) => updateScores(match.id, scores)}
-        />
-      ))}
-      <StandingsTable standings={standings} />
-    </main>
+    <>
+      <header className="poster-header">
+        <div className="poster-bar poster-bar--top" />
+        <div className="poster-center">
+          <p className="poster-overline">FIFA World Cup</p>
+          <div className="poster-mundial">MUNDIAL <span className="poster-year">2026</span></div>
+          <h1 className="poster-subtitle">ההימור 2026</h1>
+        </div>
+        <div className="poster-bar poster-bar--bottom" />
+      </header>
+
+      <main>
+        <section className="content-section">
+          <h2 className="section-tag">Group A · קבוצה א׳</h2>
+          {GROUP_A_MATCHES.map(match => (
+            <MatchRow
+              key={match.id}
+              match={match}
+              scores={predictions[match.id]}
+              onChange={(scores) => updateScores(match.id, scores)}
+            />
+          ))}
+        </section>
+
+        <section className="content-section">
+          <h2 className="section-tag">Standings · טבלת דירוג</h2>
+          <StandingsTable standings={standings} />
+        </section>
+      </main>
+    </>
   )
 }

@@ -1,12 +1,24 @@
+:root {
+  --cream: #EFE4B8;
+  --paper: #FBF8EC;
+  --red: #C0272D;
+  --navy: #0B2244;
+  --gold: #D4A016;
+  --ink: #180F07;
+  --muted: #7A6845;
+  --border: #C8B87A;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, 'Segoe UI', Tahoma, sans-serif;
-  background: #f0f4f0;
-  color: #1a1a1a;
+  font-family: 'Heebo', system-ui, sans-serif;
+  background: var(--cream);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  color: var(--ink);
   -webkit-font-smoothing: antialiased;
 }
 

@@ -1,5 +1,12 @@
 import type { Match } from '../types'
 
+export const TEAM_FLAGS: Record<string, string> = {
+  'Mexico':         '🇲🇽',
+  'South Africa':   '🇿🇦',
+  'South Korea':    '🇰🇷',
+  'Czech Republic': '🇨🇿',
+}
+
 export const TEAM_NAMES_HE: Record<string, string> = {
   'Mexico':         'מקסיקו',
   'South Africa':   'דרום אפריקה',
