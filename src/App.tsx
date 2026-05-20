@@ -3,8 +3,10 @@ import './App.css'
 import type { Match, MatchScores } from './types'
 import { GROUP_MATCHES, GROUP_HEBREW } from './lib/groups'
 import { calculateStandings } from './lib/standings'
+import { getThirdPlaceTeams, qualifyBestThirdPlace } from './lib/thirdPlace'
 import MatchRow from './components/MatchRow'
 import StandingsTable from './components/StandingsTable'
+import ThirdPlaceTable from './components/ThirdPlaceTable'
 
 type PredictionsState = Record<string, MatchScores>
 
@@ -37,6 +39,16 @@ export default function App() {
     () => calculateStandings(activeMatches, predictions),
     [activeGroup, predictions]
   )
+
+  const thirdPlaceQual = useMemo(() => {
+    const allGroupStandings = ALL_GROUP_LETTERS
+      .filter(l => l in GROUP_MATCHES)
+      .map(l => ({
+        group: l as string,
+        standings: calculateStandings(GROUP_MATCHES[l] ?? [], predictions),
+      }))
+    return qualifyBestThirdPlace(getThirdPlaceTeams(allGroupStandings))
+  }, [predictions])
 
   function updateScores(matchId: string, scores: MatchScores) {
     setPredictions(prev => {
@@ -85,6 +97,11 @@ export default function App() {
             />
           ))}
           <StandingsTable standings={activeStandings} />
+        </section>
+
+        <section className="content-section">
+          <div className="section-tag">שלישי מקום — 8 הטובות</div>
+          <ThirdPlaceTable qualification={thirdPlaceQual} />
         </section>
       </main>
     </>

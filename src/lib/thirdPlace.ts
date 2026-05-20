@@ -24,5 +24,5 @@ export function qualifyBestThirdPlace(
   )
 
   if (tied.length > 0) return { resolved: false, all: sorted, tied }
-  return { resolved: true, qualifiers: sorted.slice(0, 8) }
+  return { resolved: true, all: sorted, qualifiers: sorted.slice(0, 8) }
 }

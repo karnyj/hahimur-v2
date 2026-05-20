@@ -348,6 +348,28 @@ main {
 .gd-pos { color: #2a7e3b; font-weight: 700; }
 .gd-neg { color: var(--red); font-weight: 700; }
 
+/* Third-place group column */
+.standings th.col-group,
+.standings td.col-group {
+  width: 28px;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* Third-place tie warning */
+.third-place-tie-warning {
+  background: rgba(200, 60, 60, 0.08);
+  border-top: 1px solid rgba(200, 60, 60, 0.3);
+  padding: 8px 12px;
+  direction: rtl;
+  font-family: 'Heebo', sans-serif;
+  font-size: 11px;
+  color: var(--red);
+  letter-spacing: 0.02em;
+}
+
 /* Legend */
 .standings-legend {
   background: rgba(239, 228, 184, 0.55);

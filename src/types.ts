@@ -29,5 +29,5 @@ export interface ThirdPlaceStanding extends Standing {
 }
 
 export type ThirdPlaceQualification =
-  | { resolved: true;  qualifiers: ThirdPlaceStanding[] }
+  | { resolved: true;  all: ThirdPlaceStanding[]; qualifiers: ThirdPlaceStanding[] }
   | { resolved: false; all: ThirdPlaceStanding[]; tied: ThirdPlaceStanding[] }
