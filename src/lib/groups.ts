@@ -9,8 +9,8 @@ export const TEAMS: Record<string, { iso: string; he: string }> = {
   // Group B
   'Canada':                  { iso: 'ca',     he: 'קנדה' },
   'Bosnia and Herzegovina':  { iso: 'ba',     he: 'בוסניה והרצגובינה' },
-  'Qatar':                   { iso: 'qa',     he: 'קטר' },
-  'Switzerland':             { iso: 'ch',     he: 'שווייץ' },
+  'Qatar':                   { iso: 'qa',     he: 'קטאר' },
+  'Switzerland':             { iso: 'ch',     he: 'שוויץ' },
   // Group C
   'Brazil':                  { iso: 'br',     he: 'ברזיל' },
   'Morocco':                 { iso: 'ma',     he: 'מרוקו' },
@@ -23,13 +23,13 @@ export const TEAMS: Record<string, { iso: string; he: string }> = {
   'Turkey':                  { iso: 'tr',     he: 'טורקיה' },
   // Group E
   'Germany':                 { iso: 'de',     he: 'גרמניה' },
-  'Curaçao':                 { iso: 'cw',     he: 'קוראסאו' },
+  'Curaçao':                 { iso: 'cw',     he: 'קורסאו' },
   'Ivory Coast':             { iso: 'ci',     he: 'חוף השנהב' },
   'Ecuador':                 { iso: 'ec',     he: 'אקוודור' },
   // Group F
   'Netherlands':             { iso: 'nl',     he: 'הולנד' },
   'Japan':                   { iso: 'jp',     he: 'יפן' },
-  'Sweden':                  { iso: 'se',     he: 'שוודיה' },
+  'Sweden':                  { iso: 'se',     he: 'שבדיה' },
   'Tunisia':                 { iso: 'tn',     he: 'תוניסיה' },
   // Group G
   'Belgium':                 { iso: 'be',     he: 'בלגיה' },
@@ -38,14 +38,14 @@ export const TEAMS: Record<string, { iso: string; he: string }> = {
   'New Zealand':             { iso: 'nz',     he: 'ניו זילנד' },
   // Group H
   'Spain':                   { iso: 'es',     he: 'ספרד' },
-  'Cape Verde':              { iso: 'cv',     he: 'קאבו ורדה' },
+  'Cape Verde':              { iso: 'cv',     he: 'כף ורדה' },
   'Saudi Arabia':            { iso: 'sa',     he: 'ערב הסעודית' },
   'Uruguay':                 { iso: 'uy',     he: 'אורוגוואי' },
   // Group I
   'France':                  { iso: 'fr',     he: 'צרפת' },
   'Senegal':                 { iso: 'sn',     he: 'סנגל' },
   'Iraq':                    { iso: 'iq',     he: 'עיראק' },
-  'Norway':                  { iso: 'no',     he: 'נורווגיה' },
+  'Norway':                  { iso: 'no',     he: 'נורבגיה' },
   // Group J
   'Argentina':               { iso: 'ar',     he: 'ארגנטינה' },
   'Austria':                 { iso: 'at',     he: 'אוסטריה' },

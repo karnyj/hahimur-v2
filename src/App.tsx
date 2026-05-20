@@ -13,6 +13,11 @@ const STORAGE_KEY = 'predictions'
 const ALL_GROUP_LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L'] as const
 type GroupLetter = typeof ALL_GROUP_LETTERS[number]
 
+const GROUP_HEBREW: Record<GroupLetter, string> = {
+  A: 'א', B: 'ב', C: 'ג', D: 'ד', E: 'ה', F: 'ו',
+  G: 'ז', H: 'ח', I: 'ט', J: 'י', K: 'י"א', L: 'י"ב',
+}
+
 const ALL_MATCHES = Object.values(GROUP_MATCHES).flat() as Match[]
 
 const initialPredictions: PredictionsState = Object.fromEntries(
@@ -69,7 +74,7 @@ export default function App() {
                 onClick={() => hasData && setActiveGroup(letter)}
                 disabled={!hasData}
               >
-                {letter}
+                {GROUP_HEBREW[letter]}
               </button>
             )
           })}
