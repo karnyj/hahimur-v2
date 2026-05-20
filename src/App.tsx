@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import './App.css'
 import type { MatchScores } from './types'
 import { GROUP_A_MATCHES } from './lib/groups'
 import { calculateStandings } from './lib/standings'
@@ -22,7 +23,7 @@ export default function App() {
 
   return (
     <main>
-      <h1>2026 World Cup Predictions</h1>
+      <h1>ניחושים למונדיאל 2026</h1>
       {GROUP_A_MATCHES.map(match => (
         <MatchRow
           key={match.id}

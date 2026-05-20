@@ -6,14 +6,14 @@ function setup() {
   const user = userEvent.setup()
   render(<App />)
   // Mexico and South Africa each appear in multiple matches; grab match A1 (first occurrence)
-  const mexicoInput = screen.getAllByLabelText('Mexico score')[0]
-  const southAfricaInput = screen.getAllByLabelText('South Africa score')[0]
+  const mexicoInput = screen.getAllByLabelText('מקסיקו')[0]
+  const southAfricaInput = screen.getAllByLabelText('דרום אפריקה')[0]
   return { user, mexicoInput, southAfricaInput }
 }
 
 test('predictions page shows title', () => {
   render(<App />)
-  expect(screen.getByText('2026 World Cup Predictions')).toBeInTheDocument()
+  expect(screen.getByText('ניחושים למונדיאל 2026')).toBeInTheDocument()
 })
 
 describe('Slice 2 — one match, fillable', () => {
@@ -84,11 +84,11 @@ describe('Slice 4 — Group A (6 matches)', () => {
     const user = userEvent.setup()
     render(<App />)
     // Match A2: South Korea (home) vs Czech Republic. South Korea appears as home first in A2.
-    const southKoreaInputs = screen.getAllByLabelText('South Korea score')
-    const czechInputs = screen.getAllByLabelText('Czech Republic score')
+    const southKoreaInputs = screen.getAllByLabelText('דרום קוריאה')
+    const czechInputs = screen.getAllByLabelText('צ׳כיה')
     await user.type(southKoreaInputs[0], '2')
     await user.type(czechInputs[0], '1')
-    expect(within(screen.getByRole('row', { name: /South Korea/ })).getByText('3')).toBeInTheDocument()
+    expect(within(screen.getByRole('row', { name: /דרום קוריאה/ })).getByText('3')).toBeInTheDocument()
   })
 })
 
@@ -96,10 +96,10 @@ describe('Slice 3b — group standings table', () => {
   test('standings table shows all 4 Group A teams', () => {
     render(<App />)
     const table = screen.getByRole('table')
-    expect(within(table).getByText('Mexico')).toBeInTheDocument()
-    expect(within(table).getByText('South Africa')).toBeInTheDocument()
-    expect(within(table).getByText('South Korea')).toBeInTheDocument()
-    expect(within(table).getByText('Czech Republic')).toBeInTheDocument()
+    expect(within(table).getByText('מקסיקו')).toBeInTheDocument()
+    expect(within(table).getByText('דרום אפריקה')).toBeInTheDocument()
+    expect(within(table).getByText('דרום קוריאה')).toBeInTheDocument()
+    expect(within(table).getByText('צ׳כיה')).toBeInTheDocument()
   })
 
   test('entering scores updates the standings', async () => {
@@ -109,8 +109,8 @@ describe('Slice 3b — group standings table', () => {
 
     // After Mexico 2-1 South Africa: Mexico gets 3 pts, South Africa gets 0
     // "3" only appears in Mexico's points cell; "0" only in South Africa's points cell
-    expect(within(screen.getByRole('row', { name: /Mexico/ })).getByText('3')).toBeInTheDocument()
-    expect(within(screen.getByRole('row', { name: /South Africa/ })).getAllByText('0').length).toBeGreaterThan(0)
+    expect(within(screen.getByRole('row', { name: /מקסיקו/ })).getByText('3')).toBeInTheDocument()
+    expect(within(screen.getByRole('row', { name: /דרום אפריקה/ })).getAllByText('0').length).toBeGreaterThan(0)
   })
 
   test('changing a score updates standings immediately', async () => {
@@ -118,13 +118,13 @@ describe('Slice 3b — group standings table', () => {
     await user.type(mexicoInput, '1')
     await user.type(southAfricaInput, '0')
 
-    const mexicoRow = screen.getByRole('row', { name: /Mexico/ })
+    const mexicoRow = screen.getByRole('row', { name: /מקסיקו/ })
     expect(within(mexicoRow).getByText('3')).toBeInTheDocument()
 
     await user.clear(southAfricaInput)
     await user.type(southAfricaInput, '2')
 
-    const southAfricaRow = screen.getByRole('row', { name: /South Africa/ })
+    const southAfricaRow = screen.getByRole('row', { name: /דרום אפריקה/ })
     expect(within(southAfricaRow).getByText('3')).toBeInTheDocument()
   })
 })

@@ -1,5 +1,12 @@
 import type { Match } from '../types'
 
+export const TEAM_NAMES_HE: Record<string, string> = {
+  'Mexico':         'מקסיקו',
+  'South Africa':   'דרום אפריקה',
+  'South Korea':    'דרום קוריאה',
+  'Czech Republic': 'צ׳כיה',
+}
+
 export const GROUP_A_MATCHES: Match[] = [
   { id: 'A1', homeTeam: 'Mexico',       awayTeam: 'South Africa' },
   { id: 'A2', homeTeam: 'South Korea',  awayTeam: 'Czech Republic' },

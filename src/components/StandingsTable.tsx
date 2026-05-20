@@ -1,4 +1,5 @@
 import type { Standing } from '../types'
+import { TEAM_NAMES_HE } from '../lib/groups'
 
 interface Props {
   standings: Standing[]
@@ -6,20 +7,21 @@ interface Props {
 
 export default function StandingsTable({ standings }: Props) {
   return (
-    <table>
+    <div className="standings-wrapper">
+    <table className="standings">
       <thead>
         <tr>
-          <th>Pos</th><th>Team</th><th>Pld</th><th>W</th><th>D</th><th>L</th>
-          <th>GF</th><th>GA</th><th>GD</th><th>Pts</th>
+          <th>#</th><th>קבוצה</th><th>מש'</th><th>נ</th><th>ת</th><th>ה</th>
+          <th>שב</th><th>שנ</th><th>הפ</th><th>נק'</th>
         </tr>
       </thead>
       <tbody>
         {standings.map((s, i) => {
           const gd = s.goalsFor - s.goalsAgainst
           return (
-            <tr key={s.team} aria-label={s.team}>
+            <tr key={s.team} aria-label={TEAM_NAMES_HE[s.team]}>
               <td>{i + 1}</td>
-              <td>{s.team}</td>
+              <td>{TEAM_NAMES_HE[s.team]}</td>
               <td>{s.played}</td>
               <td>{s.won}</td>
               <td>{s.drawn}</td>
@@ -33,5 +35,6 @@ export default function StandingsTable({ standings }: Props) {
         })}
       </tbody>
     </table>
+    </div>
   )
 }

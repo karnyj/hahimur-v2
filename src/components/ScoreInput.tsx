@@ -17,6 +17,7 @@ export default function ScoreInput({ label, value, onChange }: Props) {
     <label>
       {label}
       <input
+        className="score-input"
         type="text"
         inputMode="numeric"
         value={value !== null ? String(value) : ''}
