@@ -8,16 +8,32 @@ import StandingsTable from './components/StandingsTable'
 
 type PredictionsState = Record<string, MatchScores>
 
+const STORAGE_KEY = 'predictions'
+
 const initialPredictions: PredictionsState = Object.fromEntries(
   GROUP_A_MATCHES.map(m => [m.id, { home: null, away: null }])
 )
 
+function loadPredictions(): PredictionsState {
+  try {
+    const stored = localStorage.getItem(STORAGE_KEY)
+    if (stored) return { ...initialPredictions, ...JSON.parse(stored) }
+  } catch {
+    // ignore malformed storage
+  }
+  return initialPredictions
+}
+
 export default function App() {
-  const [predictions, setPredictions] = useState<PredictionsState>(initialPredictions)
+  const [predictions, setPredictions] = useState<PredictionsState>(loadPredictions)
   const standings = useMemo(() => calculateStandings(GROUP_A_MATCHES, predictions), [predictions])
 
   function updateScores(matchId: string, scores: MatchScores) {
-    setPredictions(prev => ({ ...prev, [matchId]: scores }))
+    setPredictions(prev => {
+      const next = { ...prev, [matchId]: scores }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next))
+      return next
+    })
   }
 
   return (

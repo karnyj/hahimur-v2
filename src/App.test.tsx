@@ -92,6 +92,23 @@ describe('Slice 4 — Group A (6 matches)', () => {
   })
 })
 
+describe('Slice 8 — localStorage persistence', () => {
+  beforeEach(() => localStorage.clear())
+
+  test('predictions survive a remount (simulated refresh)', async () => {
+    const user = userEvent.setup()
+    const { unmount } = render(<App />)
+
+    const mexicoInput = screen.getAllByLabelText('מקסיקו')[0]
+    await user.type(mexicoInput, '3')
+
+    unmount()
+    render(<App />)
+
+    expect(screen.getAllByLabelText('מקסיקו')[0]).toHaveValue('3')
+  })
+})
+
 describe('Slice 3b — group standings table', () => {
   test('standings table shows all 4 Group A teams', () => {
     render(<App />)
