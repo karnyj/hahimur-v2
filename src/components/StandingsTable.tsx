@@ -22,7 +22,7 @@ export default function StandingsTable({ standings }: Props) {
           return (
             <tr key={s.team} aria-label={TEAM_NAMES_HE[s.team]}>
               <td>{i + 1}</td>
-              <td>{TEAM_FLAGS[s.team]} {TEAM_NAMES_HE[s.team]}</td>
+              <td>{TEAM_FLAGS[s.team]} <span>{TEAM_NAMES_HE[s.team]}</span></td>
               <td>{s.played}</td>
               <td>{s.won}</td>
               <td>{s.drawn}</td>
