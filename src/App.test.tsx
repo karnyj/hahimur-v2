@@ -76,18 +76,6 @@ describe('Slice 2 — one match, fillable', () => {
   })
 })
 
-describe('Slice 9 — Group B (6 matches)', () => {
-  test('all 6 Group B matches are visible after switching to group B', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    await user.click(screen.getByRole('button', { name: 'B' }))
-    expect(screen.getAllByRole('textbox')).toHaveLength(12)
-    expect(screen.getAllByLabelText('קנדה').length).toBeGreaterThan(0)
-    expect(screen.getAllByLabelText('בוסניה והרצגובינה').length).toBeGreaterThan(0)
-    expect(screen.getAllByLabelText('קטר').length).toBeGreaterThan(0)
-    expect(screen.getAllByLabelText('שווייץ').length).toBeGreaterThan(0)
-  })
-})
 
 describe('Slice 4 — Group A (6 matches)', () => {
   test('all 6 Group A matches are visible by default', () => {
@@ -122,8 +110,8 @@ describe('Slice 8 — localStorage persistence', () => {
   })
 })
 
-describe('Slice 10 — groups C–L', () => {
-  const remaining = ['C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
+describe('Slice 9/10 — group navigation (B–L)', () => {
+  const remaining = ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L'] as const
 
   test.each(remaining)('group %s button is enabled', (letter) => {
     render(<App />)
