@@ -252,6 +252,27 @@ main {
   font-size: 14px;
 }
 
+.score-input:disabled {
+  background:
+    repeating-linear-gradient(
+      -45deg,
+      rgba(122, 104, 69, 0.07) 0px,
+      rgba(122, 104, 69, 0.07) 2px,
+      transparent 2px,
+      transparent 7px
+    ),
+    rgba(122, 104, 69, 0.06);
+  border: 1.5px dashed rgba(122, 104, 69, 0.35);
+  color: rgba(122, 104, 69, 0.4);
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.score-input:disabled::placeholder {
+  color: rgba(122, 104, 69, 0.25);
+  font-size: 16px;
+}
+
 .score-input:focus {
   outline: none;
   border-color: var(--gold);

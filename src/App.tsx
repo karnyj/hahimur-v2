@@ -161,27 +161,27 @@ export default function App() {
 
         <section className="content-section">
           <div className="section-tag">שמינית גמר</div>
-          <KnockoutTable matches={knockout.r16} predictions={predictions} onChange={updateScores} alwaysShowScores />
+          <KnockoutTable matches={knockout.r16} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">רבע גמר</div>
-          <KnockoutTable matches={knockout.qf} predictions={predictions} onChange={updateScores} alwaysShowScores />
+          <KnockoutTable matches={knockout.qf} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">חצי גמר</div>
-          <KnockoutTable matches={knockout.sf} predictions={predictions} onChange={updateScores} alwaysShowScores />
+          <KnockoutTable matches={knockout.sf} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">מקום שלישי</div>
-          <KnockoutTable matches={[knockout.thirdPlace]} predictions={predictions} onChange={updateScores} alwaysShowScores />
+          <KnockoutTable matches={[knockout.thirdPlace]} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">גמר</div>
-          <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={updateScores} alwaysShowScores />
+          <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={updateScores} />
         </section>
       </main>
     </>

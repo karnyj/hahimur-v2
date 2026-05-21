@@ -24,23 +24,23 @@ const PARTIAL_MATCHES: KnockoutMatch[] = [
 
 describe('KnockoutTable — team name display', () => {
   test('shows Hebrew name for a known team', () => {
-    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
+    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
     expect(screen.getByText('מקסיקו')).toBeInTheDocument()
     expect(screen.queryByText('Mexico')).not.toBeInTheDocument()
   })
 
   test('shows flag for a known team', () => {
-    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
+    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
     expect(document.querySelector('.fi-mx')).not.toBeNull()
   })
 
   test('shows placeholder box (not flag) for an unknown slot', () => {
-    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
+    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
     expect(document.querySelectorAll('.ko-slot-flag-ph').length).toBeGreaterThan(0)
   })
 
   test('shows Hebrew placeholder text for unresolved slots', () => {
-    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
+    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
     expect(screen.getByText('סגן-אלוף ב')).toBeInTheDocument()
     expect(screen.getByText('מנצח קבוצה ו')).toBeInTheDocument()
   })
@@ -51,27 +51,35 @@ describe('KnockoutTable — team name display', () => {
   })
 })
 
-describe('KnockoutTable — default mode (score inputs only when resolved)', () => {
-  test('shows two score inputs for a resolved match', () => {
-    render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
-    // Only match 74 is resolved; expect exactly 2 score inputs
-    expect(document.querySelectorAll('.score-input')).toHaveLength(2)
+describe('KnockoutTable — score inputs enabled/disabled by resolved state', () => {
+  test('score inputs are enabled for resolved matches', () => {
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={emptyPredictions} onChange={noop} />)
+    const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
+    expect(inputs).toHaveLength(2)
+    inputs.forEach(input => expect(input.disabled).toBe(false))
   })
 
-  test('shows no score inputs for unresolved matches', () => {
-    const unresolved: KnockoutMatch[] = [
-      { matchNum: 73, home: 'סגן-אלוף א', away: 'סגן-אלוף ב', resolved: false },
-    ]
-    render(<KnockoutTable matches={unresolved} predictions={emptyPredictions} onChange={noop} />)
-    expect(document.querySelectorAll('.score-input')).toHaveLength(0)
+  test('score inputs are disabled for unresolved matches', () => {
+    render(<KnockoutTable matches={[unresolvedMatch]} predictions={emptyPredictions} onChange={noop} />)
+    const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
+    expect(inputs).toHaveLength(2)
+    inputs.forEach(input => expect(input.disabled).toBe(true))
+  })
+
+  test('shows inputs for all matches — enabled for resolved, disabled for unresolved', () => {
+    render(<KnockoutTable matches={[resolvedMatch, unresolvedMatch]} predictions={emptyPredictions} onChange={noop} />)
+    // 2 matches × 2 inputs = 4 total
+    expect(document.querySelectorAll('.score-input')).toHaveLength(4)
   })
 })
 
-describe('KnockoutTable — alwaysShowScores (optimistic prediction)', () => {
-  test('shows score inputs for all matches regardless of resolved state', () => {
-    render(<KnockoutTable matches={[resolvedMatch, unresolvedMatch]} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
-    // 2 matches × 2 inputs each = 4
-    expect(document.querySelectorAll('.score-input')).toHaveLength(4)
+describe('KnockoutTable — unresolved match scores are null', () => {
+  test('shows empty inputs for unresolved match even when predictions exist', () => {
+    const predictions: Record<string, MatchScores> = { '90': { home: 3, away: 1 } }
+    render(<KnockoutTable matches={[unresolvedMatch]} predictions={predictions} onChange={noop} />)
+    const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
+    expect(inputs[0].value).toBe('')
+    expect(inputs[1].value).toBe('')
   })
 })
 
@@ -82,5 +90,13 @@ describe('KnockoutTable — onChange', () => {
     const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
     await userEvent.type(inputs[0], '2')
     expect(onChange).toHaveBeenCalledWith('89', { home: 2, away: null })
+  })
+
+  test('does not fire onChange when typing into a disabled (unresolved) input', async () => {
+    const onChange = vi.fn()
+    render(<KnockoutTable matches={[unresolvedMatch]} predictions={emptyPredictions} onChange={onChange} />)
+    const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
+    await userEvent.type(inputs[0], '2')
+    expect(onChange).not.toHaveBeenCalled()
   })
 })

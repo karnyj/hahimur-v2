@@ -10,9 +10,10 @@ interface Props {
   label: string
   value: Score
   onChange: (v: Score) => void
+  disabled?: boolean
 }
 
-export default function ScoreInput({ label, value, onChange }: Props) {
+export default function ScoreInput({ label, value, onChange, disabled = false }: Props) {
   return (
     <input
       className="score-input"
@@ -20,6 +21,7 @@ export default function ScoreInput({ label, value, onChange }: Props) {
       inputMode="numeric"
       placeholder="—"
       aria-label={label}
+      disabled={disabled}
       value={value !== null ? String(value) : ''}
       onKeyDown={(e) => {
         if (!isDigit(e.key) && !isControlKey(e.key)) e.preventDefault()
