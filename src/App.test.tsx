@@ -81,7 +81,7 @@ describe('Slice 2 — one match, fillable', () => {
 describe('Slice 4 — Group A (6 matches)', () => {
   test('all 6 Group A matches are visible by default', () => {
     render(<App />)
-    const groupSection = document.querySelector('section.content-section')!
+    const groupSection = document.querySelector('section.content-section') as HTMLElement
     expect(within(groupSection).getAllByRole('textbox')).toHaveLength(12)
   })
 
@@ -128,7 +128,7 @@ describe('Slice 9/10 — group navigation (B–L)', () => {
     await user.click(screen.getByRole('button', { name: hebrew }))
     // Group A's Mexico must be gone — confirming we really switched groups
     expect(screen.queryAllByLabelText('מקסיקו')).toHaveLength(0)
-    const groupSection = document.querySelector('section.content-section')!
+    const groupSection = document.querySelector('section.content-section') as HTMLElement
     expect(within(groupSection).getAllByRole('textbox')).toHaveLength(12)
   })
 })
