@@ -4,9 +4,11 @@ import type { Match, MatchScores } from './types'
 import { GROUP_MATCHES, GROUP_HEBREW, TEAMS } from './lib/groups'
 import { calculateStandings } from './lib/standings'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from './lib/thirdPlace'
+import { resolveRound32 } from './lib/round32'
 import MatchRow from './components/MatchRow'
 import StandingsTable from './components/StandingsTable'
 import ThirdPlaceTable from './components/ThirdPlaceTable'
+import Round32Table from './components/Round32Table'
 
 type PredictionsState = Record<string, MatchScores>
 
@@ -44,7 +46,7 @@ export default function App() {
     return pred && pred.home !== null && pred.away !== null
   })
 
-  const { thirdPlaceQual, groupsWithTies, completedGroups, allGroupsFilled } = useMemo(() => {
+  const { thirdPlaceQual, groupsWithTies, completedGroups, allGroupsFilled, round32Matches } = useMemo(() => {
     const allGroupData = ALL_GROUP_LETTERS
       .filter(l => l in GROUP_MATCHES)
       .map(l => {
@@ -63,11 +65,13 @@ export default function App() {
       if (d.allFilled && d.tiedTeams.size > 0) groupsWithTies.add(d.group)
       if (d.isComplete) completedGroups.add(d.group)
     }
+    const thirdPlaceQual = qualifyBestThirdPlace(getThirdPlaceTeams(allGroupData))
     return {
-      thirdPlaceQual: qualifyBestThirdPlace(getThirdPlaceTeams(allGroupData)),
+      thirdPlaceQual,
       groupsWithTies,
       completedGroups,
       allGroupsFilled: allGroupData.every(d => d.allFilled),
+      round32Matches: resolveRound32(allGroupData, thirdPlaceQual),
     }
   }, [predictions])
 
@@ -135,6 +139,11 @@ export default function App() {
         <section className="content-section">
           <div className="section-tag">דירוג נבחרות במקום השלישי</div>
           <ThirdPlaceTable qualification={thirdPlaceQual} allGroupsFilled={allGroupsFilled} />
+        </section>
+
+        <section className="content-section">
+          <div className="section-tag">שלב ה-32</div>
+          <Round32Table matches={round32Matches} />
         </section>
       </main>
     </>

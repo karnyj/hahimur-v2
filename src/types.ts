@@ -31,3 +31,10 @@ export interface ThirdPlaceStanding extends Standing {
 export type ThirdPlaceQualification =
   | { resolved: true;  all: ThirdPlaceStanding[]; qualifiers: ThirdPlaceStanding[] }
   | { resolved: false; all: ThirdPlaceStanding[]; tied: ThirdPlaceStanding[] }
+
+export interface R32Match {
+  matchNum: number
+  home: string
+  away: string
+  resolved: boolean
+}

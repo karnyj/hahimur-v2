@@ -423,3 +423,66 @@ main {
   opacity: 0.75;
   flex-shrink: 0;
 }
+
+/* Round of 32 table */
+.r32-table {
+  width: 100%;
+  border-collapse: collapse;
+  direction: rtl;
+}
+
+.r32-table th {
+  font-size: 11px;
+  color: var(--muted);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  padding: 6px 8px;
+  border-bottom: 1px solid #333;
+  text-align: right;
+}
+
+.r32-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid #222;
+  vertical-align: middle;
+}
+
+.r32-num {
+  color: var(--muted);
+  font-size: 12px;
+  width: 32px;
+  text-align: center;
+}
+
+.r32-vs {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: center;
+  width: 40px;
+}
+
+.r32-team-col { width: 45%; }
+.r32-home { text-align: right; }
+.r32-away { text-align: right; }
+
+.r32-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.r32-team--pending {
+  color: var(--muted);
+  font-style: italic;
+}
+
+.r32-flag {
+  width: 20px;
+  height: 15px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.r32-row--pending td {
+  background: transparent;
+}
