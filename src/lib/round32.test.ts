@@ -69,18 +69,18 @@ describe('resolveRound32', () => {
 
   it('resolves allocation-based matches via the matrix (scenario ABCDEFGH)', () => {
     const result = resolveRound32(ALL_GROUPS, QUAL_ABCDEFGH)
-    // Scenario 1 (ABCDEFGH): 1A→3C, 1E→3F, 1G→3D, 1I→3G, 1K→3E, 1L→3H, 1B→3A, 1D→3B
-    const m79 = result.find(m => m.matchNum === 79)!  // 1A vs 3C
-    expect(m79.home).toBe('Mexico')   // winner A
-    expect(m79.away).toBe('Haiti')    // 3rd of C
+    // Combination 495 (ABCDEFGH): 1A→3H, 1B→3G, 1D→3B, 1E→3C, 1G→3A, 1I→3F, 1K→3D, 1L→3E
+    const m79 = result.find(m => m.matchNum === 79)!  // 1A vs 3H
+    expect(m79.home).toBe('Mexico')        // winner A
+    expect(m79.away).toBe('Saudi Arabia')  // 3rd of H
 
-    const m74 = result.find(m => m.matchNum === 74)!  // 1E vs 3F
+    const m74 = result.find(m => m.matchNum === 74)!  // 1E vs 3C
     expect(m74.home).toBe('Germany')  // winner E
-    expect(m74.away).toBe('Sweden')   // 3rd of F
+    expect(m74.away).toBe('Haiti')    // 3rd of C
 
-    const m87 = result.find(m => m.matchNum === 87)!  // 1K vs 3E
-    expect(m87.home).toBe('England')       // winner K
-    expect(m87.away).toBe('Ivory Coast')   // 3rd of E
+    const m87 = result.find(m => m.matchNum === 87)!  // 1K vs 3D
+    expect(m87.home).toBe('England')    // winner K
+    expect(m87.away).toBe('Australia')  // 3rd of D
   })
 
   it('shows Hebrew placeholders when a group is not fully filled', () => {
