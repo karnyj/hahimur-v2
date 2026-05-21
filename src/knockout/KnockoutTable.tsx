@@ -11,16 +11,16 @@ interface Props {
 
 export default function KnockoutTable({ matches, predictions, onChange, alwaysShowScores = false }: Props) {
   return (
-    <div className="r32-grid">
+    <div className="ko-grid">
       {matches.map(m => {
         const id = String(m.matchNum)
         const pred = predictions[id] ?? { home: null, away: null }
         return (
-          <div key={m.matchNum} className={`r32-card${m.resolved ? ' r32-card--resolved' : ''}`}>
-            <span className="r32-matchnum">{m.matchNum}</span>
+          <div key={m.matchNum} className={`ko-card${m.resolved ? ' ko-card--resolved' : ''}`}>
+            <span className="ko-matchnum">{m.matchNum}</span>
             {(m.resolved || alwaysShowScores) ? (
               <>
-                <div className="r32-team-row">
+                <div className="ko-team-row">
                   <TeamSlot name={m.home} />
                   <ScoreInput
                     label={m.home}
@@ -28,8 +28,8 @@ export default function KnockoutTable({ matches, predictions, onChange, alwaysSh
                     onChange={v => onChange(id, { home: v, away: pred.away })}
                   />
                 </div>
-                <div className="r32-row-divider" />
-                <div className="r32-team-row">
+                <div className="ko-row-divider" />
+                <div className="ko-team-row">
                   <TeamSlot name={m.away} />
                   <ScoreInput
                     label={m.away}
@@ -41,10 +41,10 @@ export default function KnockoutTable({ matches, predictions, onChange, alwaysSh
             ) : (
               <>
                 <TeamSlot name={m.home} />
-                <div className="r32-divider">
-                  <span className="r32-divider-line" />
-                  <span className="r32-divider-word">נגד</span>
-                  <span className="r32-divider-line" />
+                <div className="ko-divider">
+                  <span className="ko-divider-line" />
+                  <span className="ko-divider-word">נגד</span>
+                  <span className="ko-divider-line" />
                 </div>
                 <TeamSlot name={m.away} />
               </>

@@ -36,7 +36,7 @@ describe('KnockoutTable — team name display', () => {
 
   test('shows placeholder box (not flag) for an unknown slot', () => {
     render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} alwaysShowScores />)
-    expect(document.querySelectorAll('.r32-slot-flag-ph').length).toBeGreaterThan(0)
+    expect(document.querySelectorAll('.ko-slot-flag-ph').length).toBeGreaterThan(0)
   })
 
   test('shows Hebrew placeholder text for unresolved slots', () => {
@@ -47,7 +47,7 @@ describe('KnockoutTable — team name display', () => {
 
   test('renders correct number of match cards', () => {
     render(<KnockoutTable matches={PARTIAL_MATCHES} predictions={emptyPredictions} onChange={noop} />)
-    expect(document.querySelectorAll('.r32-card')).toHaveLength(3)
+    expect(document.querySelectorAll('.ko-card')).toHaveLength(3)
   })
 })
 
