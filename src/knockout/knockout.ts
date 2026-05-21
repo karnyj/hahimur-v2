@@ -87,6 +87,21 @@ function outcomeOf(m: KnockoutMatch, predictions: PredictionsState, pick: 'winne
   return placeholder(m.matchNum, prefix)
 }
 
+export function clearUnresolvedKOScores(
+  matches: KnockoutMatch[],
+  predictions: PredictionsState,
+): PredictionsState {
+  const toClear = matches.filter(m => {
+    if (m.resolved) return false
+    const p = predictions[String(m.matchNum)]
+    return p && (p.home !== null || p.away !== null)
+  })
+  if (toClear.length === 0) return predictions
+  const next = { ...predictions }
+  for (const m of toClear) next[String(m.matchNum)] = { home: null, away: null }
+  return next
+}
+
 export function resolveKnockout(round32: KnockoutMatch[], predictions: PredictionsState): KnockoutStages {
   const byNum: Record<number, KnockoutMatch> = {}
   for (const m of round32) byNum[m.matchNum] = m

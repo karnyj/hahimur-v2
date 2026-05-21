@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { resolveKnockout, resolveRound32 } from './knockout'
+import { resolveKnockout, resolveRound32, clearUnresolvedKOScores } from './knockout'
 import type { KnockoutMatch, ThirdPlaceQualification } from '../shared/types'
 
 const unresolvedR32 = (matchNum: number): KnockoutMatch => ({
@@ -199,5 +199,39 @@ describe('resolveRound32', () => {
 
     const m73 = result.find(m => m.matchNum === 73)!
     expect(m73.resolved).toBe(true)
+  })
+})
+
+describe('clearUnresolvedKOScores', () => {
+  it('clears predictions for unresolved matches', () => {
+    const matches: KnockoutMatch[] = [
+      { matchNum: 73, home: 'X', away: 'Y', resolved: false },
+      { matchNum: 74, home: 'A', away: 'B', resolved: true },
+    ]
+    const predictions = {
+      '73': { home: 2, away: 1 },
+      '74': { home: 3, away: 0 },
+    }
+    const result = clearUnresolvedKOScores(matches, predictions)
+    expect(result['73']).toEqual({ home: null, away: null })
+    expect(result['74']).toEqual({ home: 3, away: 0 })
+  })
+
+  it('leaves predictions unchanged when all matches are resolved', () => {
+    const matches: KnockoutMatch[] = [
+      { matchNum: 74, home: 'A', away: 'B', resolved: true },
+    ]
+    const predictions = { '74': { home: 3, away: 0 } }
+    const result = clearUnresolvedKOScores(matches, predictions)
+    expect(result['74']).toEqual({ home: 3, away: 0 })
+  })
+
+  it('returns the same object when nothing needs clearing', () => {
+    const matches: KnockoutMatch[] = [
+      { matchNum: 74, home: 'A', away: 'B', resolved: true },
+    ]
+    const predictions = { '74': { home: 3, away: 0 } }
+    const result = clearUnresolvedKOScores(matches, predictions)
+    expect(result).toBe(predictions)
   })
 })

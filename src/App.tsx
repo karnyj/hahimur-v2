@@ -1,10 +1,10 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import './App.css'
 import type { Match, MatchScores } from './shared/types'
 import { GROUP_MATCHES, GROUP_HEBREW, TEAMS } from './shared/groups'
 import { calculateStandings } from './shared/standings'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from './thirdPlace/thirdPlace'
-import { resolveRound32, resolveKnockout } from './knockout/knockout'
+import { resolveRound32, resolveKnockout, clearUnresolvedKOScores } from './knockout/knockout'
 import MatchRow from './groupStage/MatchRow'
 import StandingsTable from './groupStage/StandingsTable'
 import ThirdPlaceTable from './thirdPlace/ThirdPlaceTable'
@@ -87,6 +87,19 @@ export default function App() {
       knockout: resolveKnockout(round32Matches, predictions),
     }
   }, [predictions])
+
+  useEffect(() => {
+    const allKOMatches = [
+      ...round32Matches,
+      ...knockout.r16, ...knockout.qf, ...knockout.sf,
+      knockout.thirdPlace, knockout.final,
+    ]
+    const cleaned = clearUnresolvedKOScores(allKOMatches, predictions)
+    if (cleaned !== predictions) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleaned))
+      setPredictions(cleaned)
+    }
+  }, [round32Matches, knockout])
 
   function updateScores(matchId: string, scores: MatchScores) {
     setPredictions(prev => {
