@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolveKnockout } from './knockout'
-import type { R32Match } from '../types'
+import type { R32Match } from '../shared/types'
 
 const unresolvedR32 = (matchNum: number): R32Match => ({
   matchNum, home: `Home${matchNum}`, away: `Away${matchNum}`, resolved: false,

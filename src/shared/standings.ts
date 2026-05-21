@@ -1,4 +1,4 @@
-import type { Match, MatchScores, Standing } from '../types'
+import type { Match, MatchScores, Standing } from './types'
 
 export function goalDifference(s: Standing): number {
   return s.goalsFor - s.goalsAgainst

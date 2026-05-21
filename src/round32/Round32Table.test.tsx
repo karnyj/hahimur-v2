@@ -1,6 +1,6 @@
 import { render, screen } from '@testing-library/react'
 import Round32Table from './Round32Table'
-import type { R32Match, MatchScores } from '../types'
+import type { R32Match, MatchScores } from '../shared/types'
 import { vi } from 'vitest'
 
 const noop = vi.fn()

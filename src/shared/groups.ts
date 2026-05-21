@@ -1,4 +1,4 @@
-import type { Match } from '../types'
+import type { Match } from './types'
 
 export const TEAMS: Record<string, { iso: string; he: string }> = {
   // Group A

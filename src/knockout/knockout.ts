@@ -1,4 +1,4 @@
-import type { R32Match, KnockoutMatch, MatchScores } from '../types'
+import type { R32Match, KnockoutMatch, MatchScores } from '../shared/types'
 
 type PredictionsState = Record<string, MatchScores>
 

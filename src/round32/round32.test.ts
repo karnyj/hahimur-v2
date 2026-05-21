@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { resolveRound32 } from './round32'
-import type { ThirdPlaceQualification } from '../types'
+import type { ThirdPlaceQualification } from '../shared/types'
 
 // Minimal standing with known team name for testing
 function standing(team: string) {

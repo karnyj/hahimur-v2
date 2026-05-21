@@ -1,6 +1,6 @@
-import type { Standing, ThirdPlaceQualification, R32Match } from '../types'
+import type { Standing, ThirdPlaceQualification, R32Match } from '../shared/types'
 import { ALLOCATION_MATRIX } from './allocationMatrix'
-import { GROUP_HEBREW } from './groups'
+import { GROUP_HEBREW } from '../shared/groups'
 
 type GroupData = { group: string; standings: Standing[]; allFilled: boolean }
 type Slot = { team: string; resolved: boolean }
