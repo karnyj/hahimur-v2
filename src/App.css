@@ -479,8 +479,6 @@ main {
   letter-spacing: 0.1em;
   color: var(--muted);
   opacity: 0.7;
-  display: block;
-  margin-bottom: 2px;
 }
 
 .ko-slot {
@@ -563,4 +561,55 @@ main {
   opacity: 0.7;
   text-transform: uppercase;
   flex-shrink: 0;
+}
+
+.ko-matchnum-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.ko-draw-badge {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  color: #f59e0b;
+  text-transform: uppercase;
+  animation: ko-badge-pulse 1.4s ease-in-out infinite;
+}
+
+.ko-draw-badge--done {
+  color: var(--gold);
+  animation: none;
+}
+
+@keyframes ko-badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.ko-team-click {
+  flex: 1;
+  min-width: 0;
+  border-radius: 4px;
+  padding: 2px 3px;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.ko-team-click--selectable {
+  cursor: pointer;
+}
+
+.ko-team-click--selectable:hover {
+  background: rgba(200, 184, 122, 0.12);
+}
+
+.ko-team-click--selected {
+  background: rgba(200, 184, 122, 0.18);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+.ko-team-click--unselected {
+  opacity: 0.35;
 }

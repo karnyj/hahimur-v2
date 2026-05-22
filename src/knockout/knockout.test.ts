@@ -52,7 +52,7 @@ describe('resolveKnockout', () => {
     expect(r16[0].home).toBe('TeamB')
   })
 
-  it('draw: next-round slot stays as placeholder', () => {
+  it('draw without drawWinner: next-round slot stays as placeholder', () => {
     const r32 = [
       resolvedR32(74, 'TeamA', 'TeamB'),
       ...([73, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88].map(unresolvedR32)),
@@ -60,6 +60,28 @@ describe('resolveKnockout', () => {
     const predictions = { '74': { home: 1, away: 1 } }
     const { r16 } = resolveKnockout(r32, predictions)
     expect(r16[0].home).toBe('מנצח 74')
+    expect(r16[0].resolved).toBe(false)
+  })
+
+  it('draw with drawWinner home: home team advances', () => {
+    const r32 = [
+      resolvedR32(74, 'TeamA', 'TeamB'),
+      ...([73, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88].map(unresolvedR32)),
+    ]
+    const predictions = { '74': { home: 1, away: 1, drawWinner: 'home' as const } }
+    const { r16 } = resolveKnockout(r32, predictions)
+    expect(r16[0].home).toBe('TeamA')
+    expect(r16[0].resolved).toBe(false)
+  })
+
+  it('draw with drawWinner away: away team advances', () => {
+    const r32 = [
+      resolvedR32(74, 'TeamA', 'TeamB'),
+      ...([73, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88].map(unresolvedR32)),
+    ]
+    const predictions = { '74': { home: 1, away: 1, drawWinner: 'away' as const } }
+    const { r16 } = resolveKnockout(r32, predictions)
+    expect(r16[0].home).toBe('TeamB')
     expect(r16[0].resolved).toBe(false)
   })
 

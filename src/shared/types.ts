@@ -11,6 +11,7 @@ export interface Match {
 export interface MatchScores {
   home: Score
   away: Score
+  drawWinner?: 'home' | 'away'
 }
 
 export interface Standing {

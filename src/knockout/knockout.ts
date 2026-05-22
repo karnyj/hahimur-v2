@@ -84,6 +84,8 @@ function outcomeOf(m: KnockoutMatch, predictions: PredictionsState, pick: 'winne
   if (!pred || pred.home === null || pred.away === null) return placeholder(m.matchNum, prefix)
   if (pred.home > pred.away) return { team: pick === 'winner' ? m.home : m.away, resolved: true }
   if (pred.away > pred.home) return { team: pick === 'winner' ? m.away : m.home, resolved: true }
+  if (pred.drawWinner === 'home') return { team: pick === 'winner' ? m.home : m.away, resolved: true }
+  if (pred.drawWinner === 'away') return { team: pick === 'winner' ? m.away : m.home, resolved: true }
   return placeholder(m.matchNum, prefix)
 }
 

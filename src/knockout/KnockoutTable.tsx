@@ -14,11 +14,26 @@ export default function KnockoutTable({ matches, predictions, onChange }: Props)
       {matches.map(m => {
         const id = String(m.matchNum)
         const pred = m.resolved ? (predictions[id] ?? { home: null, away: null }) : { home: null, away: null }
+        const isDraw = m.resolved && pred.home !== null && pred.away !== null && pred.home === pred.away
         return (
           <div key={m.matchNum} className={`ko-card${m.resolved ? ' ko-card--resolved' : ''}`}>
-            <span className="ko-matchnum">{m.matchNum}</span>
+            <div className="ko-matchnum-row">
+              <span className="ko-matchnum">{m.matchNum}</span>
+              {isDraw && (
+                <span className={`ko-draw-badge${pred.drawWinner ? ' ko-draw-badge--done' : ''}`}>
+                  בחר מנצחת
+                </span>
+              )}
+            </div>
             <div className="ko-team-row">
-              <TeamSlot name={m.home} />
+              <div
+                className={`ko-team-click${isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'home' ? ' ko-team-click--selected' : pred.drawWinner === 'away' ? ' ko-team-click--unselected' : ''}` : ''}`}
+                onClick={isDraw ? () => onChange(id, { ...pred, drawWinner: 'home' }) : undefined}
+                role={isDraw ? 'button' : undefined}
+                tabIndex={isDraw ? 0 : undefined}
+              >
+                <TeamSlot name={m.home} />
+              </div>
               <ScoreInput
                 label={m.home}
                 value={pred.home}
@@ -28,7 +43,14 @@ export default function KnockoutTable({ matches, predictions, onChange }: Props)
             </div>
             <div className="ko-row-divider" />
             <div className="ko-team-row">
-              <TeamSlot name={m.away} />
+              <div
+                className={`ko-team-click${isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'away' ? ' ko-team-click--selected' : pred.drawWinner === 'home' ? ' ko-team-click--unselected' : ''}` : ''}`}
+                onClick={isDraw ? () => onChange(id, { ...pred, drawWinner: 'away' }) : undefined}
+                role={isDraw ? 'button' : undefined}
+                tabIndex={isDraw ? 0 : undefined}
+              >
+                <TeamSlot name={m.away} />
+              </div>
               <ScoreInput
                 label={m.away}
                 value={pred.away}

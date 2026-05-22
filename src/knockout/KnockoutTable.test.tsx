@@ -83,6 +83,71 @@ describe('KnockoutTable — unresolved match scores are null', () => {
   })
 })
 
+describe('KnockoutTable — draw winner selection', () => {
+  test('no draw badge when prediction is decisive (2-1)', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 2, away: 1 } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    expect(document.querySelector('.ko-draw-badge')).toBeNull()
+  })
+
+  test('no draw badge when scores are incomplete', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: null } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    expect(document.querySelector('.ko-draw-badge')).toBeNull()
+  })
+
+  test('draw badge appears when both scores are equal', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    expect(document.querySelector('.ko-draw-badge')).not.toBeNull()
+    expect(document.querySelector('.ko-draw-badge')!.textContent).toBe('בחר מנצחת')
+  })
+
+  test('clicking home team area calls onChange with drawWinner home', async () => {
+    const onChange = vi.fn()
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
+    const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
+    await userEvent.click(areas[0])
+    expect(onChange).toHaveBeenCalledWith('89', { home: 1, away: 1, drawWinner: 'home' })
+  })
+
+  test('clicking away team area calls onChange with drawWinner away', async () => {
+    const onChange = vi.fn()
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
+    const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
+    await userEvent.click(areas[1])
+    expect(onChange).toHaveBeenCalledWith('89', { home: 1, away: 1, drawWinner: 'away' })
+  })
+})
+
+describe('KnockoutTable — draw winner selection state', () => {
+  test('home team area has selected class when drawWinner is home', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1, drawWinner: 'home' } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
+    expect(areas[0].classList.contains('ko-team-click--selected')).toBe(true)
+    expect(areas[1].classList.contains('ko-team-click--selected')).toBe(false)
+  })
+
+  test('away team area has selected class when drawWinner is away', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1, drawWinner: 'away' } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
+    expect(areas[0].classList.contains('ko-team-click--selected')).toBe(false)
+    expect(areas[1].classList.contains('ko-team-click--selected')).toBe(true)
+  })
+
+  test('neither team area has selected class when drawWinner is unset', () => {
+    const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={noop} />)
+    const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
+    expect(areas[0].classList.contains('ko-team-click--selected')).toBe(false)
+    expect(areas[1].classList.contains('ko-team-click--selected')).toBe(false)
+  })
+})
+
 describe('KnockoutTable — onChange', () => {
   test('fires with correct matchNum key and scores when home score typed', async () => {
     const onChange = vi.fn()
@@ -90,6 +155,15 @@ describe('KnockoutTable — onChange', () => {
     const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
     await userEvent.type(inputs[0], '2')
     expect(onChange).toHaveBeenCalledWith('89', { home: 2, away: null })
+  })
+
+  test('score change on draw-with-drawWinner match omits drawWinner from onChange payload', async () => {
+    const onChange = vi.fn()
+    const predictions: Record<string, MatchScores> = { '89': { home: null, away: 1, drawWinner: 'home' } }
+    render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
+    const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
+    await userEvent.type(inputs[0], '2')
+    expect(onChange).toHaveBeenCalledWith('89', { home: 2, away: 1 })
   })
 
   test('does not fire onChange when typing into a disabled (unresolved) input', async () => {
