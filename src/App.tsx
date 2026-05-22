@@ -9,6 +9,7 @@ import MatchRow from './groupStage/MatchRow'
 import StandingsTable from './groupStage/StandingsTable'
 import ThirdPlaceTable from './thirdPlace/ThirdPlaceTable'
 import KnockoutTable from './knockout/KnockoutTable'
+import ChampionBanner from './knockout/ChampionBanner'
 
 type PredictionsState = Record<string, MatchScores>
 
@@ -87,6 +88,17 @@ export default function App() {
       knockout: resolveKnockout(round32Matches, predictions),
     }
   }, [predictions])
+
+  const finalPred = predictions['104']
+  const finalWinner: string | null = (() => {
+    if (!knockout.final.resolved) return null
+    if (!finalPred || finalPred.home === null || finalPred.away === null) return null
+    if (finalPred.home > finalPred.away) return knockout.final.home
+    if (finalPred.away > finalPred.home) return knockout.final.away
+    if (finalPred.drawWinner === 'home') return knockout.final.home
+    if (finalPred.drawWinner === 'away') return knockout.final.away
+    return null
+  })()
 
   useEffect(() => {
     const allKOMatches = [
@@ -196,6 +208,8 @@ export default function App() {
           <div className="section-tag">גמר</div>
           <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={updateScores} />
         </section>
+
+        {finalWinner && <ChampionBanner winner={finalWinner} />}
       </main>
     </>
   )

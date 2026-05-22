@@ -636,3 +636,100 @@ main {
 .ko-team-click--unselected {
   opacity: 0.35;
 }
+
+/* ── Champion Banner ──────────────────────────────────────── */
+
+@keyframes champion-entrance {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes champion-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position:  200% center; }
+}
+
+.champion-banner {
+  margin-top: 32px;
+  animation: champion-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+.champion-banner__border {
+  height: 14px;
+}
+
+.champion-banner__border--top {
+  background: linear-gradient(90deg,
+    #051533 33.33%, var(--red) 33.33%, var(--red) 66.66%, var(--gold) 66.66%
+  );
+}
+
+.champion-banner__border--bottom {
+  background: linear-gradient(90deg,
+    var(--gold) 33.33%, var(--red) 33.33%, var(--red) 66.66%, #051533 66.66%
+  );
+}
+
+.champion-banner__body {
+  background:
+    radial-gradient(ellipse 60% 70% at 50% 50%, rgba(212, 160, 22, 0.18) 0%, transparent 70%),
+    var(--navy);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 36px 20px 32px;
+  text-align: center;
+  gap: 8px;
+}
+
+.champion-banner__trophy {
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 4px;
+  filter: drop-shadow(0 0 8px rgba(212, 160, 22, 0.6));
+}
+
+.champion-banner__flag {
+  width: 80px !important;
+  height: 80px !important;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 3px rgba(212, 160, 22, 0.5),
+    0 8px 24px rgba(0, 0, 0, 0.5);
+  flex-shrink: 0;
+}
+
+.champion-banner__label {
+  margin: 8px 0 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.32em;
+  color: var(--gold);
+  text-transform: uppercase;
+  opacity: 0.85;
+}
+
+.champion-banner__name {
+  margin: 2px 0 0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(40px, 12vw, 58px);
+  letter-spacing: 0.06em;
+  line-height: 1;
+
+  background: linear-gradient(
+    90deg,
+    var(--cream) 20%,
+    var(--gold)  40%,
+    #fff8e0      50%,
+    var(--gold)  60%,
+    var(--cream) 80%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: var(--cream);
+
+  animation: champion-shimmer 3.5s linear 0.8s infinite;
+}
