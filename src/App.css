@@ -580,7 +580,6 @@ main {
   letter-spacing: 0.12em;
   color: #f59e0b;
   text-transform: uppercase;
-  animation: ko-badge-pulse 1.4s ease-in-out infinite;
 }
 
 .ko-draw-badge--done {
