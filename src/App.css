@@ -576,10 +576,15 @@ main {
 
 .ko-draw-badge {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 9px;
+  font-size: 11px;
+  font-weight: 700;
   letter-spacing: 0.12em;
-  color: #f59e0b;
+  color: #d97706;
   text-transform: uppercase;
+  background: rgba(217, 119, 6, 0.1);
+  padding: 3px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(217, 119, 6, 0.3);
 }
 
 .ko-draw-badge--done {
