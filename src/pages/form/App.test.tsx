@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import App from './App'
-import { GROUPS } from './shared/groups'
+import { GROUPS } from '../../shared/groups'
 
 beforeEach(() => localStorage.clear())
 
