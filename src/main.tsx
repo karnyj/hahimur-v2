@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import ResultsLoader from './ResultsLoader.tsx'
 import FormsPage from './FormsPage.tsx'
+import HomePage from './HomePage.tsx'
 
 const { pathname } = window.location
 
@@ -12,6 +13,7 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     {pathname === '/results' ? <ResultsLoader /> :
      pathname === '/forms' ? <FormsPage /> :
-     <App />}
+     pathname === '/form' ? <App /> :
+     <HomePage />}
   </StrictMode>,
 )
