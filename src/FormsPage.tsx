@@ -1,8 +1,20 @@
+import { useState } from 'react'
 import PredictionsView from './PredictionsView'
 import Nav from './Nav'
 import { predictions as talPredictions, topGoalscorer as talGoalscorer } from './users/tal-lichter'
+import { predictions as idanPredictions, topGoalscorer as idanGoalscorer } from './users/idan-melamed'
+import { predictions as alradPredictions, topGoalscorer as alradGoalscorer } from './users/alrad-guma'
+
+const USERS = [
+  { label: 'טל ליכטר', predictions: talPredictions, topGoalscorer: talGoalscorer },
+  { label: 'עידן מלמד', predictions: idanPredictions, topGoalscorer: idanGoalscorer },
+  { label: 'אלרד גומא', predictions: alradPredictions, topGoalscorer: alradGoalscorer },
+]
 
 export default function FormsPage() {
+  const [selectedLabel, setSelectedLabel] = useState('')
+  const selected = USERS.find(u => u.label === selectedLabel)
+
   return (
     <>
       <header className="poster-header">
@@ -17,10 +29,20 @@ export default function FormsPage() {
       <Nav />
 
       <main>
-        <section>
-          <h2>טל ליכטר</h2>
-          <PredictionsView predictions={talPredictions} topGoalscorer={talGoalscorer} />
-        </section>
+        <select aria-label="בחר משתתף" value={selectedLabel} onChange={e => setSelectedLabel(e.target.value)}>
+          <option value="">בחר משתתף</option>
+          {USERS.map(u => <option key={u.label} value={u.label}>{u.label}</option>)}
+        </select>
+
+        {selected
+          ? (
+            <section>
+              <h2>{selected.label}</h2>
+              <PredictionsView predictions={selected.predictions} topGoalscorer={selected.topGoalscorer} />
+            </section>
+          )
+          : <p>בחר משתתף</p>
+        }
       </main>
     </>
   )
