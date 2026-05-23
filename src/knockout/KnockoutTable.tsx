@@ -6,9 +6,10 @@ interface Props {
   matches: KnockoutMatch[]
   predictions: Record<string, MatchScores>
   onChange: (matchId: string, scores: MatchScores) => void
+  readOnly?: boolean
 }
 
-export default function KnockoutTable({ matches, predictions, onChange }: Props) {
+export default function KnockoutTable({ matches, predictions, onChange, readOnly = false }: Props) {
   return (
     <div className="ko-grid">
       {matches.map(m => {
@@ -28,36 +29,32 @@ export default function KnockoutTable({ matches, predictions, onChange }: Props)
             </div>
             <div className="ko-team-row">
               <div
-                className={`ko-team-click${isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'home' ? ' ko-team-click--selected' : pred.drawWinner === 'away' ? ' ko-team-click--unselected' : ''}` : ''}`}
-                onClick={isDraw ? () => onChange(id, { ...pred, drawWinner: 'home' }) : undefined}
-                role={isDraw ? 'button' : undefined}
-                tabIndex={isDraw ? 0 : undefined}
+                className={`ko-team-click${!readOnly && isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'home' ? ' ko-team-click--selected' : pred.drawWinner === 'away' ? ' ko-team-click--unselected' : ''}` : ''}`}
+                onClick={!readOnly && isDraw ? () => onChange(id, { ...pred, drawWinner: 'home' }) : undefined}
+                role={!readOnly && isDraw ? 'button' : undefined}
+                tabIndex={!readOnly && isDraw ? 0 : undefined}
               >
                 <TeamSlot name={m.home} />
               </div>
-              <ScoreInput
-                label={m.home}
-                value={pred.home}
-                disabled={!m.resolved}
-                onChange={v => onChange(id, { home: v, away: pred.away })}
-              />
+              {readOnly
+                ? <span className="match-score-static">{pred.home ?? '–'}</span>
+                : <ScoreInput label={m.home} value={pred.home} disabled={!m.resolved} onChange={v => onChange(id, { home: v, away: pred.away })} />
+              }
             </div>
             <div className="ko-row-divider" />
             <div className="ko-team-row">
               <div
-                className={`ko-team-click${isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'away' ? ' ko-team-click--selected' : pred.drawWinner === 'home' ? ' ko-team-click--unselected' : ''}` : ''}`}
-                onClick={isDraw ? () => onChange(id, { ...pred, drawWinner: 'away' }) : undefined}
-                role={isDraw ? 'button' : undefined}
-                tabIndex={isDraw ? 0 : undefined}
+                className={`ko-team-click${!readOnly && isDraw ? ` ko-team-click--selectable${pred.drawWinner === 'away' ? ' ko-team-click--selected' : pred.drawWinner === 'home' ? ' ko-team-click--unselected' : ''}` : ''}`}
+                onClick={!readOnly && isDraw ? () => onChange(id, { ...pred, drawWinner: 'away' }) : undefined}
+                role={!readOnly && isDraw ? 'button' : undefined}
+                tabIndex={!readOnly && isDraw ? 0 : undefined}
               >
                 <TeamSlot name={m.away} />
               </div>
-              <ScoreInput
-                label={m.away}
-                value={pred.away}
-                disabled={!m.resolved}
-                onChange={v => onChange(id, { home: pred.home, away: v })}
-              />
+              {readOnly
+                ? <span className="match-score-static">{pred.away ?? '–'}</span>
+                : <ScoreInput label={m.away} value={pred.away} disabled={!m.resolved} onChange={v => onChange(id, { home: pred.home, away: v })} />
+              }
             </div>
           </div>
         )

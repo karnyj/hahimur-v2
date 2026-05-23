@@ -165,3 +165,6 @@ export const GROUPS: Record<string, { he: string; matches: Match[] }> = {
 export const GROUP_A_MATCHES = GROUPS.A.matches
 export const GROUP_MATCHES = Object.fromEntries(Object.entries(GROUPS).map(([k, v]) => [k, v.matches]))
 export const GROUP_HEBREW  = Object.fromEntries(Object.entries(GROUPS).map(([k, v]) => [k, v.he]))
+
+export const ALL_GROUP_LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L'] as const
+export type GroupLetter = typeof ALL_GROUP_LETTERS[number]

@@ -1,23 +1,18 @@
-import { useMemo, useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import './App.css'
-import type { Match, MatchScores } from './shared/types'
-import { GROUP_MATCHES, GROUP_HEBREW, TEAMS } from './shared/groups'
+import type { Match, MatchScores, PredictionsState } from './shared/types'
+import { GROUP_MATCHES, GROUP_HEBREW, TEAMS, ALL_GROUP_LETTERS, type GroupLetter } from './shared/groups'
 import { calculateStandings } from './shared/standings'
-import { getThirdPlaceTeams, qualifyBestThirdPlace } from './thirdPlace/thirdPlace'
-import { resolveRound32, resolveKnockout, clearUnresolvedKOScores } from './knockout/knockout'
+import { clearUnresolvedKOScores } from './knockout/knockout'
+import { useTournament } from './shared/useTournament'
 import MatchRow from './groupStage/MatchRow'
 import StandingsTable from './groupStage/StandingsTable'
 import ThirdPlaceTable from './thirdPlace/ThirdPlaceTable'
 import KnockoutTable from './knockout/KnockoutTable'
 import ChampionBanner from './knockout/ChampionBanner'
 
-type PredictionsState = Record<string, MatchScores>
-
 const STORAGE_KEY = 'predictions'
 const GOALSCORER_KEY = 'topGoalscorer'
-
-const ALL_GROUP_LETTERS = ['A','B','C','D','E','F','G','H','I','J','K','L'] as const
-type GroupLetter = typeof ALL_GROUP_LETTERS[number]
 
 const ALL_MATCHES = Object.values(GROUP_MATCHES).flat() as Match[]
 
@@ -64,47 +59,7 @@ export default function App() {
     return pred && pred.home !== null && pred.away !== null
   })
 
-  const { thirdPlaceQual, groupsWithTies, completedGroups, allGroupsFilled, round32Matches, knockout } = useMemo(() => {
-    const allGroupData = ALL_GROUP_LETTERS
-      .filter(l => l in GROUP_MATCHES)
-      .map(l => {
-        const matches = GROUP_MATCHES[l] ?? []
-        const { standings, tiedTeams } = calculateStandings(matches, predictions)
-        const allFilled = matches.length > 0 && matches.every(m => {
-          const pred = predictions[m.id]
-          return pred && pred.home !== null && pred.away !== null
-        })
-        const isComplete = allFilled && tiedTeams.size === 0
-        return { group: l as string, standings, tiedTeams, allFilled, isComplete }
-      })
-    const groupsWithTies = new Set<string>()
-    const completedGroups = new Set<string>()
-    for (const d of allGroupData) {
-      if (d.allFilled && d.tiedTeams.size > 0) groupsWithTies.add(d.group)
-      if (d.isComplete) completedGroups.add(d.group)
-    }
-    const thirdPlaceQual = qualifyBestThirdPlace(getThirdPlaceTeams(allGroupData))
-    const round32Matches = resolveRound32(allGroupData, thirdPlaceQual)
-    return {
-      thirdPlaceQual,
-      groupsWithTies,
-      completedGroups,
-      allGroupsFilled: allGroupData.every(d => d.allFilled),
-      round32Matches,
-      knockout: resolveKnockout(round32Matches, predictions),
-    }
-  }, [predictions])
-
-  const finalPred = predictions['104']
-  const finalWinner: string | null = (() => {
-    if (!knockout.final.resolved) return null
-    if (!finalPred || finalPred.home === null || finalPred.away === null) return null
-    if (finalPred.home > finalPred.away) return knockout.final.home
-    if (finalPred.away > finalPred.home) return knockout.final.away
-    if (finalPred.drawWinner === 'home') return knockout.final.home
-    if (finalPred.drawWinner === 'away') return knockout.final.away
-    return null
-  })()
+  const { thirdPlaceQual, groupsWithTies, completedGroups, allGroupsFilled, round32Matches, knockout, finalWinner } = useTournament(predictions)
 
   useEffect(() => {
     const allKOMatches = [

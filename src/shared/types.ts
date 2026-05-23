@@ -39,3 +39,5 @@ export interface KnockoutMatch {
   away: string
   resolved: boolean
 }
+
+export type PredictionsState = Record<string, MatchScores>
