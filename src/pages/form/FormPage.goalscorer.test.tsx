@@ -1,17 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import App from './App'
+import FormPage from './FormPage'
 
 beforeEach(() => localStorage.clear())
 
 describe('Top Goalscorer (מלך השערים)', () => {
   test('section heading is visible', () => {
-    render(<App />)
+    render(<FormPage />)
     expect(screen.getByText('מלך השערים')).toBeInTheDocument()
   })
 
   test('input field is visible with Hebrew placeholder', () => {
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...')
     expect(input).toBeInTheDocument()
     expect(input).toHaveAttribute('type', 'text')
@@ -19,7 +19,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('user can type a player name', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...') as HTMLInputElement
 
     await user.type(input, 'Lionel Messi')
@@ -28,7 +28,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('user can clear the input', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...') as HTMLInputElement
 
     await user.type(input, 'Cristiano Ronaldo')
@@ -40,13 +40,13 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('player name persists across remount (simulated refresh)', async () => {
     const user = userEvent.setup()
-    const { unmount } = render(<App />)
+    const { unmount } = render(<FormPage />)
 
     const input = screen.getByPlaceholderText('שם השחקן...') as HTMLInputElement
     await user.type(input, 'Kylian Mbappe')
 
     unmount()
-    render(<App />)
+    render(<FormPage />)
 
     const inputAfterRemount = screen.getByPlaceholderText('שם השחקן...') as HTMLInputElement
     expect(inputAfterRemount.value).toBe('Kylian Mbappe')
@@ -54,7 +54,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('player name is stored in localStorage under correct key', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...')
 
     await user.type(input, 'Erling Haaland')
@@ -65,7 +65,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('empty string is persisted when input is cleared', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...')
 
     await user.type(input, 'Harry Kane')
@@ -77,7 +77,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('player name is loaded from localStorage on mount', () => {
     localStorage.setItem('topGoalscorer', 'Neymar Jr')
-    render(<App />)
+    render(<FormPage />)
 
     const input = screen.getByPlaceholderText('שם השחקן...') as HTMLInputElement
     expect(input.value).toBe('Neymar Jr')
@@ -85,7 +85,7 @@ describe('Top Goalscorer (מלך השערים)', () => {
 
   test('player name updates are independent of match predictions', async () => {
     const user = userEvent.setup()
-    render(<App />)
+    render(<FormPage />)
 
     const mexicoInput = screen.getAllByLabelText('מקסיקו')[0]
     const goalscorInput = screen.getByPlaceholderText('שם השחקן...')
@@ -99,13 +99,13 @@ describe('Top Goalscorer (מלך השערים)', () => {
   })
 
   test('input has correct CSS class for styling', () => {
-    render(<App />)
+    render(<FormPage />)
     const input = screen.getByPlaceholderText('שם השחקן...')
     expect(input).toHaveClass('goalscorer-input')
   })
 
   test('input is in a card with correct styling class', () => {
-    render(<App />)
+    render(<FormPage />)
     const card = document.querySelector('.goalscorer-card')
     expect(card).toBeInTheDocument()
     const input = card?.querySelector('.goalscorer-input')

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import './App.css'
+import './FormPage.css'
 import type { Match, MatchScores, PredictionsState } from '../../shared/types'
 import { GROUP_MATCHES, GROUP_HEBREW, TEAMS, ALL_GROUP_LETTERS, type GroupLetter } from '../../shared/groups'
 import { calculateStandings } from '../../shared/standings'
@@ -46,7 +46,7 @@ function loadGoalscorer(): string {
   return localStorage.getItem(GOALSCORER_KEY) ?? ''
 }
 
-export default function App() {
+export default function FormPage() {
   const [predictions, setPredictions] = useState<PredictionsState>(loadPredictions)
   const [topGoalscorer, setTopGoalscorer] = useState<string>(loadGoalscorer)
   const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
