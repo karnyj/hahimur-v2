@@ -216,6 +216,8 @@ describe('Save predictions', () => {
     localStorage.setItem('predictions', JSON.stringify({ A1: { home: 2, away: 1 } }))
     localStorage.setItem('topGoalscorer', 'Mbappé')
 
+    render(<App />)
+
     const mockClick = vi.fn()
     const mockAnchor = { href: '', download: '', click: mockClick }
     const original = document.createElement.bind(document)
@@ -226,11 +228,11 @@ describe('Save predictions', () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:fake')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 
-    render(<App />)
     await user.click(screen.getByRole('button', { name: /save|שמור/i }))
 
     expect(mockAnchor.download).toBe('wc2026-predictions.json')
     expect(mockClick).toHaveBeenCalled()
+    vi.restoreAllMocks()
   })
 })
 

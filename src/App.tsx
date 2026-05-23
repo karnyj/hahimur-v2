@@ -5,6 +5,7 @@ import { GROUP_MATCHES, GROUP_HEBREW, TEAMS, ALL_GROUP_LETTERS, type GroupLetter
 import { calculateStandings } from './shared/standings'
 import { clearUnresolvedKOScores } from './knockout/knockout'
 import { useTournament } from './shared/useTournament'
+import Nav from './Nav'
 import MatchRow from './groupStage/MatchRow'
 import StandingsTable from './groupStage/StandingsTable'
 import ThirdPlaceTable from './thirdPlace/ThirdPlaceTable'
@@ -109,6 +110,7 @@ export default function App() {
         </div>
         <div className="poster-bar poster-bar--bottom" />
       </header>
+      <Nav />
 
       <main>
         <div className="group-grid">

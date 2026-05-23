@@ -1,4 +1,5 @@
 import PredictionsView from './PredictionsView'
+import Nav from './Nav'
 import { predictions as talPredictions, topGoalscorer as talGoalscorer } from './users/tal-lichter'
 
 export default function FormsPage() {
@@ -13,6 +14,7 @@ export default function FormsPage() {
         </div>
         <div className="poster-bar poster-bar--bottom" />
       </header>
+      <Nav />
 
       <main>
         <section>

@@ -1,3 +1,5 @@
+import Nav from './Nav'
+
 export default function HomePage() {
   return (
     <>
@@ -10,6 +12,7 @@ export default function HomePage() {
         </div>
         <div className="poster-bar poster-bar--bottom" />
       </header>
+      <Nav />
 
       <main dir="rtl" style={{ textAlign: 'center', paddingTop: '4rem', fontSize: '1.5rem' }}>
         מחכים למסר מהליכטטור

@@ -55,6 +55,38 @@
   letter-spacing: 0.07em;
 }
 
+/* ── Site Navigation ──────────────────────────────────────── */
+
+.site-nav {
+  background: var(--cream);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: center;
+  padding: 10px 16px;
+}
+
+.site-nav__link {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  letter-spacing: 0.22em;
+  color: rgba(11, 34, 68, 0.35);
+  text-decoration: none;
+  padding: 4px 22px;
+  transition: color 0.13s;
+}
+
+.site-nav__link + .site-nav__link {
+  border-right: 1px solid var(--border);
+}
+
+.site-nav__link:hover {
+  color: var(--navy);
+}
+
+.site-nav__link--active {
+  color: var(--red);
+}
+
 .save-section {
   text-align: center;
   padding: 20px 0 8px;
