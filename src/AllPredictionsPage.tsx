@@ -1,3 +1,6 @@
+import PredictionsView from './PredictionsView'
+import { predictions as talPredictions, topGoalscorer as talGoalscorer } from './users/tal-lichter'
+
 export default function AllPredictionsPage() {
   return (
     <>
@@ -10,7 +13,13 @@ export default function AllPredictionsPage() {
         </div>
         <div className="poster-bar poster-bar--bottom" />
       </header>
-      <main />
+
+      <main>
+        <section>
+          <h2>טל ליכטר</h2>
+          <PredictionsView predictions={talPredictions} topGoalscorer={talGoalscorer} />
+        </section>
+      </main>
     </>
   )
 }
