@@ -1,5 +1,6 @@
 import type { PredictionsState } from '../shared/types'
 
+import * as elrad_gome from './elrad-gome'
 import * as idan_melamed from './idan-melamed'
 
 export interface User {
@@ -10,5 +11,6 @@ export interface User {
 }
 
 export const USERS: User[] = [
+  elrad_gome,
   idan_melamed,
 ]
