@@ -1,6 +1,9 @@
+import { useState } from 'react'
 import Nav from '../../Nav'
 import { GROUPS, TEAMS } from '../../shared/groups'
+import type { Score } from '../../shared/types'
 import { isUnpredicted } from '../../shared/types'
+import ScoreInput from '../../formView/ScoreInput'
 import { USERS } from '../../users/index'
 import './MatchPredictionsPage.css'
 
@@ -9,6 +12,8 @@ const MATCH = GROUPS.A.matches[0]
 export default function MatchPredictionsPage() {
   const home = TEAMS[MATCH.homeTeam]
   const away = TEAMS[MATCH.awayTeam]
+  const [homeScore, setHomeScore] = useState<Score>(null)
+  const [awayScore, setAwayScore] = useState<Score>(null)
 
   return (
     <>
@@ -22,9 +27,9 @@ export default function MatchPredictionsPage() {
           </div>
 
           <div className="match-header__vs">
-            <div className="match-header__vs-line" />
-            <span className="match-header__vs-text">VS</span>
-            <div className="match-header__vs-line" />
+            <ScoreInput label={home.he} value={homeScore} onChange={setHomeScore} />
+            <span className="match-header__vs-text">–</span>
+            <ScoreInput label={away.he} value={awayScore} onChange={setAwayScore} />
           </div>
 
           <div className="match-team">
