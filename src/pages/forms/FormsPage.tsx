@@ -55,7 +55,7 @@ export default function FormsPage() {
 
           {isOpen && (
             <div className="user-picker__menu" role="listbox" aria-label="בחר שחקן">
-              {USERS.map(u => (
+              {[...USERS].sort((a, b) => a.label.localeCompare(b.label, 'he')).map(u => (
                 <button
                   key={u.label}
                   role="option"
