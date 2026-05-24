@@ -1,4 +1,4 @@
-import type { Score } from './types'
+import type { Score } from '../shared/types'
 
 const CONTROL_KEYS = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab', 'Home', 'End']
 

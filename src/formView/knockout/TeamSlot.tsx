@@ -1,4 +1,4 @@
-import { TEAMS } from './groups'
+import { TEAMS } from '../../shared/groups'
 
 export default function TeamSlot({ name }: { name: string }) {
   const info = TEAMS[name]

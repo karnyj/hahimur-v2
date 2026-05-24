@@ -1,6 +1,6 @@
 import type { KnockoutMatch, MatchScores } from '../../shared/types'
-import ScoreInput from '../../shared/ScoreInput'
-import TeamSlot from '../../shared/TeamSlot'
+import ScoreInput from '../ScoreInput'
+import TeamSlot from './TeamSlot'
 
 interface Props {
   matches: KnockoutMatch[]
