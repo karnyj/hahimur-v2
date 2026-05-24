@@ -6,7 +6,7 @@ test('home page shows title', () => {
   expect(screen.getByText('ההימור 2026')).toBeInTheDocument()
 })
 
-test('home page shows waiting message', () => {
+test('home page shows welcome message', () => {
   render(<HomePage />)
-  expect(screen.getByText('מחכים למסר מהליכטטור')).toBeInTheDocument()
+  expect(screen.getByText('ברוכים הבאים להימור המסורתי שלנו!')).toBeInTheDocument()
 })
