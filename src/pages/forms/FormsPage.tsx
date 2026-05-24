@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import PredictionsView from '../../predictionsView/PredictionsView'
+import FormView from '../../formView/FormView'
 import Nav from '../../Nav'
 import { predictions as talPredictions, topGoalscorer as talGoalscorer } from '../../users/tal-lichter'
 import { predictions as idanPredictions, topGoalscorer as idanGoalscorer } from '../../users/idan-melamed'
@@ -84,7 +84,7 @@ export default function FormsPage() {
 
         {selected && (
           <section>
-            <PredictionsView predictions={selected.predictions} topGoalscorer={selected.topGoalscorer} />
+            <FormView predictions={selected.predictions} topGoalscorer={selected.topGoalscorer} />
           </section>
         )}
       </main>

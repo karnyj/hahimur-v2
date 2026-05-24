@@ -16,7 +16,7 @@ interface Props {
 
 const noop = () => {}
 
-export default function PredictionsView({ predictions, topGoalscorer }: Props) {
+export default function FormView({ predictions, topGoalscorer }: Props) {
   const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
   const activeMatches = GROUP_MATCHES[activeGroup] ?? []
 

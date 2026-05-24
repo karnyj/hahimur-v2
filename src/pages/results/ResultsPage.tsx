@@ -1,5 +1,5 @@
 import type { PredictionsState } from '../../shared/types'
-import PredictionsView from '../../predictionsView/PredictionsView'
+import FormView from '../../formView/FormView'
 import Nav from '../../Nav'
 
 interface Results {
@@ -26,7 +26,7 @@ export default function ResultsPage({ results }: Props) {
       <Nav />
 
       <main>
-        <PredictionsView predictions={results.predictions} topGoalscorer={results.topGoalscorer} />
+        <FormView predictions={results.predictions} topGoalscorer={results.topGoalscorer} />
       </main>
     </>
   )
