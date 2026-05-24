@@ -2,19 +2,10 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import 'flag-icons/css/flag-icons.min.css'
 import './index.css'
-import FormPage from './pages/form/FormPage.tsx'
-import ResultsPage from './pages/results/ResultsPage.tsx'
-import * as results from './results.ts'
-import FormsPage from './pages/forms/FormsPage.tsx'
-import HomePage from './pages/home/HomePage.tsx'
-
-const { pathname } = window.location
+import App from './App'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    {pathname === '/results' ? <ResultsPage results={results} /> :
-     pathname === '/forms' ? <FormsPage /> :
-     pathname === '/form' ? <FormPage /> :
-     <HomePage />}
+    <App />
   </StrictMode>,
 )

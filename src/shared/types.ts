@@ -41,3 +41,7 @@ export interface KnockoutMatch {
 }
 
 export type PredictionsState = Record<string, MatchScores>
+
+export function isUnpredicted(scores: MatchScores): boolean {
+  return scores.home === null || scores.away === null
+}
