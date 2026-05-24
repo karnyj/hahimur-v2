@@ -46,10 +46,7 @@ export default function FormsPage() {
             aria-expanded={isOpen}
           >
             {selected ? (
-              <>
-                <span className="user-picker__trigger-num">{selected.number}</span>
-                <span className="user-picker__trigger-name">{selected.label}</span>
-              </>
+              <span className="user-picker__trigger-name">{selected.label}</span>
             ) : (
               <span className="user-picker__trigger-placeholder">בחר שחקן</span>
             )}
@@ -66,7 +63,6 @@ export default function FormsPage() {
                   className={`user-picker__option${selectedLabel === u.label ? ' user-picker__option--selected' : ''}`}
                   onClick={() => select(u.label)}
                 >
-                  <span className="user-picker__option-num">{u.number}</span>
                   <span className="user-picker__option-name">{u.label}</span>
                 </button>
               ))}
