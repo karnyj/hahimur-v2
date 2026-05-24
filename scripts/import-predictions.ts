@@ -2,11 +2,11 @@ import { readFileSync, writeFileSync, readdirSync } from 'fs'
 import { resolve } from 'path'
 import { GROUPS } from '../src/shared/groups.ts'
 
-const [inputPath, outputSlug, userName, userNumber] = process.argv.slice(2)
+const [inputPath, outputSlug, userName] = process.argv.slice(2)
 
 if (!inputPath || !outputSlug) {
-  console.error('Usage: node --experimental-strip-types scripts/import-predictions.ts <input-json> <output-slug> [name] [number]')
-  console.error('Example: node --experimental-strip-types scripts/import-predictions.ts raw_exports/idan-wc2026-predictions.json idan-melamed "עידן מלמד" 1')
+  console.error('Usage: node --experimental-strip-types scripts/import-predictions.ts <input-json> <output-slug> [name]')
+  console.error('Example: node --experimental-strip-types scripts/import-predictions.ts raw_exports/idan-wc2026-predictions.json idan-melamed "עידן מלמד"')
   process.exit(1)
 }
 
@@ -56,7 +56,6 @@ lines.push(`}`)
 lines.push(``)
 lines.push(`export const topGoalscorer = '${topGoalscorer ?? ''}'`)
 lines.push(`export const label = '${userName ?? ''}'`)
-lines.push(`export const number = '${userNumber ?? ''}'`)
 lines.push(``)
 
 const outputPath = resolve(`src/users/${outputSlug}.ts`)
@@ -75,7 +74,6 @@ const indexLines = [
   ``,
   `export interface User {`,
   `  label: string`,
-  `  number: string`,
   `  predictions: PredictionsState`,
   `  topGoalscorer: string`,
   `}`,

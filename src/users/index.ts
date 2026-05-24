@@ -6,7 +6,6 @@ import * as idan_melamed from './idan-melamed'
 
 export interface User {
   label: string
-  number: string
   predictions: PredictionsState
   topGoalscorer: string
 }

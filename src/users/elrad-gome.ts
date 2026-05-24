@@ -121,4 +121,3 @@ export const predictions: PredictionsState = {
 
 export const topGoalscorer = 'קיליאן אמבפה'
 export const label = 'אלרד גומא'
-export const number = '2'
