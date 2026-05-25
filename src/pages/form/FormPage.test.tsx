@@ -1,19 +1,23 @@
-import { render, screen, within } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import { vi, afterEach } from 'vitest'
 import FormPage from './FormPage'
 import { GROUPS } from '../../shared/groups'
+
+vi.mock('../../Nav', () => ({ default: () => null }))
+vi.mock('../../shared/Countdown', () => ({ default: () => null }))
+vi.mock('../../formView/knockout/KnockoutTable', () => ({ default: () => null }))
+vi.mock('../../formView/thirdPlace/ThirdPlaceTable', () => ({ default: () => null }))
+vi.mock('../../formView/knockout/ChampionBanner', () => ({ default: () => null }))
 
 beforeEach(() => localStorage.clear())
 afterEach(() => vi.useRealTimers())
 
 function setup() {
-  const user = userEvent.setup()
   render(<FormPage />)
   // Mexico and South Africa each appear in multiple matches; grab match A1 (first occurrence)
   const mexicoInput = screen.getAllByLabelText('מקסיקו')[0]
   const southAfricaInput = screen.getAllByLabelText('דרום אפריקה')[0]
-  return { user, mexicoInput, southAfricaInput }
+  return { mexicoInput, southAfricaInput }
 }
 
 test('predictions page shows title', () => {
@@ -28,25 +32,23 @@ describe('Slice 4 — Group A (6 matches)', () => {
     expect(within(groupSection).getAllByRole('textbox')).toHaveLength(12)
   })
 
-  test('standings update when a non-opening match score is entered', async () => {
-    const user = userEvent.setup()
+  test('standings update when a non-opening match score is entered', () => {
     render(<FormPage />)
     // Match A2: South Korea (home) vs Czech Republic. South Korea appears as home first in A2.
     const southKoreaInputs = screen.getAllByLabelText('דרום קוריאה')
     const czechInputs = screen.getAllByLabelText('צ׳כיה')
-    await user.type(southKoreaInputs[0], '2')
-    await user.type(czechInputs[0], '1')
+    fireEvent.change(southKoreaInputs[0], { target: { value: '2' } })
+    fireEvent.change(czechInputs[0], { target: { value: '1' } })
     expect(within(screen.getByRole('row', { name: /דרום קוריאה/ })).getByText('3')).toBeInTheDocument()
   })
 })
 
 describe('Slice 8 — localStorage persistence', () => {
-  test('predictions survive a remount (simulated refresh)', async () => {
-    const user = userEvent.setup()
+  test('predictions survive a remount (simulated refresh)', () => {
     const { unmount } = render(<FormPage />)
 
     const mexicoInput = screen.getAllByLabelText('מקסיקו')[0]
-    await user.type(mexicoInput, '3')
+    fireEvent.change(mexicoInput, { target: { value: '3' } })
 
     unmount()
     render(<FormPage />)
@@ -65,10 +67,9 @@ describe('Slice 9/10 — group navigation (B–L)', () => {
     expect(screen.getByRole('button', { name: hebrew })).not.toBeDisabled()
   })
 
-  test.each(remaining)('group %s shows 6 matches (12 inputs) when selected', async (_letter, hebrew) => {
-    const user = userEvent.setup()
+  test.each(remaining)('group %s shows 6 matches (12 inputs) when selected', (_letter, hebrew) => {
     render(<FormPage />)
-    await user.click(screen.getByRole('button', { name: hebrew }))
+    fireEvent.click(screen.getByRole('button', { name: hebrew }))
     // Group A's Mexico must be gone — confirming we really switched groups
     expect(screen.queryAllByLabelText('מקסיקו')).toHaveLength(0)
     const groupSection = document.querySelector('section.content-section') as HTMLElement
@@ -154,8 +155,7 @@ describe('Group completion indicator', () => {
 })
 
 describe('Save predictions', () => {
-  test('Save button downloads predictions as JSON', async () => {
-    const user = userEvent.setup()
+  test('Save button downloads predictions as JSON', () => {
     localStorage.setItem('predictions', JSON.stringify({ A1: { home: 2, away: 1 } }))
     localStorage.setItem('topGoalscorer', 'Mbappé')
 
@@ -171,7 +171,7 @@ describe('Save predictions', () => {
     vi.spyOn(URL, 'createObjectURL').mockReturnValueOnce('blob:fake')
     vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {})
 
-    await user.click(screen.getByRole('button', { name: /save|שמור/i }))
+    fireEvent.click(screen.getByRole('button', { name: /save|שמור/i }))
 
     expect(mockAnchor.download).toBe('wc2026-predictions.json')
     expect(mockClick).toHaveBeenCalled()
@@ -189,10 +189,10 @@ describe('Slice 3b — group standings table', () => {
     expect(within(table).getByText('צ׳כיה')).toBeInTheDocument()
   })
 
-  test('entering scores updates the standings', async () => {
-    const { user, mexicoInput, southAfricaInput } = setup()
-    await user.type(mexicoInput, '2')
-    await user.type(southAfricaInput, '1')
+  test('entering scores updates the standings', () => {
+    const { mexicoInput, southAfricaInput } = setup()
+    fireEvent.change(mexicoInput, { target: { value: '2' } })
+    fireEvent.change(southAfricaInput, { target: { value: '1' } })
 
     // After Mexico 2-1 South Africa: Mexico gets 3 pts, South Africa gets 0
     // "3" only appears in Mexico's points cell; "0" only in South Africa's points cell
@@ -200,16 +200,15 @@ describe('Slice 3b — group standings table', () => {
     expect(within(screen.getByRole('row', { name: /דרום אפריקה/ })).getAllByText('0').length).toBeGreaterThan(0)
   })
 
-  test('changing a score updates standings immediately', async () => {
-    const { user, mexicoInput, southAfricaInput } = setup()
-    await user.type(mexicoInput, '1')
-    await user.type(southAfricaInput, '0')
+  test('changing a score updates standings immediately', () => {
+    const { mexicoInput, southAfricaInput } = setup()
+    fireEvent.change(mexicoInput, { target: { value: '1' } })
+    fireEvent.change(southAfricaInput, { target: { value: '0' } })
 
     const mexicoRow = screen.getByRole('row', { name: /מקסיקו/ })
     expect(within(mexicoRow).getByText('3')).toBeInTheDocument()
 
-    await user.clear(southAfricaInput)
-    await user.type(southAfricaInput, '2')
+    fireEvent.change(southAfricaInput, { target: { value: '2' } })
 
     const southAfricaRow = screen.getByRole('row', { name: /דרום אפריקה/ })
     expect(within(southAfricaRow).getByText('3')).toBeInTheDocument()

@@ -293,12 +293,12 @@
 }
 
 .pred-summary__label {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 9px;
-  letter-spacing: 0.26em;
-  color: rgba(239, 228, 184, 0.3);
+  font-family: 'Heebo', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(239, 228, 184, 0.58);
   margin-top: 0.4rem;
-  text-transform: uppercase;
 }
 
 /* ── Proportional split bar ─────────────────────────────────── */
