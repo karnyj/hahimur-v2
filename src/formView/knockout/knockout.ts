@@ -16,6 +16,46 @@ export interface KnockoutStages {
 
 const POSITION_LABELS = ['מנצח', 'סגן-אלוף', 'שלישי'] as const
 
+const KO_DATES: Record<number, { matchDate: string; kickoffIST: string }> = {
+  // Round of 32
+  73: { matchDate: '28 ביוני', kickoffIST: '22:00' },
+  74: { matchDate: '29 ביוני', kickoffIST: '23:30' },
+  75: { matchDate: '30 ביוני', kickoffIST: '04:00' },
+  76: { matchDate: '29 ביוני', kickoffIST: '20:00' },
+  77: { matchDate: '1 ביולי',  kickoffIST: '00:00' },
+  78: { matchDate: '30 ביוני', kickoffIST: '20:00' },
+  79: { matchDate: '1 ביולי',  kickoffIST: '04:00' },
+  80: { matchDate: '1 ביולי',  kickoffIST: '19:00' },
+  81: { matchDate: '2 ביולי',  kickoffIST: '03:00' },
+  82: { matchDate: '1 ביולי',  kickoffIST: '23:00' },
+  83: { matchDate: '3 ביולי',  kickoffIST: '02:00' },
+  84: { matchDate: '2 ביולי',  kickoffIST: '22:00' },
+  85: { matchDate: '3 ביולי',  kickoffIST: '06:00' },
+  86: { matchDate: '4 ביולי',  kickoffIST: '01:00' },
+  87: { matchDate: '4 ביולי',  kickoffIST: '04:30' },
+  88: { matchDate: '3 ביולי',  kickoffIST: '21:00' },
+  // Round of 16
+  89: { matchDate: '5 ביולי',  kickoffIST: '00:00' },
+  90: { matchDate: '4 ביולי',  kickoffIST: '20:00' },
+  91: { matchDate: '5 ביולי',  kickoffIST: '23:00' },
+  92: { matchDate: '6 ביולי',  kickoffIST: '03:00' },
+  93: { matchDate: '6 ביולי',  kickoffIST: '22:00' },
+  94: { matchDate: '7 ביולי',  kickoffIST: '03:00' },
+  95: { matchDate: '7 ביולי',  kickoffIST: '19:00' },
+  96: { matchDate: '7 ביולי',  kickoffIST: '23:00' },
+  // Quarterfinals
+  97:  { matchDate: '9 ביולי',  kickoffIST: '23:00' },
+  98:  { matchDate: '10 ביולי', kickoffIST: '22:00' },
+  99:  { matchDate: '12 ביולי', kickoffIST: '00:00' },
+  100: { matchDate: '12 ביולי', kickoffIST: '04:00' },
+  // Semifinals
+  101: { matchDate: '14 ביולי', kickoffIST: '22:00' },
+  102: { matchDate: '15 ביולי', kickoffIST: '22:00' },
+  // Third place & Final
+  103: { matchDate: '19 ביולי', kickoffIST: '00:00' },
+  104: { matchDate: '19 ביולי', kickoffIST: '22:00' },
+}
+
 function slotAt(data: GroupData | undefined, group: string, idx: number): Slot {
   if (data?.allFilled && data.standings[idx])
     return { team: data.standings[idx].team, resolved: true }
@@ -27,7 +67,7 @@ const runnerUp = (d: GroupData | undefined, g: string) => slotAt(d, g, 1)
 const thirdOf  = (d: GroupData | undefined, g: string) => slotAt(d, g, 2)
 
 function mk(matchNum: number, home: Slot, away: Slot): KnockoutMatch {
-  return { matchNum, home: home.team, away: away.team, resolved: home.resolved && away.resolved }
+  return { matchNum, home: home.team, away: away.team, resolved: home.resolved && away.resolved, ...KO_DATES[matchNum] }
 }
 
 export function resolveRound32(

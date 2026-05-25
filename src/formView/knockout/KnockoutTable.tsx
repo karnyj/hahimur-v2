@@ -2,6 +2,15 @@ import type { KnockoutMatch, MatchScores } from '../../shared/types'
 import ScoreInput from '../ScoreInput'
 import TeamSlot from './TeamSlot'
 
+const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
+
+function dayOfWeek(matchDate: string): string {
+  const parts = matchDate.split(' ')
+  const day = parseInt(parts[0])
+  const month = parts[1] === 'ביולי' ? 6 : 5
+  return `יום ${HE_DAYS[new Date(2026, month, day).getDay()]}`
+}
+
 interface Props {
   matches: KnockoutMatch[]
   predictions: Record<string, MatchScores>
@@ -19,6 +28,13 @@ export default function KnockoutTable({ matches, predictions, onChange, readOnly
         const needsDrawWinner = isDraw && !pred.drawWinner
         return (
           <div key={m.matchNum} className={`ko-card${m.resolved ? ' ko-card--resolved' : ''}${needsDrawWinner ? ' ko-card--draw-pending' : ''}`}>
+            {(m.matchDate || m.kickoffIST) && (
+              <div className="match-meta">
+                {m.matchDate && <span>{dayOfWeek(m.matchDate)}, {m.matchDate}</span>}
+                {m.matchDate && m.kickoffIST && <span className="match-meta-sep">|</span>}
+                {m.kickoffIST && <span>{m.kickoffIST}</span>}
+              </div>
+            )}
             <div className="ko-matchnum-row">
               <span className="ko-matchnum">{m.matchNum}</span>
               {isDraw && !pred.drawWinner && (

@@ -38,6 +38,8 @@ export interface KnockoutMatch {
   home: string
   away: string
   resolved: boolean
+  matchDate?: string
+  kickoffIST?: string
 }
 
 export type PredictionsState = Record<string, MatchScores>
