@@ -1,7 +1,8 @@
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
+import { render, screen, fireEvent } from '@testing-library/react'
 import { vi } from 'vitest'
 import FormsPage from './FormsPage'
+
+vi.mock('../../Nav', () => ({ default: () => null }))
 
 vi.mock('../../users/index', () => {
   const GROUP_IDS = ['A','B','C','D','E','F','G','H','I','J','K','L'].flatMap(g =>
@@ -27,11 +28,10 @@ vi.mock('../../users/index', () => {
   }
 })
 
-async function selectUser(name: string) {
-  const user = userEvent.setup()
+function selectUser(name: string) {
   render(<FormsPage />)
-  await user.click(screen.getByRole('button', { name: /בחר שחקן/ }))
-  await user.click(screen.getByRole('option', { name: new RegExp(name) }))
+  fireEvent.click(screen.getByRole('button', { name: /בחר שחקן/ }))
+  fireEvent.click(screen.getByRole('option', { name: new RegExp(name) }))
 }
 
 test('forms page shows הטפסים heading', () => {
@@ -54,46 +54,46 @@ test('shows בחר שחקן prompt on initial load', () => {
   expect(screen.getByText('בחר שחקן')).toBeInTheDocument()
 })
 
-test('shows group navigation tabs when טל ליכטר is selected', async () => {
-  await selectUser('טל ליכטר')
+test('shows group navigation tabs when טל ליכטר is selected', () => {
+  selectUser('טל ליכטר')
   expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
 })
 
-test('shows hardcoded score for Mexico vs South Africa (A1 home = 2) when טל ליכטר is selected', async () => {
-  await selectUser('טל ליכטר')
+test('shows hardcoded score for Mexico vs South Africa (A1 home = 2) when טל ליכטר is selected', () => {
+  selectUser('טל ליכטר')
   expect(screen.getAllByTestId('score-home')[0]).toHaveTextContent('2')
 })
 
-test('shows hardcoded KO scores (more than just the 12 group-A scores) when טל ליכטר is selected', async () => {
-  await selectUser('טל ליכטר')
+test('shows hardcoded KO scores (more than just the 12 group-A scores) when טל ליכטר is selected', () => {
+  selectUser('טל ליכטר')
   const allScoreEls = document.querySelectorAll('.match-score-static')
   const nonEmpty = Array.from(allScoreEls).filter(el => el.textContent !== '–')
   expect(nonEmpty.length).toBeGreaterThan(12)
 })
 
-test('shows עידן מלמד predictions when selected', async () => {
-  await selectUser('עידן מלמד')
+test('shows עידן מלמד predictions when selected', () => {
+  selectUser('עידן מלמד')
   expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
 })
 
-test('עידן מלמד predictions are not all 0-0', async () => {
-  await selectUser('עידן מלמד')
+test('עידן מלמד predictions are not all 0-0', () => {
+  selectUser('עידן מלמד')
   const homeScores = screen.getAllByTestId('score-home')
   const nonZero = homeScores.filter(el => el.textContent !== '0')
   expect(nonZero.length).toBeGreaterThan(0)
 })
 
-test('עידן מלמד has no unresolved draw winner badges', async () => {
-  await selectUser('עידן מלמד')
+test('עידן מלמד has no unresolved draw winner badges', () => {
+  selectUser('עידן מלמד')
   expect(screen.queryByText('בחר מנצחת')).not.toBeInTheDocument()
 })
 
-test('אלרד גומא appears in dropdown and shows predictions section', async () => {
-  await selectUser('אלרד גומא')
+test('אלרד גומא appears in dropdown and shows predictions section', () => {
+  selectUser('אלרד גומא')
   expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
 })
 
-test('אלרד גומא group A scores show – for null predictions', async () => {
-  await selectUser('אלרד גומא')
+test('אלרד גומא group A scores show – for null predictions', () => {
+  selectUser('אלרד גומא')
   expect(screen.getAllByTestId('score-home')[0]).toHaveTextContent('–')
 })

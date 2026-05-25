@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import KnockoutTable from './KnockoutTable'
 import type { KnockoutMatch, MatchScores } from '../../shared/types'
@@ -103,21 +103,21 @@ describe('KnockoutTable — draw winner selection', () => {
     expect(document.querySelector('.ko-draw-badge')!.textContent).toBe('בחר מנצחת')
   })
 
-  test('clicking home team area calls onChange with drawWinner home', async () => {
+  test('clicking home team area calls onChange with drawWinner home', () => {
     const onChange = vi.fn()
     const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
     render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
     const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
-    await userEvent.click(areas[0])
+    fireEvent.click(areas[0])
     expect(onChange).toHaveBeenCalledWith('89', { home: 1, away: 1, drawWinner: 'home' })
   })
 
-  test('clicking away team area calls onChange with drawWinner away', async () => {
+  test('clicking away team area calls onChange with drawWinner away', () => {
     const onChange = vi.fn()
     const predictions: Record<string, MatchScores> = { '89': { home: 1, away: 1 } }
     render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
     const areas = document.querySelectorAll<HTMLElement>('.ko-team-click--selectable')
-    await userEvent.click(areas[1])
+    fireEvent.click(areas[1])
     expect(onChange).toHaveBeenCalledWith('89', { home: 1, away: 1, drawWinner: 'away' })
   })
 })
@@ -189,20 +189,20 @@ describe('KnockoutTable — read-only draw winner display', () => {
 })
 
 describe('KnockoutTable — onChange', () => {
-  test('fires with correct matchNum key and scores when home score typed', async () => {
+  test('fires with correct matchNum key and scores when home score typed', () => {
     const onChange = vi.fn()
     render(<KnockoutTable matches={[resolvedMatch]} predictions={emptyPredictions} onChange={onChange} />)
     const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
-    await userEvent.type(inputs[0], '2')
+    fireEvent.change(inputs[0], { target: { value: '2' } })
     expect(onChange).toHaveBeenCalledWith('89', { home: 2, away: null })
   })
 
-  test('score change on draw-with-drawWinner match omits drawWinner from onChange payload', async () => {
+  test('score change on draw-with-drawWinner match omits drawWinner from onChange payload', () => {
     const onChange = vi.fn()
     const predictions: Record<string, MatchScores> = { '89': { home: null, away: 1, drawWinner: 'home' } }
     render(<KnockoutTable matches={[resolvedMatch]} predictions={predictions} onChange={onChange} />)
     const inputs = document.querySelectorAll<HTMLInputElement>('.score-input')
-    await userEvent.type(inputs[0], '2')
+    fireEvent.change(inputs[0], { target: { value: '2' } })
     expect(onChange).toHaveBeenCalledWith('89', { home: 2, away: 1 })
   })
 
