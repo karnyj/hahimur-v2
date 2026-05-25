@@ -94,7 +94,16 @@ export default function MatchPredictionsPage() {
         {USERS.length === 0 ? (
           <p className="match-predictions__empty">אין תחזיות למשחק זה</p>
         ) : (
-          USERS.map((u, i) => {
+          [...USERS].sort((a, b) => {
+            const outcome = (u: typeof a) => {
+              const p = u.predictions['A1']
+              if (!p || isUnpredicted(p)) return 3
+              if (p.home! > p.away!) return 0
+              if (p.home! === p.away!) return 1
+              return 2
+            }
+            return outcome(a) - outcome(b) || a.label.localeCompare(b.label, 'he')
+          }).map((u, i) => {
             const p = u.predictions['A1']
             const unpredicted = !p || isUnpredicted(p)
             const score = (v: number | null) => v !== null ? String(v) : '–'

@@ -101,3 +101,27 @@ test('excludes unpredicted entries from summary counts', () => {
   render(<MatchPredictionsPage />)
   expect(getCounts()).toEqual(['1', '0', '0'])
 })
+
+test('sorts predictions: home wins first, then draws, then away wins, then unpredicted', () => {
+  mockUsers = [
+    { label: 'מנחה', predictions: { A1: { home: null, away: null } }, topGoalscorer: '' },
+    { label: 'אורן', predictions: { A1: { home: 0, away: 2 } }, topGoalscorer: '' },
+    { label: 'טל', predictions: { A1: { home: 1, away: 1 } }, topGoalscorer: '' },
+    { label: 'עידן', predictions: { A1: { home: 2, away: 0 } }, topGoalscorer: '' },
+  ]
+  render(<MatchPredictionsPage />)
+  const names = screen.getAllByText(/עידן|טל|אורן|מנחה/).map(el => el.textContent)
+  expect(names).toEqual(['עידן', 'טל', 'אורן', 'מנחה'])
+})
+
+test('sorts alphabetically by Hebrew name within each outcome group', () => {
+  mockUsers = [
+    { label: 'רון', predictions: { A1: { home: 2, away: 0 } }, topGoalscorer: '' },
+    { label: 'אבי', predictions: { A1: { home: 3, away: 1 } }, topGoalscorer: '' },
+    { label: 'תמר', predictions: { A1: { home: 1, away: 1 } }, topGoalscorer: '' },
+    { label: 'דן', predictions: { A1: { home: 0, away: 1 } }, topGoalscorer: '' },
+  ]
+  render(<MatchPredictionsPage />)
+  const names = screen.getAllByText(/אבי|רון|תמר|דן/).map(el => el.textContent)
+  expect(names).toEqual(['אבי', 'רון', 'תמר', 'דן'])
+})
