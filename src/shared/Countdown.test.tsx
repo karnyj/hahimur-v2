@@ -23,9 +23,10 @@ test('shows correct days when 2 days remain', () => {
   expect(screen.getByText('02')).toBeInTheDocument()
 })
 
-test('shows zeros when target date has passed', () => {
+
+test('hides countdown when target date has passed', () => {
   vi.useFakeTimers()
   vi.setSystemTime(new Date('2026-06-12T00:00:00'))
   render(<Countdown targetDate={TARGET} />)
-  expect(screen.getAllByText('00').length).toBe(4)
+  expect(screen.queryByText('ימים')).not.toBeInTheDocument()
 })
