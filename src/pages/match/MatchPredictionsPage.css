@@ -214,6 +214,113 @@
   letter-spacing: 0.04em;
 }
 
+/* ── Prediction Summary ─────────────────────────────────────── */
+
+.pred-summary {
+  background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-bottom: 1.75rem;
+  border-top: 2px solid rgba(212, 160, 22, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(212, 160, 22, 0.12),
+    0 8px 28px rgba(0, 0, 0, 0.28);
+  position: relative;
+  animation: summary-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* noise texture — same as match header */
+.pred-summary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes summary-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.pred-summary__cols {
+  display: flex;
+  direction: ltr;
+  position: relative;
+  z-index: 1;
+}
+
+.pred-summary__col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.15rem 0.5rem 0.9rem;
+  position: relative;
+}
+
+/* vertical column dividers */
+.pred-summary__col + .pred-summary__col::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 18%;
+  bottom: 18%;
+  width: 1px;
+  background: rgba(212, 160, 22, 0.16);
+}
+
+.pred-summary__count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.6rem, 9vw, 3.75rem);
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.pred-summary__col--home .pred-summary__count {
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(212, 160, 22, 0.5);
+}
+
+.pred-summary__col--draw .pred-summary__count {
+  color: rgba(239, 228, 184, 0.4);
+}
+
+.pred-summary__col--away .pred-summary__count {
+  color: var(--red);
+  text-shadow: 0 0 24px rgba(192, 39, 45, 0.4);
+}
+
+.pred-summary__label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.26em;
+  color: rgba(239, 228, 184, 0.3);
+  margin-top: 0.4rem;
+  text-transform: uppercase;
+}
+
+/* ── Proportional split bar ─────────────────────────────────── */
+
+.pred-summary__bar {
+  display: flex;
+  height: 4px;
+  position: relative;
+  z-index: 1;
+  transform-origin: left center;
+  animation: bar-reveal 0.75s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
+}
+
+@keyframes bar-reveal {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+.pred-summary__seg--home { background: var(--gold); }
+.pred-summary__seg--draw { background: rgba(239, 228, 184, 0.22); }
+.pred-summary__seg--away { background: var(--red); }
+
 /* ── Prediction Row ─────────────────────────────────────────── */
 
 .prediction-row {
