@@ -17,6 +17,11 @@ const SUBMISSION_DEADLINE = new Date('2026-06-07T00:00:00+03:00')
 
 const STORAGE_KEY = 'predictions'
 const GOALSCORER_KEY = 'topGoalscorer'
+const USERNAME_KEY = 'userName'
+
+function slugify(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, '-')
+}
 
 const ALL_MATCHES = Object.values(GROUP_MATCHES).flat() as Match[]
 
@@ -52,6 +57,7 @@ function loadGoalscorer(): string {
 export default function FormPage() {
   const [predictions, setPredictions] = useState<PredictionsState>(loadPredictions)
   const [topGoalscorer, setTopGoalscorer] = useState<string>(loadGoalscorer)
+  const [userName, setUserName] = useState<string>(() => localStorage.getItem(USERNAME_KEY) ?? '')
   const [locked, setLocked] = useState(() => Date.now() >= SUBMISSION_DEADLINE.getTime())
 
   useEffect(() => {
@@ -100,13 +106,19 @@ export default function FormPage() {
     localStorage.setItem(GOALSCORER_KEY, name)
   }
 
+  function updateUserName(name: string) {
+    setUserName(name)
+    localStorage.setItem(USERNAME_KEY, name)
+  }
+
   function saveToFile() {
     const data = { predictions, topGoalscorer }
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
-    a.download = 'wc2026-predictions.json'
+    const slug = slugify(userName)
+    a.download = slug ? `wc2026-predictions-${slug}.json` : 'wc2026-predictions.json'
     a.click()
     URL.revokeObjectURL(url)
   }
@@ -212,6 +224,19 @@ export default function FormPage() {
               value={topGoalscorer}
               onChange={e => updateTopGoalscorer(e.target.value)}
               disabled={locked}
+            />
+          </div>
+        </section>
+
+        <section className="content-section">
+          <div className="section-tag">השם שלך</div>
+          <div className="goalscorer-card" dir="rtl">
+            <input
+              type="text"
+              className="goalscorer-input"
+              placeholder="שמך..."
+              value={userName}
+              onChange={e => updateUserName(e.target.value)}
             />
           </div>
         </section>
