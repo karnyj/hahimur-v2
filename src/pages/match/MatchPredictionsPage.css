@@ -36,7 +36,7 @@
   direction: ltr;
 }
 
-.match-team {
+.match-header .match-team {
   flex: 1;
   display: flex;
   flex-direction: column;
