@@ -118,7 +118,7 @@ export default function MatchPredictionsPage({ matchId = 'A1' }: { matchId?: str
   return (
     <>
       <div className="match-header">
-        <div className="match-header__group-badge">קבוצה {GROUPS[match.id[0]]?.he} · משחק {match.id[1]}</div>
+        <div className="match-header__group-badge">בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]}</div>
 
         <div className="match-header__teams">
           <div className="match-team">
