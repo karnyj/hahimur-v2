@@ -86,6 +86,14 @@ export default function ResultsPage({ results }: Props) {
         </div>
 
         <section className="content-section">
+          <StandingsTable standings={standings} />
+        </section>
+
+        <section className="content-section results-votes">
+          <GroupVoteMatrix votes={votes} />
+        </section>
+
+        <section className="content-section results-matches">
           {matches.map(match => (
             <MatchRow
               key={match.id}
@@ -95,12 +103,6 @@ export default function ResultsPage({ results }: Props) {
               readOnly
             />
           ))}
-          <StandingsTable standings={standings} />
-        </section>
-
-        <section className="content-section results-votes">
-          <div className="section-tag">תחזיות הבית</div>
-          <GroupVoteMatrix votes={votes} />
         </section>
       </main>
     </PageLayout>
