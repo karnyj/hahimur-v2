@@ -3,6 +3,7 @@ import FormsPage from './pages/forms/FormsPage'
 import HomePage from './pages/home/HomePage'
 import MatchPredictionsPage from './pages/match/MatchPredictionsPage'
 import ResultsPage from './pages/results/ResultsPage'
+import { prepareResultsData } from './pages/results/prepareResultsData'
 import * as results from './results'
 import { useUpdateCheck } from './shared/useUpdateCheck'
 import UpdateBanner from './shared/UpdateBanner'
@@ -20,7 +21,7 @@ export default function App() {
     <>
       <UpdateBanner updateAvailable={updateAvailable} />
       {matchId                                            ? <MatchPredictionsPage matchId={matchId} /> :
-       pathname === '/results'                            ? <ResultsPage results={results} /> :
+       pathname === '/results'                            ? <ResultsPage data={prepareResultsData(results.predictions)} /> :
        pathname === '/forms'                              ? <FormsPage /> :
        pathname === '/form'                               ? <FormPage /> :
        <HomePage />}

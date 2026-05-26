@@ -1,28 +1,19 @@
-import { useState, useMemo, useRef, useEffect } from 'react'
-import type { PredictionsState } from '../../shared/types'
-import { GROUP_MATCHES, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../../shared/groups'
-import { calculateStandings } from '../../shared/standings'
-import { computeGroupVotes } from '../group/groupVotes'
-import { USERS } from '../../users/index'
+import { useState, useRef, useEffect } from 'react'
+import type { ResultsPageData } from './prepareResultsData'
 import PageLayout from '../../shared/PageLayout'
 import MatchRow from '../../formView/groupStage/MatchRow'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
 import GroupVoteMatrix from '../group/GroupVoteMatrix'
 import './ResultsPage.css'
 
-interface Results {
-  predictions: PredictionsState
-  topGoalscorer: string
-}
-
 interface Props {
-  results: Results
+  data: ResultsPageData
 }
 
 const noop = () => {}
 
-export default function ResultsPage({ results }: Props) {
-  const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
+export default function ResultsPage({ data }: Props) {
+  const [activeGroup, setActiveGroup] = useState(data.groups[0].letter)
   const [dropdownOpen, setDropdownOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -36,12 +27,7 @@ export default function ResultsPage({ results }: Props) {
     return () => document.removeEventListener('mousedown', handleClick)
   }, [])
 
-  const matches = GROUP_MATCHES[activeGroup] ?? []
-  const { standings } = useMemo(
-    () => calculateStandings(matches, results.predictions),
-    [activeGroup, results.predictions]
-  )
-  const votes = useMemo(() => computeGroupVotes(USERS, activeGroup), [activeGroup])
+  const { standings, votes, matches, scores } = data.byGroup[activeGroup]
 
   return (
     <PageLayout title="תוצאות">
@@ -58,7 +44,7 @@ export default function ResultsPage({ results }: Props) {
             aria-expanded={dropdownOpen}
             aria-haspopup="listbox"
           >
-            <span className="group-picker__trigger-he">בית {GROUP_HEBREW[activeGroup]}</span>
+            <span className="group-picker__trigger-he">בית {data.groups.find(g => g.letter === activeGroup)?.hebrew}</span>
             <svg className="group-picker__chevron" width="11" height="7" viewBox="0 0 11 7" fill="none" aria-hidden="true">
               <path d="M1 1L5.5 6L10 1" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -68,16 +54,16 @@ export default function ResultsPage({ results }: Props) {
             <div className="group-picker__panel" role="listbox" aria-label="בחר בית">
               <div className="group-picker__eyebrow">בחר בית</div>
               <div className="group-picker__grid">
-                {ALL_GROUP_LETTERS.map(letter => (
+                {data.groups.map(({ letter, hebrew }) => (
                   <button
                     key={letter}
                     type="button"
                     role="option"
                     aria-selected={letter === activeGroup}
                     className={`group-picker__item${letter === activeGroup ? ' group-picker__item--active' : ''}`}
-                    onClick={() => { setActiveGroup(letter as GroupLetter); setDropdownOpen(false) }}
+                    onClick={() => { setActiveGroup(letter); setDropdownOpen(false) }}
                   >
-                    <span className="group-picker__item-letter">{GROUP_HEBREW[letter]}</span>
+                    <span className="group-picker__item-letter">{hebrew}</span>
                   </button>
                 ))}
               </div>
@@ -110,7 +96,7 @@ export default function ResultsPage({ results }: Props) {
             <MatchRow
               key={match.id}
               match={match}
-              scores={results.predictions[match.id] ?? { home: null, away: null }}
+              scores={scores[match.id] ?? { home: null, away: null }}
               onChange={noop}
               readOnly
             />
