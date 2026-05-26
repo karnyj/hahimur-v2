@@ -1,21 +1,11 @@
-import Nav from '../../Nav'
+import PageLayout from '../../shared/PageLayout'
 import Countdown from '../../shared/Countdown'
 
 const FIRST_MATCH = new Date('2026-06-11T19:00:00Z')
 
 export default function HomePage() {
   return (
-    <>
-      <header className="poster-header">
-        <div className="poster-bar poster-bar--top" />
-        <div className="poster-center">
-          <p className="poster-overline">גביע העולם FIFA</p>
-          <div className="poster-mundial">MUNDIAL <span className="poster-year">2026</span></div>
-          <h1 className="poster-subtitle">ההימור 2026</h1>
-        </div>
-        <div className="poster-bar poster-bar--bottom" />
-      </header>
-      <Nav />
+    <PageLayout title="ההימור 2026">
       <Countdown targetDate={FIRST_MATCH} label="לשריקת הפתיחה" />
 
       <main dir="rtl" style={{ maxWidth: '700px', margin: '0 auto', padding: '3rem 1.5rem', fontSize: '1.1rem', lineHeight: '1.9' }}>
@@ -77,6 +67,6 @@ export default function HomePage() {
           </div>
         </div>
       </main>
-    </>
+    </PageLayout>
   )
 }

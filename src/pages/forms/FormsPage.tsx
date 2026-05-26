@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import FormView from '../../formView/FormView'
-import Nav from '../../Nav'
+import PageLayout from '../../shared/PageLayout'
 import { USERS } from '../../users/index'
 
 export default function FormsPage() {
@@ -25,18 +25,7 @@ export default function FormsPage() {
   }
 
   return (
-    <>
-      <header className="poster-header">
-        <div className="poster-bar poster-bar--top" />
-        <div className="poster-center">
-          <p className="poster-overline">גביע העולם FIFA</p>
-          <div className="poster-mundial">MUNDIAL <span className="poster-year">2026</span></div>
-          <h1 className="poster-subtitle">הטפסים</h1>
-        </div>
-        <div className="poster-bar poster-bar--bottom" />
-      </header>
-      <Nav />
-
+    <PageLayout title="הטפסים">
       <main>
         <div className="user-picker" ref={pickerRef} dir="rtl">
           <button
@@ -76,6 +65,6 @@ export default function FormsPage() {
           </section>
         )}
       </main>
-    </>
+    </PageLayout>
   )
 }

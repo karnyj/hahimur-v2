@@ -1,0 +1,56 @@
+/* ── Poster Header ─────────────────────────────────────────── */
+
+.poster-header {
+  text-align: center;
+  background: var(--cream);
+}
+
+.poster-bar {
+  height: 14px;
+}
+
+.poster-bar--top {
+  background: linear-gradient(90deg,
+    var(--navy) 33.33%, var(--red) 33.33%, var(--red) 66.66%, var(--gold) 66.66%
+  );
+}
+
+.poster-bar--bottom {
+  background: linear-gradient(90deg,
+    var(--gold) 33.33%, var(--red) 33.33%, var(--red) 66.66%, var(--navy) 66.66%
+  );
+}
+
+.poster-center {
+  padding: 30px 20px 26px;
+}
+
+.poster-overline {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.38em;
+  color: var(--muted);
+  text-transform: uppercase;
+  margin: 0 0 6px;
+}
+
+.poster-mundial {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(58px, 22vw, 92px);
+  line-height: 0.88;
+  letter-spacing: 0.05em;
+  color: var(--navy);
+  margin: 0 0 10px;
+}
+
+.poster-year {
+  color: var(--red);
+}
+
+.poster-subtitle {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  margin: 0;
+  letter-spacing: 0.07em;
+}

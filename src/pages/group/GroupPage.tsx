@@ -1,7 +1,6 @@
 import { TEAMS } from '../../shared/groups'
 import type { GroupVotes } from './groupVotes'
-import Nav from '../../Nav'
-import '../../pages/form/FormPage.css'
+import PageLayout from '../../shared/PageLayout'
 import './GroupPage.css'
 
 interface Props {
@@ -21,19 +20,7 @@ export default function GroupPage({ groupName, votes }: Props) {
   const maxCount = teams.length > 0 ? Math.max(...teams.flatMap(t => votes[t]), 1) : 1
 
   return (
-    <>
-      <header className="poster-header">
-        <div className="poster-bar poster-bar--top" />
-        <div className="poster-center">
-          <p className="poster-overline">גביע העולם FIFA</p>
-          <div className="poster-mundial">MUNDIAL <span className="poster-year">2026</span></div>
-          <h1 className="poster-subtitle">{groupName}</h1>
-        </div>
-        <div className="poster-bar poster-bar--bottom" />
-      </header>
-
-      <Nav />
-
+    <PageLayout title={groupName}>
       <div className="group-body">
         {teams.length === 0 ? (
           <p className="group-empty">אין הצבעות</p>
@@ -89,6 +76,6 @@ export default function GroupPage({ groupName, votes }: Props) {
           </div>
         )}
       </div>
-    </>
+    </PageLayout>
   )
 }
