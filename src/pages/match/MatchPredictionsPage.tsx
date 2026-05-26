@@ -9,6 +9,14 @@ import './MatchPredictionsPage.css'
 
 const ALL_MATCHES = Object.values(GROUPS).flatMap(g => g.matches)
 
+const resultGroup = (h: number, aw: number) => h > aw ? 0 : h === aw ? 1 : 2
+const compareScores = (ha: number, aa: number, hb: number, ab: number) => {
+  const ga = resultGroup(ha, aa), gb = resultGroup(hb, ab)
+  if (ga !== gb) return ga - gb
+  if (ga === 2) return aa - ab || ha - hb  // away goals asc, then home goals asc (goal diff desc)
+  return ha - hb || ab - aa               // home goals asc, then away goals desc (goal diff asc)
+}
+
 function findMatch(matchId: string) {
   return ALL_MATCHES.find(m => m.id === matchId) ?? GROUPS.A.matches[0]
 }
@@ -22,8 +30,9 @@ function ScoreFrequencyTable({ matchId }: { matchId: string }) {
     counts.set(key, (counts.get(key) ?? 0) + 1)
   }
   const total = [...counts.values()].reduce((s, n) => s + n, 0)
+  const parseKey = (key: string) => { const [h, aw] = key.split('-').map(Number); return { h, aw } }
   const rows = [...counts.entries()]
-    .sort((a, b) => b[1] - a[1])
+    .sort((a, b) => { const pa = parseKey(a[0]), pb = parseKey(b[0]); return compareScores(pa.h, pa.aw, pb.h, pb.aw) })
     .map(([key, count]) => ({ key, count, pct: Math.round((count / total) * 100) }))
 
   if (rows.length === 0) return null
@@ -146,7 +155,7 @@ export default function MatchPredictionsPage({ matchId = 'A1' }: { matchId?: str
             if (ua && ub) return a.label.localeCompare(b.label, 'he')
             if (ua) return 1
             if (ub) return -1
-            return pa.home! - pb.home! || pa.away! - pb.away! || a.label.localeCompare(b.label, 'he')
+            return compareScores(pa.home!, pa.away!, pb.home!, pb.away!) || a.label.localeCompare(b.label, 'he')
           }).map((u, i) => {
             const p = u.predictions[matchId]
             const unpredicted = !p || isUnpredicted(p)

@@ -119,7 +119,7 @@ test('excludes unpredicted entries from summary counts', () => {
   expect(getCounts()).toEqual(['0', '0', '1'])
 })
 
-test('sorts predictions by home score asc then away score asc, unpredicted last', () => {
+test('sorts predictions: home wins, draws, away wins, unpredicted last', () => {
   mockUsers = [
     { label: 'מנחה', predictions: { A1: { home: null, away: null } }, topGoalscorer: '' },
     { label: 'אורן', predictions: { A1: { home: 0, away: 2 } }, topGoalscorer: '' },
@@ -128,7 +128,7 @@ test('sorts predictions by home score asc then away score asc, unpredicted last'
   ]
   render(<MatchPredictionsPage />)
   const names = screen.getAllByText(/עידן|טל|אורן|מנחה/).map(el => el.textContent)
-  expect(names).toEqual(['אורן', 'טל', 'עידן', 'מנחה'])
+  expect(names).toEqual(['עידן', 'טל', 'אורן', 'מנחה'])
 })
 
 test('shows a score frequency table above the predictions list', () => {
@@ -164,7 +164,7 @@ test('score frequency table shows count and percentage per scoreline', () => {
   expect(table).toHaveTextContent('33%')
 })
 
-test('score frequency table is sorted by count descending', () => {
+test('score frequency table is sorted: home wins, then draws', () => {
   mockUsers = [
     { label: 'א', predictions: { A1: { home: 0, away: 0 } }, topGoalscorer: '' },
     { label: 'ב', predictions: { A1: { home: 2, away: 1 } }, topGoalscorer: '' },
@@ -195,7 +195,7 @@ test('score frequency table appears above the individual predictions list', () =
   expect(table.compareDocumentPosition(name)).toBe(Node.DOCUMENT_POSITION_FOLLOWING)
 })
 
-test('sorts by home score then away score then Hebrew name', () => {
+test('sorts home wins by home goals asc, then draws, then away wins', () => {
   mockUsers = [
     { label: 'רון', predictions: { A1: { home: 2, away: 0 } }, topGoalscorer: '' },
     { label: 'אבי', predictions: { A1: { home: 3, away: 1 } }, topGoalscorer: '' },
@@ -204,5 +204,5 @@ test('sorts by home score then away score then Hebrew name', () => {
   ]
   render(<MatchPredictionsPage />)
   const names = screen.getAllByText(/אבי|רון|תמר|דן/).map(el => el.textContent)
-  expect(names).toEqual(['דן', 'תמר', 'רון', 'אבי'])
+  expect(names).toEqual(['רון', 'אבי', 'תמר', 'דן'])
 })
