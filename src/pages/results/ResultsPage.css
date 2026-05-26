@@ -167,6 +167,37 @@
   color: var(--red);
 }
 
+/* ── Section Headings ───────────────────────────────────────── */
+
+.section-heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  margin-bottom: 0.85rem;
+  padding-right: 10px;
+  border-right: 3px solid var(--gold);
+}
+
+.section-heading__eyebrow {
+  font-family: 'Heebo', sans-serif;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  line-height: 1;
+}
+
+.section-heading__title {
+  margin: 0;
+  font-family: 'Heebo', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--navy);
+  line-height: 1.15;
+  letter-spacing: 0.01em;
+}
+
 .results-votes {
   margin-top: 2rem;
 }

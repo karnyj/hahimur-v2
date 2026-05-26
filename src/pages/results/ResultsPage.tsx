@@ -86,14 +86,26 @@ export default function ResultsPage({ results }: Props) {
         </div>
 
         <section className="content-section">
+          <header className="section-heading" dir="rtl">
+            <span className="section-heading__eyebrow">דירוג</span>
+            <h2 className="section-heading__title">טבלת הבית</h2>
+          </header>
           <StandingsTable standings={standings} />
         </section>
 
         <section className="content-section results-votes">
+          <header className="section-heading" dir="rtl">
+            <span className="section-heading__eyebrow">ניחושים</span>
+            <h2 className="section-heading__title">תחזיות הקבוצה</h2>
+          </header>
           <GroupVoteMatrix votes={votes} />
         </section>
 
         <section className="content-section results-matches">
+          <header className="section-heading" dir="rtl">
+            <span className="section-heading__eyebrow">משחקים</span>
+            <h2 className="section-heading__title">תוצאות הבית</h2>
+          </header>
           {matches.map(match => (
             <MatchRow
               key={match.id}
