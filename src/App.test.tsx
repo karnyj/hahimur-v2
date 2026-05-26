@@ -11,3 +11,9 @@ test('renders MatchPredictionsPage at /match/A1', () => {
   render(<App />)
   expect(screen.getByText('אין תחזיות למשחק זה')).toBeInTheDocument()
 })
+
+test('renders MatchPredictionsPage at /match/b1 with correct teams', () => {
+  vi.stubGlobal('location', { pathname: '/match/b1', search: '' })
+  render(<App />)
+  expect(screen.getAllByText('קנדה').length).toBeGreaterThan(0)
+})

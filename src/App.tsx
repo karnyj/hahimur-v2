@@ -14,10 +14,12 @@ export default function App() {
   const pathname = window.location.pathname.toLowerCase()
   const interval = new URLSearchParams(window.location.search).has('fastCheck') ? FAST_CHECK : FIVE_MINUTES
   const { updateAvailable } = useUpdateCheck(interval)
+  const matchId = pathname.startsWith('/match/') ? pathname.slice('/match/'.length).toUpperCase() : null
+
   return (
     <>
       <UpdateBanner updateAvailable={updateAvailable} />
-      {pathname === '/match/a1' ? <MatchPredictionsPage /> :
+      {matchId            ? <MatchPredictionsPage matchId={matchId} /> :
        pathname === '/results'  ? <ResultsPage results={results} /> :
        pathname === '/forms'    ? <FormsPage /> :
        pathname === '/form'     ? <FormPage /> :

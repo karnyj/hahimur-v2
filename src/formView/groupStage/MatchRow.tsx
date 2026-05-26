@@ -19,8 +19,10 @@ interface Props {
 
 export default function MatchRow({ match, scores, onChange, readOnly = false }: Props) {
   const set = (home: Score, away: Score) => onChange({ home, away })
+  const Card = readOnly ? 'a' : 'div'
+  const cardProps = readOnly ? { href: `/match/${match.id.toLowerCase()}`, className: 'match-card' } : { className: 'match-card' }
   return (
-    <div className="match-card">
+    <Card {...cardProps}>
       {(match.matchDate || match.kickoffIST) && (
         <div className="match-meta">
           {match.matchDate && <span>{dayOfWeek(match.matchDate)}, {match.matchDate}</span>}
@@ -59,6 +61,6 @@ export default function MatchRow({ match, scores, onChange, readOnly = false }: 
         <span className="match-team-name">{TEAMS[match.awayTeam].he}</span>
         <span className={`fi fi-${TEAMS[match.awayTeam].iso} match-team-flag`} />
       </div>
-    </div>
+    </Card>
   )
 }

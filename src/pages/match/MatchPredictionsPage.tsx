@@ -7,7 +7,11 @@ import ScoreInput from '../../formView/ScoreInput'
 import { USERS } from '../../users/index'
 import './MatchPredictionsPage.css'
 
-const MATCH = GROUPS.A.matches[0]
+const ALL_MATCHES = Object.values(GROUPS).flatMap(g => g.matches)
+
+function findMatch(matchId: string) {
+  return ALL_MATCHES.find(m => m.id === matchId) ?? GROUPS.A.matches[0]
+}
 
 function ScoreFrequencyTable({ matchId }: { matchId: string }) {
   const counts = new Map<string, number>()
@@ -86,16 +90,17 @@ function PredictionSummary({ matchId, homeLabel, awayLabel }: { matchId: string;
   )
 }
 
-export default function MatchPredictionsPage() {
-  const home = TEAMS[MATCH.homeTeam]
-  const away = TEAMS[MATCH.awayTeam]
+export default function MatchPredictionsPage({ matchId = 'A1' }: { matchId?: string }) {
+  const match = findMatch(matchId)
+  const home = TEAMS[match.homeTeam]
+  const away = TEAMS[match.awayTeam]
   const [homeScore, setHomeScore] = useState<Score>(null)
   const [awayScore, setAwayScore] = useState<Score>(null)
 
   return (
     <>
       <div className="match-header">
-        <div className="match-header__group-badge">קבוצה א · מחזור 1</div>
+        <div className="match-header__group-badge">קבוצה {GROUPS[match.id[0]]?.he} · משחק {match.id[1]}</div>
 
         <div className="match-header__teams">
           <div className="match-team">
@@ -116,9 +121,9 @@ export default function MatchPredictionsPage() {
         </div>
 
         <div className="match-header__meta">
-          <span>{MATCH.matchDate}</span>
+          <span>{match.matchDate}</span>
           <span className="match-header__meta-dot" />
-          <span>{MATCH.kickoffIST}</span>
+          <span>{match.kickoffIST}</span>
           <span className="match-header__meta-dot" />
           <span>שעון ישראל</span>
         </div>
@@ -129,21 +134,21 @@ export default function MatchPredictionsPage() {
       <div className="match-predictions">
         <p className="match-predictions__heading">הניחושים</p>
 
-        <PredictionSummary matchId="A1" homeLabel={home.he} awayLabel={away.he} />
-        <ScoreFrequencyTable matchId="A1" />
+        <PredictionSummary matchId={matchId} homeLabel={home.he} awayLabel={away.he} />
+        <ScoreFrequencyTable matchId={matchId} />
 
         {USERS.length === 0 ? (
           <p className="match-predictions__empty">אין תחזיות למשחק זה</p>
         ) : (
           [...USERS].sort((a, b) => {
-            const pa = a.predictions['A1'], pb = b.predictions['A1']
+            const pa = a.predictions[matchId], pb = b.predictions[matchId]
             const ua = !pa || isUnpredicted(pa), ub = !pb || isUnpredicted(pb)
             if (ua && ub) return a.label.localeCompare(b.label, 'he')
             if (ua) return 1
             if (ub) return -1
             return pa.home! - pb.home! || pa.away! - pb.away! || a.label.localeCompare(b.label, 'he')
           }).map((u, i) => {
-            const p = u.predictions['A1']
+            const p = u.predictions[matchId]
             const unpredicted = !p || isUnpredicted(p)
             const score = (v: number | null) => v !== null ? String(v) : '–'
 

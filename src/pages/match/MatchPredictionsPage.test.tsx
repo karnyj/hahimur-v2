@@ -15,8 +15,25 @@ function getCounts() {
 
 test('shows Hebrew message when there are no users', () => {
   mockUsers = []
-  render(<MatchPredictionsPage />)
+  render(<MatchPredictionsPage matchId="A1" />)
   expect(screen.getByText('אין תחזיות למשחק זה')).toBeInTheDocument()
+})
+
+test('shows correct teams when matchId is B1', () => {
+  mockUsers = []
+  render(<MatchPredictionsPage matchId="B1" />)
+  expect(screen.getAllByText('קנדה').length).toBeGreaterThan(0)
+  expect(screen.getAllByText('בוסניה והרצגובינה').length).toBeGreaterThan(0)
+})
+
+test('shows score from B1 prediction when matchId is B1', () => {
+  mockUsers = [
+    { label: 'שחקן א', predictions: { B1: { home: 2, away: 1 } }, topGoalscorer: '' },
+  ]
+  render(<MatchPredictionsPage matchId="B1" />)
+  const row = screen.getByText('שחקן א').closest('.prediction-row')!
+  expect(row).toHaveTextContent('2')
+  expect(row).toHaveTextContent('1')
 })
 
 test('shows summary table even when no one predicted the game', () => {

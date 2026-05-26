@@ -396,6 +396,14 @@ main {
   align-items: center;
   gap: 8px;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+  color: inherit;
+  text-decoration: none;
+}
+
+a.match-card:hover {
+  border-right-color: var(--gold, #c8b87a);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.13);
+  cursor: pointer;
 }
 
 /* ── Match Meta (date / time) ───────────────────────────────── */
