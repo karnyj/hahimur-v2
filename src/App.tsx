@@ -19,15 +19,16 @@ export default function App() {
   const interval = new URLSearchParams(window.location.search).has('fastCheck') ? FAST_CHECK : FIVE_MINUTES
   const { updateAvailable } = useUpdateCheck(interval)
   const matchId = pathname.startsWith('/match/') ? pathname.slice('/match/'.length).toUpperCase() : null
+  const groupLetter = pathname.startsWith('/group/') ? pathname.slice('/group/'.length).toUpperCase() : null
 
   return (
     <>
       <UpdateBanner updateAvailable={updateAvailable} />
-      {matchId                            ? <MatchPredictionsPage matchId={matchId} /> :
-       pathname === '/results'            ? <ResultsPage results={results} /> :
-       pathname === '/forms'              ? <FormsPage /> :
-       pathname === '/form'               ? <FormPage /> :
-       pathname.startsWith('/group/')     ? <GroupPage groupName={`בית ${GROUPS['A'].he}`} votes={computeGroupVotes(USERS)} /> :
+      {matchId                                            ? <MatchPredictionsPage matchId={matchId} /> :
+       pathname === '/results'                            ? <ResultsPage results={results} /> :
+       pathname === '/forms'                              ? <FormsPage /> :
+       pathname === '/form'                               ? <FormPage /> :
+       groupLetter && GROUPS[groupLetter]                 ? <GroupPage groupName={`בית ${GROUPS[groupLetter].he}`} votes={computeGroupVotes(USERS, groupLetter)} /> :
        <HomePage />}
     </>
   )

@@ -28,31 +28,31 @@ const mexicoFirst: User = {
 }
 
 test('returns nothing when there are no users', () => {
-  expect(computeGroupVotes([])).toEqual({})
+  expect(computeGroupVotes([], 'A')).toEqual({})
 })
 
 test('returns 1 first-place vote for Mexico when 1 user predicts Mexico finishing first', () => {
-  const votes = computeGroupVotes([mexicoFirst])
+  const votes = computeGroupVotes([mexicoFirst], 'A')
   expect(votes['Mexico'][0]).toBe(1)
 })
 
 test('returns 1 first-place vote for each team when 2 users predict different winners', () => {
-  const votes = computeGroupVotes([mexicoFirst, southAfricaFirst])
+  const votes = computeGroupVotes([mexicoFirst, southAfricaFirst], 'A')
   expect(votes['Mexico'][0]).toBe(1)
   expect(votes['South Africa'][0]).toBe(1)
 })
 
 test('returns 2 first-place votes for Mexico when 2 users both predict Mexico first', () => {
-  const votes = computeGroupVotes([mexicoFirst, mexicoFirst])
+  const votes = computeGroupVotes([mexicoFirst, mexicoFirst], 'A')
   expect(votes['Mexico'][0]).toBe(2)
 })
 
 test('returns correct 2nd-place vote when 1 user predicts Mexico first', () => {
-  const votes = computeGroupVotes([mexicoFirst])
+  const votes = computeGroupVotes([mexicoFirst], 'A')
   expect(votes['South Africa'][1]).toBe(1)
 })
 
 test('ignores a user with no predictions', () => {
   const noPredictions: User = { label: 'Empty', topGoalscorer: '', predictions: {} }
-  expect(computeGroupVotes([noPredictions])).toEqual({})
+  expect(computeGroupVotes([noPredictions], 'A')).toEqual({})
 })

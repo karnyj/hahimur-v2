@@ -4,13 +4,13 @@ import type { User } from '../../users'
 
 export type GroupVotes = Record<string, number[]>
 
-export function computeGroupVotes(users: User[]): GroupVotes {
+export function computeGroupVotes(users: User[], groupLetter: string): GroupVotes {
   if (users.length === 0) return {}
 
   const votes: GroupVotes = {}
 
   for (const user of users) {
-    const { standings } = calculateStandings(GROUPS['A'].matches, user.predictions)
+    const { standings } = calculateStandings(GROUPS[groupLetter].matches, user.predictions)
     if (standings.every(s => s.played === 0)) continue
     standings.forEach((standing, position) => {
       if (!votes[standing.team]) votes[standing.team] = [0, 0, 0, 0]
