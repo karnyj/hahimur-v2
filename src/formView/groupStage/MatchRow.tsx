@@ -20,7 +20,7 @@ interface Props {
 export default function MatchRow({ match, scores, onChange, readOnly = false }: Props) {
   const set = (home: Score, away: Score) => onChange({ home, away })
   const Card = readOnly ? 'a' : 'div'
-  const cardProps = readOnly ? { href: `/match/${match.id.toLowerCase()}`, className: 'match-card' } : { className: 'match-card' }
+  const cardProps = readOnly ? { href: `/matches/${match.id.toLowerCase()}`, className: 'match-card' } : { className: 'match-card' }
   return (
     <Card {...cardProps}>
       {(match.matchDate || match.kickoffIST) && (

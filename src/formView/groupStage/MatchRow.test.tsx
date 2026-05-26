@@ -25,11 +25,11 @@ test('readOnly: no input elements rendered', () => {
   expect(document.querySelector('input')).toBeNull()
 })
 
-test('readOnly: card is a link to /match/a1', () => {
+test('readOnly: card is a link to /matches/a1', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly />)
   const link = document.querySelector('a.match-card')
   expect(link).not.toBeNull()
-  expect(link).toHaveAttribute('href', '/match/a1')
+  expect(link).toHaveAttribute('href', '/matches/a1')
 })
 
 test('editable: card is not a link', () => {

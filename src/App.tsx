@@ -18,7 +18,7 @@ export default function App() {
   const pathname = window.location.pathname.toLowerCase()
   const interval = new URLSearchParams(window.location.search).has('fastCheck') ? FAST_CHECK : FIVE_MINUTES
   const { updateAvailable } = useUpdateCheck(interval)
-  const matchId = pathname.startsWith('/match/') ? pathname.slice('/match/'.length).toUpperCase() : null
+  const matchId = pathname.startsWith('/matches/') ? pathname.slice('/matches/'.length).toUpperCase() : null
   const groupLetter = pathname.startsWith('/group/') ? pathname.slice('/group/'.length).toUpperCase() : null
 
   return (
