@@ -61,6 +61,12 @@ export default function MatchRow({ match, scores, onChange, readOnly = false }: 
         <span className="match-team-name">{TEAMS[match.awayTeam].he}</span>
         <span className={`fi fi-${TEAMS[match.awayTeam].iso} match-team-flag`} />
       </div>
+      {readOnly && (
+        <div className="match-card-hint" aria-hidden="true">
+          <span className="match-card-hint__label">לפרטים</span>
+          <span className="match-card-hint__chevron">›</span>
+        </div>
+      )}
     </Card>
   )
 }

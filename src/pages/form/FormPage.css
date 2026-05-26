@@ -349,6 +349,51 @@ a.match-card:hover {
   cursor: pointer;
 }
 
+a.match-card:active {
+  background: rgba(200, 184, 122, 0.12);
+  transform: scale(0.985);
+  transition: transform 0.08s ease, background 0.08s ease;
+}
+
+/* ── Match Card Tap Hint ────────────────────────────────────── */
+
+.match-card-hint {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding-top: 8px;
+  margin-top: 4px;
+  border-top: 1px solid rgba(200, 184, 122, 0.3);
+  direction: rtl;
+}
+
+.match-card-hint__label {
+  font-family: 'Heebo', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  color: var(--gold);
+  opacity: 0.75;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.match-card-hint__chevron {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--gold);
+  opacity: 0.65;
+  line-height: 1;
+  margin-top: -1px;
+}
+
+a.match-card:hover .match-card-hint__label,
+a.match-card:hover .match-card-hint__chevron {
+  opacity: 1;
+}
+
 /* ── Match Meta (date / time) ───────────────────────────────── */
 
 .match-meta {
