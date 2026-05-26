@@ -1,0 +1,32 @@
+.results-main {
+  max-width: 540px;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 3rem;
+}
+
+.results-group-select {
+  margin-bottom: 1.5rem;
+}
+
+.results-group-select select {
+  font-family: 'Heebo', sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  appearance: none;
+  direction: rtl;
+}
+
+.results-group-select select:focus {
+  outline: none;
+  border-color: var(--navy);
+}
+
+.results-votes {
+  margin-top: 2rem;
+}

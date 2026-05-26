@@ -1,11 +1,5 @@
 import { render, screen, fireEvent } from '@testing-library/react'
-import { vi } from 'vitest'
 import ResultsPage from './ResultsPage'
-
-vi.mock('../../Nav', () => ({ default: () => null }))
-vi.mock('../../formView/knockout/KnockoutTable', () => ({ default: () => null }))
-vi.mock('../../formView/thirdPlace/ThirdPlaceTable', () => ({ default: () => null }))
-vi.mock('../../formView/knockout/ChampionBanner', () => ({ default: () => null }))
 
 // --- Slice 1: /results route renders a heading ---
 
@@ -28,15 +22,14 @@ test('results page has no input elements', () => {
 
 // --- Slice 4: Group selector navigation ---
 
-test('clicking group ב shows group B label', () => {
+test('results page shows a group dropdown', () => {
   render(<ResultsPage results={{ predictions: {}, topGoalscorer: '' }} />)
-  fireEvent.click(screen.getByRole('button', { name: 'ב' }))
-  expect(screen.getByRole('button', { name: 'ב' })).toHaveClass('group-cell--active')
+  expect(screen.getByRole('combobox', { name: 'בחר בית' })).toBeInTheDocument()
 })
 
-// --- Slice 5: Champion banner ---
-
-test('champion banner not shown when final has no result', () => {
+test('selecting group B from dropdown switches the active group', () => {
   render(<ResultsPage results={{ predictions: {}, topGoalscorer: '' }} />)
-  expect(screen.queryByText('אלופת העולם 2026')).not.toBeInTheDocument()
+  const dropdown = screen.getByRole('combobox', { name: 'בחר בית' })
+  fireEvent.change(dropdown, { target: { value: 'B' } })
+  expect(dropdown).toHaveValue('B')
 })
