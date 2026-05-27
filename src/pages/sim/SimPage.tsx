@@ -16,7 +16,7 @@ import * as results from '../../results'
 import { TEAM_STRENGTH } from './teamStrength'
 import '../../leaderboard/LeaderboardPage.css'
 import '../../pages/form/FormPage.css'
-import './PlaygroundPage.css'
+import './SimPage.css'
 
 const GROUP_MATCH_TEAMS: Record<string, { homeTeam: string; awayTeam: string }> = {}
 Object.values(GROUPS).forEach(group =>
@@ -25,7 +25,7 @@ Object.values(GROUPS).forEach(group =>
 
 interface Row extends PointsBreakdown { label: string }
 
-export default function PlaygroundPage() {
+export default function SimPage() {
   const [editedResults, setEditedResults] = useState<PredictionsState>({ ...results.predictions })
   const [activeGroup, setActiveGroup] = useState('A')
 
@@ -80,7 +80,7 @@ export default function PlaygroundPage() {
   })).sort((a, b) => b.total - a.total)
 
   return (
-    <PageLayout title="פלייגראונד">
+    <PageLayout title="סימולציה">
       <div className="pg-page" dir="rtl">
 
         <div className="pg-toolbar">
