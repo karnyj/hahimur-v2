@@ -3,17 +3,17 @@ import Nav from './Nav'
 
 beforeEach(() => localStorage.clear())
 
-test('regular user sees only home and form links', () => {
+test('regular user sees home and form links', () => {
   render(<Nav />)
   expect(screen.getByText('בית')).toBeInTheDocument()
   expect(screen.getByText('הטופס')).toBeInTheDocument()
   expect(screen.queryByText('תוצאות')).not.toBeInTheDocument()
 })
 
-test('ליכטטור sees admin links in addition to regular links', () => {
+test('ליכטטור sees admin links but not home link', () => {
   localStorage.setItem('userName', 'ליכטטור')
   render(<Nav />)
-  expect(screen.getByText('בית')).toBeInTheDocument()
+  expect(screen.queryByText('בית')).not.toBeInTheDocument()
   expect(screen.getByText('הטופס')).toBeInTheDocument()
   expect(screen.getByText('טפסים')).toBeInTheDocument()
   expect(screen.getByText('הטבלה')).toBeInTheDocument()

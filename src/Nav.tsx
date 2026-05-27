@@ -4,7 +4,7 @@ const LINKS = [
 ]
 
 const ADMIN_LINKS = [
-  ...LINKS,
+  { href: '/form', label: 'הטופס' },
   { href: '/forms', label: 'טפסים' },
   { href: '/leaderboard', label: 'הטבלה' },
   { href: '/results', label: 'תוצאות' },

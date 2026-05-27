@@ -11,11 +11,11 @@ export default function PageLayout({ title, children }: Props) {
     <>
       <header className="poster-header">
         <div className="poster-bar poster-bar--top" />
-        <div className="poster-center">
+        <a href="/" className="poster-center" style={{ textDecoration: 'none', color: 'inherit', display: 'block' }}>
           <p className="poster-overline">גביע העולם FIFA</p>
           <div className="poster-mundial">MUNDIAL <span className="poster-year">2026</span></div>
           <h1 className="poster-subtitle">{title}</h1>
-        </div>
+        </a>
         <div className="poster-bar poster-bar--bottom" />
       </header>
       <Nav />
