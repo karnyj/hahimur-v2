@@ -3,11 +3,21 @@ const LINKS = [
   { href: '/form', label: 'הטופס' },
 ]
 
+const ADMIN_LINKS = [
+  ...LINKS,
+  { href: '/forms', label: 'טפסים' },
+  { href: '/results', label: 'תוצאות' },
+]
+
+const ADMIN_USERS = ['ליכטטור']
+
 export default function Nav() {
   const path = window.location.pathname
+  const userName = localStorage.getItem('userName') ?? ''
+  const links = ADMIN_USERS.includes(userName) ? ADMIN_LINKS : LINKS
   return (
     <nav className="site-nav" dir="rtl" aria-label="ניווט ראשי">
-      {LINKS.map(({ href, label }) => (
+      {links.map(({ href, label }) => (
         <a
           key={href}
           href={href}
