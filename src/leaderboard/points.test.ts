@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 import type { PredictionsState, KnockoutMatch } from '../shared/types'
-import { calculateUserPoints, calculateKnockoutMatchPoints } from './points'
+import { calculateUserPoints, calculateKnockoutMatchPoints, calculatePointsBreakdown } from './points'
 
 const NO_RESULTS: PredictionsState = {}
 
@@ -43,10 +43,16 @@ describe('knockout match scoring', () => {
     expect(calculateUserPoints(predictions, results)).toBe(5)
   })
 
-  test('R32 פגיעה — regular win matches draw+drawWinner with same winner earns 5 points', () => {
+  test('predicted regular win, actual draw with same side advancing → 0 points', () => {
     const predictions: PredictionsState = { '73': { home: 2, away: 1 } }
     const results: PredictionsState = { '73': { home: 1, away: 1, drawWinner: 'home' } }
-    expect(calculateUserPoints(predictions, results)).toBe(5)
+    expect(calculateUserPoints(predictions, results)).toBe(0)
+  })
+
+  test('predicted draw with winner, actual regular win for same team → 0 points', () => {
+    const predictions: PredictionsState = { '73': { home: 1, away: 1, drawWinner: 'away' } }
+    const results: PredictionsState = { '73': { home: 0, away: 2 } }
+    expect(calculateUserPoints(predictions, results)).toBe(0)
   })
 
   test('R16 צליפה earns 8 points', () => {
@@ -288,6 +294,35 @@ describe('group stage match scoring', () => {
       A3: { home: 0, away: 1 },
     }
     expect(calculateUserPoints(predictions, results)).toBe(6)
+  })
+})
+
+describe('calculatePointsBreakdown', () => {
+  test('returns all-zero breakdown when there are no predictions or results', () => {
+    const bd = calculatePointsBreakdown({}, {})
+    expect(bd).toEqual({ group: 0, r32: 0, r16: 0, qf: 0, sf: 0, third: 0, final: 0, goldenBoot: 0, total: 0 })
+  })
+
+  test('total equals sum of all stage fields', () => {
+    const bd = calculatePointsBreakdown(GROUP_A_MEXICO_CZECH_TOP2, GROUP_A_MEXICO_CZECH_TOP2)
+    const { total, goldenBoot, ...stages } = bd
+    expect(total).toBe(Object.values(stages).reduce((a, b) => a + b, 0) + goldenBoot)
+  })
+
+  test('group stage points appear in group field', () => {
+    const bd = calculatePointsBreakdown(GROUP_A_MEXICO_CZECH_TOP2, GROUP_A_MEXICO_CZECH_TOP2)
+    expect(bd.group).toBe(4 * 6 + 10) // 6 exact scores + 2 advancement × 5pts
+    expect(bd.r32).toBe(0)
+  })
+
+  test('golden boot points appear in goldenBoot field', () => {
+    const bd = calculatePointsBreakdown({}, {}, {
+      predictedPlayer: 'Messi',
+      actualGoals: { Messi: 4 },
+      goldenBootWinner: 'Messi',
+    })
+    expect(bd.goldenBoot).toBe(4 * 3 + 10)
+    expect(bd.total).toBe(4 * 3 + 10)
   })
 })
 

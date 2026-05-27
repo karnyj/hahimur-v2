@@ -13,9 +13,15 @@ import { useTournament } from '../../shared/useTournament'
 import { GROUPS, ALL_GROUP_LETTERS } from '../../shared/groups'
 import type { PredictionsState, MatchScores } from '../../shared/types'
 import * as results from '../../results'
+import { TEAM_STRENGTH } from './teamStrength'
 import '../../leaderboard/LeaderboardPage.css'
 import '../../pages/form/FormPage.css'
 import './PlaygroundPage.css'
+
+const GROUP_MATCH_TEAMS: Record<string, { homeTeam: string; awayTeam: string }> = {}
+Object.values(GROUPS).forEach(group =>
+  group.matches.forEach(m => { GROUP_MATCH_TEAMS[m.id] = { homeTeam: m.homeTeam, awayTeam: m.awayTeam } })
+)
 
 interface Row extends PointsBreakdown { label: string }
 
@@ -28,11 +34,21 @@ export default function PlaygroundPage() {
   }
 
   const randomize = () => {
-    const r = () => Math.floor(Math.random() * 4)
+    const poisson = (lambda: number) => {
+      const L = Math.exp(-lambda)
+      let k = 0, p = 1
+      do { k++; p *= Math.random() } while (p > L)
+      return k - 1
+    }
+    const BASE = 1.3
     setEditedResults(prev =>
       Object.fromEntries(Object.keys(prev).map(id => {
-        const home = r()
-        const away = r()
+        const teams = GROUP_MATCH_TEAMS[id]
+        const avg = { att: 1.0, def: 1.0 }
+        const homeStr = (teams && TEAM_STRENGTH[teams.homeTeam]) ?? avg
+        const awayStr = (teams && TEAM_STRENGTH[teams.awayTeam]) ?? avg
+        const home = poisson(BASE * homeStr.att * awayStr.def)
+        const away = poisson(BASE * awayStr.att * homeStr.def)
         const isKO = !isNaN(Number(id))
         const drawWinner = isKO && home === away
           ? (Math.random() < 0.5 ? 'home' : 'away') as 'home' | 'away'

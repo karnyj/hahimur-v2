@@ -38,11 +38,16 @@ function isExactMatch(predicted: MatchScores, actual: MatchScores): boolean {
   )
 }
 
+function isDraw(scores: MatchScores): boolean {
+  return scores.home === scores.away
+}
+
 function singleMatchPoints(matchId: string, predicted: MatchScores, actual: MatchScores): number {
   if (predicted.home === null || predicted.away === null) return 0
   if (actual.home === null || actual.away === null) return 0
   const { pagiya, tzelifa } = ROUND_POINTS[roundOf(matchId)]
   if (isExactMatch(predicted, actual)) return tzelifa
+  if (isDraw(predicted) !== isDraw(actual)) return 0
   if (winner(predicted) === winner(actual)) return pagiya
   return 0
 }
@@ -189,6 +194,37 @@ export interface PointsBreakdown {
   total: number
 }
 
+function teamsIn(bracket: KnockoutMatch[], matchIds: string[]): string[] {
+  const nums = new Set(matchIds.map(Number))
+  return bracket
+    .filter(m => nums.has(m.matchNum) && m.home && m.away)
+    .flatMap(m => [m.home, m.away])
+}
+
+function bracketWinner(matchId: string, bracket: KnockoutMatch[], predictions: PredictionsState): string | undefined {
+  const m = bracket.find(b => b.matchNum === Number(matchId))
+  if (!m || !m.home || !m.away) return undefined
+  const pred = predictions[matchId]
+  if (!pred || pred.home === null || pred.away === null) return undefined
+  if (pred.home > pred.away) return m.home
+  if (pred.away > pred.home) return m.away
+  if (pred.drawWinner === 'home') return m.home
+  if (pred.drawWinner === 'away') return m.away
+  return undefined
+}
+
+function advPts(predicted: string[], actual: string[], pts: number): number {
+  const actualSet = new Set(actual)
+  return predicted.reduce((sum, t) => sum + (actualSet.has(t) ? pts : 0), 0)
+}
+
+function roundComplete(matchIds: string[], results: PredictionsState): boolean {
+  return matchIds.every(id => {
+    const r = results[id]
+    return r && r.home !== null && r.away !== null
+  })
+}
+
 function calculateRoundMatchPoints(
   matchIds: string[],
   userPredictions: PredictionsState,
@@ -233,12 +269,20 @@ export function calculatePointsBreakdown(
       + calculateGroupMatchPoints(groupId, userPredictions, results)
       + calculateGroupAdvancementPoints(groupId, userPredictions, results)
   }, 0)
-  const r32       = calculateRoundMatchPoints(R32_IDS,  userPredictions, results, participating)
-  const r16       = calculateRoundMatchPoints(R16_IDS,  userPredictions, results, participating)
-  const qf        = calculateRoundMatchPoints(QF_IDS,   userPredictions, results, participating)
-  const sf        = calculateRoundMatchPoints(SF_IDS,   userPredictions, results, participating)
-  const third     = calculateRoundMatchPoints(THIRD_ID, userPredictions, results, participating)
+  const r32 = calculateRoundMatchPoints(R32_IDS, userPredictions, results, participating)
+            + (roundComplete(R32_IDS, results) ? advPts(teamsIn(userBracket, R16_IDS), teamsIn(actualBracket, R16_IDS), KNOCKOUT_OLEH_POINTS.r32) : 0)
+  const r16 = calculateRoundMatchPoints(R16_IDS, userPredictions, results, participating)
+            + (roundComplete(R16_IDS, results) ? advPts(teamsIn(userBracket, QF_IDS), teamsIn(actualBracket, QF_IDS), KNOCKOUT_OLEH_POINTS.r16) : 0)
+  const qf  = calculateRoundMatchPoints(QF_IDS, userPredictions, results, participating)
+            + (roundComplete(QF_IDS, results) ? advPts(teamsIn(userBracket, SF_IDS), teamsIn(actualBracket, SF_IDS), KNOCKOUT_OLEH_POINTS.qf) : 0)
+  const sf  = calculateRoundMatchPoints(SF_IDS, userPredictions, results, participating)
+            + (roundComplete(SF_IDS, results) ? advPts(teamsIn(userBracket, FINAL_ID), teamsIn(actualBracket, FINAL_ID), KNOCKOUT_OLEH_POINTS.sf) : 0)
+  const third = calculateRoundMatchPoints(THIRD_ID, userPredictions, results, participating)
+              + (bracketWinner('103', userBracket, userPredictions) === bracketWinner('103', actualBracket, results)
+                  && bracketWinner('103', actualBracket, results) !== undefined ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0)
   const final_pts = calculateRoundMatchPoints(FINAL_ID, userPredictions, results, participating)
+                  + (bracketWinner('104', userBracket, userPredictions) === bracketWinner('104', actualBracket, results)
+                      && bracketWinner('104', actualBracket, results) !== undefined ? KNOCKOUT_OLEH_POINTS.champion : 0)
   const goldenBootPts = goldenBoot ? calculateGoldenBootPoints(goldenBoot) : 0
   const total = group + r32 + r16 + qf + sf + third + final_pts + goldenBootPts
   return { group, r32, r16, qf, sf, third, final: final_pts, goldenBoot: goldenBootPts, total }
