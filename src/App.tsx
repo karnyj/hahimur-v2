@@ -3,7 +3,7 @@ import FormsPage from './pages/forms/FormsPage'
 import HomePage from './pages/home/HomePage'
 import LeaderboardPage from './leaderboard/LeaderboardPage'
 import MatchPredictionsPage from './pages/match/MatchPredictionsPage'
-import SimPage from './pages/sim/SimPage'
+import ResultsPage from './pages/results/ResultsPage'
 import StatsPage from './pages/stats/StatsPage'
 import GroupStatsPage from './pages/stats/group/GroupStatsPage'
 import type { GroupLetter } from './shared/groups'
@@ -30,7 +30,7 @@ export default function App() {
       {matchId                                            ? <MatchPredictionsPage matchId={matchId} /> :
        groupStatsLetter && ALL_GROUP_LETTERS.includes(groupStatsLetter) ? <GroupStatsPage groupLetter={groupStatsLetter} /> :
        pathname === '/leaderboard'                         ? <LeaderboardPage /> :
-       pathname === '/results'                            ? <SimPage /> :
+       pathname === '/results'                            ? <ResultsPage /> :
        pathname === '/stats'                             ? <StatsPage /> :
        pathname === '/forms'                              ? <FormsPage /> :
        pathname === '/form'                               ? <FormPage /> :

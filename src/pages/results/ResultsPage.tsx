@@ -16,14 +16,14 @@ import * as results from '../../results'
 import { TEAM_STRENGTH } from './teamStrength'
 import '../../leaderboard/LeaderboardPage.css'
 import '../../pages/form/FormPage.css'
-import './SimPage.css'
+import './ResultsPage.css'
 
 const GROUP_MATCH_TEAMS: Record<string, { homeTeam: string; awayTeam: string }> = {}
 Object.values(GROUPS).forEach(group =>
   group.matches.forEach(m => { GROUP_MATCH_TEAMS[m.id] = { homeTeam: m.homeTeam, awayTeam: m.awayTeam } })
 )
 
-export default function SimPage() {
+export default function ResultsPage() {
   const [editedResults, setEditedResults] = useState<PredictionsState>({ ...results.predictions })
   const [activeGroup, setActiveGroup] = useState('A')
 
