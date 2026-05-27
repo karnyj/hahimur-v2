@@ -16,7 +16,6 @@ test('ליכטטור sees admin links but not home link', () => {
   expect(screen.queryByText('בית')).not.toBeInTheDocument()
   expect(screen.getByText('הטופס')).toBeInTheDocument()
   expect(screen.getByText('טפסים')).toBeInTheDocument()
-  expect(screen.getByText('הטבלה')).toBeInTheDocument()
 })
 
 test('ליכטטור sees stats link', () => {
