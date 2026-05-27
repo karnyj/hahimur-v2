@@ -1,0 +1,206 @@
+/* ── Stats Page ─────────────────────────────────────────────── */
+
+.stats-main {
+  padding: 1.5rem 1rem 4rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.stats-eyebrow {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.45em;
+  color: var(--muted);
+  text-align: center;
+  margin: 0 0 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.stats-eyebrow::before,
+.stats-eyebrow::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+  opacity: 0.5;
+}
+
+/* ── Group Grid ─────────────────────────────────────────────── */
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+@media (min-width: 520px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 780px) {
+  .stats-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* ── Group Card ─────────────────────────────────────────────── */
+
+@keyframes card-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.group-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-top: 3px solid var(--navy);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  min-height: 158px;
+  transition:
+    background 0.22s ease,
+    border-top-color 0.22s ease,
+    transform 0.2s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.2s ease;
+  animation: card-rise 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--card-index, 0) * 38ms);
+}
+
+.group-card:hover {
+  background: var(--navy);
+  border-top-color: var(--gold);
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(11, 34, 68, 0.3);
+}
+
+/* Faint watermark: Latin group letter */
+.group-card__watermark {
+  position: absolute;
+  top: -0.1em;
+  left: -0.04em;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 7rem;
+  line-height: 1;
+  color: var(--navy);
+  opacity: 0.055;
+  pointer-events: none;
+  user-select: none;
+  transition: opacity 0.22s, color 0.22s;
+}
+
+.group-card:hover .group-card__watermark {
+  color: var(--gold);
+  opacity: 0.1;
+}
+
+/* Card body */
+.group-card__body {
+  position: relative;
+  flex: 1;
+  padding: 0.9rem 0.9rem 0.65rem;
+  direction: rtl;
+}
+
+.group-card__meta {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.65rem;
+}
+
+.group-card__overline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 8.5px;
+  letter-spacing: 0.38em;
+  color: var(--muted);
+  line-height: 1;
+  margin-bottom: 0.05em;
+  transition: color 0.22s;
+}
+
+.group-card:hover .group-card__overline {
+  color: rgba(212, 160, 22, 0.55);
+}
+
+.group-card__hebrew {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.75rem;
+  line-height: 0.9;
+  color: var(--navy);
+  transition: color 0.22s;
+}
+
+.group-card:hover .group-card__hebrew {
+  color: var(--cream);
+}
+
+/* Team list */
+.group-card__teams {
+  list-style: none;
+  margin: 0;
+  padding: 0.5rem 0 0;
+  border-top: 1px solid rgba(200, 184, 122, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  transition: border-top-color 0.22s;
+}
+
+.group-card:hover .group-card__teams {
+  border-top-color: rgba(212, 160, 22, 0.22);
+}
+
+.group-card__teams li {
+  font-size: 10.5px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.45;
+  transition: color 0.22s;
+}
+
+.group-card:hover .group-card__teams li {
+  color: rgba(239, 228, 184, 0.82);
+}
+
+/* Footer / CTA arrow */
+.group-card__footer {
+  padding: 0.4rem 0.9rem 0.6rem;
+  border-top: 1px solid transparent;
+  direction: rtl;
+  transition: border-top-color 0.22s;
+}
+
+.group-card:hover .group-card__footer {
+  border-top-color: rgba(212, 160, 22, 0.18);
+}
+
+.group-card__cta {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.28em;
+  color: transparent;
+  transition: color 0.2s;
+  display: block;
+}
+
+.group-card:hover .group-card__cta {
+  color: var(--gold);
+}
