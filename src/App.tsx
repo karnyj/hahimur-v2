@@ -9,6 +9,8 @@ import GroupStatsPage from './pages/stats/group/GroupStatsPage'
 import type { GroupLetter } from './shared/groups'
 import { ALL_GROUP_LETTERS } from './shared/groups'
 import { useUpdateCheck } from './shared/useUpdateCheck'
+import { resolveMatch } from './pages/match/matchUtils'
+import { USERS } from './users/index'
 
 const GROUP_STATS_RE = /^\/stats\/groups\/([a-l])$/
 import UpdateBanner from './shared/UpdateBanner'
@@ -27,7 +29,7 @@ export default function App() {
   return (
     <>
       <UpdateBanner updateAvailable={updateAvailable} />
-      {matchId                                            ? <MatchPredictionsPage matchId={matchId} /> :
+      {matchId                                            ? <MatchPredictionsPage {...resolveMatch(matchId)} users={USERS} /> :
        groupStatsLetter && ALL_GROUP_LETTERS.includes(groupStatsLetter) ? <GroupStatsPage groupLetter={groupStatsLetter} /> :
        pathname === '/leaderboard'                         ? <LeaderboardPage /> :
        pathname === '/results'                            ? <ResultsPage /> :
