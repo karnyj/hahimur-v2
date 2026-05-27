@@ -46,6 +46,7 @@ export default function GroupStatsPage({ groupLetter }: Props) {
               scores={scores[match.id]}
               onChange={noop}
               readOnly
+              href={`/matches/${match.id.toLowerCase()}`}
             />
           ))}
         </section>
