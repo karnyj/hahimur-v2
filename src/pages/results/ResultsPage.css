@@ -1,37 +1,113 @@
 .pg-page {
-  padding: 1.5rem 1rem 4rem;
+  padding: 2rem 1rem 5rem;
   max-width: 800px;
   margin: 0 auto;
 }
 
+/* ── Leaderboard section ─────────────────────────────────────── */
+
+.pg-lb-section {
+  margin-bottom: 3rem;
+}
+
+.pg-lb-header {
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  margin-bottom: 1.1rem;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--navy);
+  direction: rtl;
+}
+
+.pg-lb-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.1rem;
+  letter-spacing: 0.1em;
+  color: var(--navy);
+  line-height: 1;
+  margin: 0;
+  font-weight: 400;
+}
+
+.pg-lb-live-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--red);
+  flex-shrink: 0;
+  /* align to baseline of text — nudge down */
+  position: relative;
+  top: -3px;
+  animation: pg-live-pulse 2.6s ease-in-out infinite;
+}
+
+@keyframes pg-live-pulse {
+  0%, 100% { opacity: 1; box-shadow: 0 0 0 0 rgba(192, 39, 45, 0.4); }
+  50%       { opacity: 0.55; box-shadow: 0 0 0 4px rgba(192, 39, 45, 0); }
+}
+
+.pg-lb-subtitle {
+  font-family: 'Heebo', sans-serif;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  opacity: 0.75;
+}
+
+/* Shadow on the leaderboard scroll wrapper inside this section */
+.pg-lb-section .lb-scroll {
+  box-shadow: 0 3px 16px rgba(11, 34, 68, 0.1);
+}
+
+.pg-lb-section .lb-mobile {
+  box-shadow: 0 3px 16px rgba(11, 34, 68, 0.08);
+}
+
+/* ── Section label (above toolbar) ──────────────────────────── */
+
+.pg-section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.55em;
+  color: var(--muted);
+  opacity: 0.55;
+  margin-bottom: 0.9rem;
+  text-align: right;
+}
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+
 .pg-toolbar {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 1.5rem;
+  gap: 10px;
+  margin-bottom: 1.25rem;
   flex-wrap: wrap;
 }
 
 .pg-groups {
   display: flex;
   flex-wrap: wrap;
-  gap: 6px;
+  gap: 5px;
 }
 
 .pg-group-btn {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem;
-  padding: 6px 14px;
-  background: var(--paper);
-  border: 1.5px solid var(--border);
-  color: var(--ink);
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  padding: 5px 11px;
+  background: transparent;
+  border: 1.5px solid rgba(200, 184, 122, 0.55);
+  color: rgba(11, 34, 68, 0.38);
   cursor: pointer;
-  transition: border-color 0.12s, background 0.12s;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
 .pg-group-btn:hover {
   border-color: var(--navy);
+  color: var(--navy);
 }
 
 .pg-group-btn--active {
@@ -40,32 +116,43 @@
   border-color: var(--navy);
 }
 
+
 .pg-random-btn {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem;
-  padding: 6px 16px;
-  background: var(--gold);
-  border: 1.5px solid var(--gold);
-  color: var(--navy);
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  padding: 7px 22px 6px;
+  background: var(--navy);
+  border: 1.5px solid var(--navy);
+  color: var(--gold);
   cursor: pointer;
   white-space: nowrap;
-  transition: opacity 0.12s;
+  box-shadow: 3px 3px 0 var(--gold);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+  position: relative;
 }
 
 .pg-random-btn:hover {
-  opacity: 0.85;
+  box-shadow: 4px 4px 0 var(--gold);
+  transform: translate(-1px, -1px);
+}
+
+.pg-random-btn:active {
+  box-shadow: 0 0 0 var(--gold);
+  transform: translate(3px, 3px);
 }
 
 .pg-reset-btn {
   font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.1rem;
-  padding: 6px 16px;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  padding: 7px 22px 6px;
   background: transparent;
   border: 1.5px solid var(--border);
-  color: var(--ink);
+  color: var(--muted);
   cursor: pointer;
   white-space: nowrap;
-  transition: border-color 0.12s, color 0.12s;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
 }
 
 .pg-reset-btn:hover {
@@ -73,11 +160,154 @@
   color: var(--navy);
 }
 
+.pg-reset-btn:active {
+  background: rgba(11, 34, 68, 0.05);
+}
+
+/* ── Simulation note ─────────────────────────────────────────── */
+
+.pg-sim-note {
+  border-right: 2px solid var(--gold);
+  padding: 8px 14px 8px 0;
+  margin-bottom: 1.4rem;
+}
+
+.pg-sim-note-label {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 9px;
+  letter-spacing: 0.45em;
+  color: var(--gold);
+  margin-bottom: 5px;
+  line-height: 1;
+}
+
+.pg-sim-note-body {
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.55;
+  margin: 0;
+}
+
+.pg-sim-note-body strong {
+  color: var(--navy);
+  font-weight: 700;
+}
+
+/* ── Simulation actions (always visible) ─────────────────────── */
+
+.pg-sim-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-bottom: 1.25rem;
+  /* extra right padding so the gold shadow isn't clipped */
+  padding-inline-start: 6px;
+}
+
+/* ── Matches ─────────────────────────────────────────────────── */
+
+.pg-collapsible-inner .pg-toolbar {
+  margin-top: 4px;
+}
+
 .pg-matches {
   margin-bottom: 2rem;
 }
 
-.pg-lb-section {
-  border-top: 1.5px solid var(--border);
-  padding-top: 1.5rem;
+/* ── KO Stages ───────────────────────────────────────────────── */
+
+.pg-ko-stages {
+  margin-top: 0;
+}
+
+/* ── Collapsible accordion ───────────────────────────────────── */
+
+.pg-collapsible {
+  /* No borders — structure comes from the trigger design */
+}
+
+.pg-collapsible-trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  padding: 13px 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  direction: rtl;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+.pg-collapsible-rule {
+  flex: 1;
+  height: 1px;
+  background: rgba(200, 184, 122, 0.5);
+  display: block;
+  transition: background 0.22s;
+}
+
+.pg-collapsible--open .pg-collapsible-rule {
+  background: rgba(11, 34, 68, 0.2);
+}
+
+.pg-collapsible-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.38em;
+  color: var(--muted);
+  padding: 0 18px;
+  white-space: nowrap;
+  transition: color 0.22s;
+  line-height: 1;
+}
+
+.pg-collapsible-trigger:hover .pg-collapsible-label {
+  color: var(--navy);
+}
+
+.pg-collapsible--open .pg-collapsible-label {
+  color: var(--navy);
+}
+
+.pg-collapsible-chevron {
+  font-size: 17px;
+  color: var(--muted);
+  transform: rotate(90deg);
+  transition: transform 0.26s cubic-bezier(0.22, 1, 0.36, 1), color 0.22s;
+  line-height: 1;
+  flex-shrink: 0;
+  /* margin-right in RTL = margin on the logical end = visual left */
+  margin-right: 2px;
+}
+
+.pg-collapsible-trigger:hover .pg-collapsible-chevron {
+  color: var(--navy);
+}
+
+.pg-collapsible--open .pg-collapsible-chevron {
+  transform: rotate(-90deg);
+  color: var(--navy);
+}
+
+/* Smooth height animation via CSS grid trick */
+
+.pg-collapsible-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.pg-collapsible--open .pg-collapsible-body {
+  grid-template-rows: 1fr;
+}
+
+.pg-collapsible-inner {
+  overflow: hidden;
+}
+
+.pg-collapsible--open .pg-collapsible-inner {
+  padding-bottom: 20px;
 }

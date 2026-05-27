@@ -23,6 +23,35 @@ Object.values(GROUPS).forEach(group =>
   group.matches.forEach(m => { GROUP_MATCH_TEAMS[m.id] = { homeTeam: m.homeTeam, awayTeam: m.awayTeam } })
 )
 
+interface CollapsibleSectionProps {
+  label: string
+  children: React.ReactNode
+}
+
+function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className={`pg-collapsible${open ? ' pg-collapsible--open' : ''}`}>
+      <button
+        type="button"
+        className="pg-collapsible-trigger"
+        onClick={() => setOpen(o => !o)}
+        aria-expanded={open}
+      >
+        <span className="pg-collapsible-rule" aria-hidden="true" />
+        <span className="pg-collapsible-label">{label}</span>
+        <span className="pg-collapsible-rule" aria-hidden="true" />
+        <span className="pg-collapsible-chevron" aria-hidden="true">›</span>
+      </button>
+      <div className="pg-collapsible-body">
+        <div className="pg-collapsible-inner">
+          {children}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function ResultsPage() {
   const [editedResults, setEditedResults] = useState<PredictionsState>({ ...results.predictions })
   const [activeGroup, setActiveGroup] = useState('A')
@@ -81,79 +110,85 @@ export default function ResultsPage() {
     <PageLayout title="תוצאות">
       <div className="pg-page" dir="rtl">
 
-        <div className="pg-toolbar">
-          <div className="pg-groups">
-            {ALL_GROUP_LETTERS.map(letter => (
-              <button
-                key={letter}
-                type="button"
-                className={`pg-group-btn${activeGroup === letter ? ' pg-group-btn--active' : ''}`}
-                onClick={() => setActiveGroup(letter)}
-              >
-                {GROUPS[letter].he}
-              </button>
-            ))}
+        {/* Leaderboard — first and prominent */}
+        <section className="pg-lb-section">
+          <div className="pg-lb-header">
+            <h2 className="pg-lb-title">טבלת ניקוד</h2>
+            <span className="pg-lb-live-dot" aria-hidden="true" />
+            <span className="pg-lb-subtitle">מתעדכן בזמן אמת</span>
           </div>
-          <button type="button" className="pg-random-btn" onClick={randomize}>
-            ערבב תוצאות
-          </button>
-          <button type="button" className="pg-reset-btn" onClick={reset}>
-            איפוס
-          </button>
-        </div>
-
-        <div className="pg-matches">
-          {GROUPS[activeGroup].matches.map(match => (
-            <MatchRow
-              key={match.id}
-              match={match}
-              scores={editedResults[match.id] ?? { home: null, away: null }}
-              onChange={scores => updateMatch(match.id, scores)}
-            />
-          ))}
-        </div>
-
-        <StandingsTable
-          standings={calculateStandings(GROUPS[activeGroup].matches, editedResults).standings}
-        />
-
-        <section className="content-section">
-          <div className="section-tag">דירוג נבחרות במקום השלישי</div>
-          <ThirdPlaceTable qualification={thirdPlaceQual} allGroupsFilled={allGroupsFilled} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">שלב ה-32</div>
-          <KnockoutTable matches={round32Matches} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">שמינית גמר</div>
-          <KnockoutTable matches={knockout.r16} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">רבע גמר</div>
-          <KnockoutTable matches={knockout.qf} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">חצי גמר</div>
-          <KnockoutTable matches={knockout.sf} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">מקום שלישי</div>
-          <KnockoutTable matches={[knockout.thirdPlace]} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <section className="content-section">
-          <div className="section-tag">גמר</div>
-          <KnockoutTable matches={[knockout.final]} predictions={editedResults} onChange={updateMatch} />
-        </section>
-
-        <div className="pg-lb-section">
           <LeaderboardTable rows={rows} />
+        </section>
+
+        {/* Simulation callout */}
+        <aside className="pg-sim-note">
+          <span className="pg-sim-note-label">סימולטור תוצאות</span>
+          <p className="pg-sim-note-body">
+            ערכו תוצאות ידנית בכל שלב — הניקוד מתעדכן בזמן אמת.
+            לחצו <strong>סימלוץ</strong> לתוצאות אקראיות, או <strong>איפוס</strong> לחזרה לתוצאות האמיתיות.
+          </p>
+        </aside>
+
+        {/* Simulation actions — always visible, affect all stages */}
+        <div className="pg-sim-actions">
+          <button type="button" className="pg-random-btn" onClick={randomize}>סימלוץ</button>
+          <button type="button" className="pg-reset-btn" onClick={reset}>איפוס</button>
+        </div>
+
+        {/* All stages — collapsible accordion */}
+        <div className="pg-ko-stages">
+          <CollapsibleSection label="שלב הבתים">
+            <div className="pg-toolbar">
+              <div className="pg-groups">
+                {ALL_GROUP_LETTERS.map(letter => (
+                  <button
+                    key={letter}
+                    type="button"
+                    className={`pg-group-btn${activeGroup === letter ? ' pg-group-btn--active' : ''}`}
+                    onClick={() => setActiveGroup(letter)}
+                  >
+                    {GROUPS[letter].he}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="pg-matches">
+              {GROUPS[activeGroup].matches.map(match => (
+                <MatchRow
+                  key={match.id}
+                  match={match}
+                  scores={editedResults[match.id] ?? { home: null, away: null }}
+                  onChange={scores => updateMatch(match.id, scores)}
+                />
+              ))}
+            </div>
+
+            <StandingsTable
+              standings={calculateStandings(GROUPS[activeGroup].matches, editedResults).standings}
+            />
+          </CollapsibleSection>
+          <CollapsibleSection label="דירוג נבחרות במקום השלישי">
+            <ThirdPlaceTable qualification={thirdPlaceQual} allGroupsFilled={allGroupsFilled} />
+          </CollapsibleSection>
+          <CollapsibleSection label="שלב ה-32">
+            <KnockoutTable matches={round32Matches} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
+          <CollapsibleSection label="שמינית גמר">
+            <KnockoutTable matches={knockout.r16} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
+          <CollapsibleSection label="רבע גמר">
+            <KnockoutTable matches={knockout.qf} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
+          <CollapsibleSection label="חצי גמר">
+            <KnockoutTable matches={knockout.sf} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
+          <CollapsibleSection label="מקום שלישי">
+            <KnockoutTable matches={[knockout.thirdPlace]} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
+          <CollapsibleSection label="גמר">
+            <KnockoutTable matches={[knockout.final]} predictions={editedResults} onChange={updateMatch} />
+          </CollapsibleSection>
         </div>
 
       </div>
