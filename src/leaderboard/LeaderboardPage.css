@@ -12,6 +12,163 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* ── Responsive layout ── */
+
+.lb-desktop { display: block; }
+.lb-mobile  { display: none; }
+
+@media (max-width: 639px) {
+  .lb-desktop { display: none; }
+  .lb-mobile  { display: block; padding: 0 0.875rem; }
+}
+
+/* ── Mobile Cards ── */
+
+@keyframes lb-card-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.lb-card {
+  background: var(--paper);
+  border: 1px solid rgba(200, 184, 122, 0.35);
+  border-right: 3px solid rgba(200, 184, 122, 0.2);
+  margin-bottom: 6px;
+  cursor: pointer;
+  overflow: hidden;
+  animation: lb-card-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) var(--delay, 0ms) both;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.lb-card:active {
+  background: rgba(239, 228, 184, 0.65);
+}
+
+.lb-card--rank-1 {
+  border-right: 3px solid var(--gold);
+  background: linear-gradient(to left, rgba(212, 160, 22, 0.07) 0%, var(--paper) 65%);
+}
+
+.lb-card--rank-2 {
+  border-right: 3px solid #9daabb;
+}
+
+.lb-card--rank-3 {
+  border-right: 3px solid #b8855a;
+}
+
+/* ── Card Header ── */
+
+.lb-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 14px;
+}
+
+.lb-card__rank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 19px;
+  color: var(--muted);
+  min-width: 26px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.lb-card--rank-1 .lb-card__rank { font-size: 22px; }
+
+.lb-card__name {
+  font-family: 'Heebo', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--ink);
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lb-card--rank-1 .lb-card__name { font-weight: 900; }
+
+.lb-card__total {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 22px;
+  color: var(--navy);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+
+.lb-card--rank-1 .lb-card__total {
+  color: var(--gold);
+  font-size: 25px;
+}
+
+.lb-card__chevron {
+  font-size: 20px;
+  color: var(--muted);
+  transform: rotate(90deg);
+  transition: transform 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  flex-shrink: 0;
+  line-height: 1;
+  opacity: 0.6;
+}
+
+.lb-card--open .lb-card__chevron {
+  transform: rotate(-90deg);
+  opacity: 1;
+}
+
+/* ── Card Body (animated expand) ── */
+
+.lb-card__body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.lb-card--open .lb-card__body {
+  grid-template-rows: 1fr;
+}
+
+.lb-card__inner {
+  overflow: hidden;
+}
+
+.lb-card__grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: rgba(200, 184, 122, 0.25);
+  border-top: 1px solid rgba(200, 184, 122, 0.3);
+}
+
+.lb-card__stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  background: var(--paper);
+  padding: 9px 12px;
+}
+
+.lb-card__stat-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.2em;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.lb-card__stat-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+}
+
 /* ── Table ── */
 
 .lb-table {

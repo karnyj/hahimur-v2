@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import PageLayout from '../shared/PageLayout'
 import { USERS_SORTED } from '../users/index'
 import { calculatePointsBreakdown } from './points'
@@ -11,7 +12,20 @@ interface Row extends PointsBreakdown {
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
+const BREAKDOWN: { key: keyof PointsBreakdown; label: string }[] = [
+  { key: 'group',      label: 'בתים' },
+  { key: 'r32',        label: 'שלב 32' },
+  { key: 'r16',        label: 'שמינית' },
+  { key: 'qf',         label: 'רבע' },
+  { key: 'sf',         label: 'חצי' },
+  { key: 'third',      label: 'ארד' },
+  { key: 'final',      label: 'גמר' },
+  { key: 'goldenBoot', label: 'מלך שערים' },
+]
+
 export default function LeaderboardPage() {
+  const [expanded, setExpanded] = useState<string | null>(null)
+
   const rows: Row[] = USERS_SORTED.map(user => ({
     label: user.label,
     ...calculatePointsBreakdown(user.predictions, results.predictions),
@@ -20,7 +34,9 @@ export default function LeaderboardPage() {
   return (
     <PageLayout title="לוח המובילים">
       <div className="lb-page" dir="rtl">
-        <div className="lb-scroll">
+
+        {/* Desktop: full table */}
+        <div className="lb-scroll lb-desktop">
           <table className="lb-table">
             <thead>
               <tr>
@@ -66,6 +82,45 @@ export default function LeaderboardPage() {
             </tbody>
           </table>
         </div>
+
+        {/* Mobile: expandable cards */}
+        <div className="lb-mobile">
+          {rows.map((row, i) => {
+            const rank = i + 1
+            const isOpen = expanded === row.label
+            const rankCls = rank <= 3 ? `lb-card--rank-${rank}` : ''
+            return (
+              <div
+                key={row.label}
+                className={`lb-card ${rankCls} ${isOpen ? 'lb-card--open' : ''}`}
+                style={{ '--delay': `${i * 60}ms` } as React.CSSProperties}
+                onClick={() => setExpanded(isOpen ? null : row.label)}
+              >
+                <div className="lb-card__header">
+                  <span className="lb-card__rank">
+                    {rank <= 3 ? MEDALS[rank] : rank}
+                  </span>
+                  <span className="lb-card__name">{row.label}</span>
+                  <span className="lb-card__total">{row.total}</span>
+                  <span className="lb-card__chevron">›</span>
+                </div>
+                <div className="lb-card__body">
+                  <div className="lb-card__inner">
+                    <div className="lb-card__grid">
+                      {BREAKDOWN.map(({ key, label }) => (
+                        <div key={key} className="lb-card__stat">
+                          <span className="lb-card__stat-label">{label}</span>
+                          <span className="lb-card__stat-value">{row[key] || '—'}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
       </div>
     </PageLayout>
   )
