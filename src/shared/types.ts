@@ -58,6 +58,17 @@ export interface KnockoutStages {
 
 export type PredictionsState = Record<string, MatchScores>
 
+export interface TournamentResults {
+  groupMatches: Record<string, GroupMatch[]>
+  groupTables: Record<string, Standing[]>
+  thirdPlaceQualification: ThirdPlaceQualification
+  knockoutStages: KnockoutStages
+  champion?: string
+  thirdPlaceWinner?: string
+  goldenBootWinner?: string
+  playerGoals?: Record<string, number>
+}
+
 export function isUnpredicted(scores: MatchScores): boolean {
   return scores.home === null || scores.away === null
 }

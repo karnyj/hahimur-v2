@@ -1,14 +1,14 @@
 import PageLayout from '../shared/PageLayout'
 import { USERS_SORTED } from '../users/index'
-import { calculatePointsBreakdown } from './points'
+import { computeUserPoints } from './points'
 import LeaderboardTable from './LeaderboardTable'
-import * as results from '../results'
+import { tournamentResults } from '../tournament-results'
 import './LeaderboardPage.css'
 
 export default function LeaderboardPage() {
   const rows = USERS_SORTED.map(user => ({
     label: user.label,
-    ...calculatePointsBreakdown(user.predictions, results.predictions),
+    ...computeUserPoints(user, tournamentResults),
   })).sort((a, b) => b.total - a.total)
 
   return (

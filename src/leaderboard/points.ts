@@ -1,7 +1,8 @@
-import { isUnpredicted, type MatchScores, type PredictionsState, type KnockoutMatch } from '../shared/types'
+import { isUnpredicted, type MatchScores, type PredictionsState, type KnockoutMatch, type TournamentResults } from '../shared/types'
 import { isPlayerParticipatingInKOMatch, buildKnockoutBracket, getQualifiedThirdPlaceTeams } from '../formView/knockout/knockout'
 import { GROUPS } from '../shared/groups'
 import { calculateStandings } from '../shared/standings'
+import type { User } from '../users'
 
 const ROUND_POINTS: Record<string, { pagiya: number; tzelifa: number }> = {
   r32:   { pagiya: 5,  tzelifa: 7  },
@@ -289,4 +290,88 @@ export function calculateUserPoints(
     + (knockoutOleh ? calculateKnockoutAdvancementPoints(knockoutOleh) : 0)
     + (thirdPlace   ? calculateThirdPlaceQualifierPoints(thirdPlace)   : 0)
     + (goldenBoot   ? calculateGoldenBootPoints(goldenBoot)            : 0)
+}
+
+function koMatchPoints(userMatches: KnockoutMatch[], resultMatches: KnockoutMatch[]): number {
+  return userMatches.reduce((total, userMatch) => {
+    const resultMatch = resultMatches.find(m => m.matchNum === userMatch.matchNum)
+    if (!resultMatch || !userMatch.scores || !resultMatch.scores) return total
+    if (isUnpredicted(resultMatch.scores)) return total
+    const sameTeams =
+      (userMatch.home === resultMatch.home && userMatch.away === resultMatch.away) ||
+      (userMatch.home === resultMatch.away && userMatch.away === resultMatch.home)
+    if (!sameTeams) return total
+    return total + singleMatchPoints(String(userMatch.matchNum), userMatch.scores, resultMatch.scores)
+  }, 0)
+}
+
+function roundTeams(matches: KnockoutMatch[]): string[] {
+  return matches.flatMap(m => [m.home, m.away]).filter(Boolean) as string[]
+}
+
+function roundReady(matches: KnockoutMatch[]): boolean {
+  return matches.length > 0 && matches.every(m => m.home && m.away)
+}
+
+export function computeUserPoints(user: User, results: TournamentResults): PointsBreakdown {
+  let group = 0
+
+  const allGroupIds = new Set([...Object.keys(user.groupMatches), ...Object.keys(user.groupTables)])
+
+  // Group match points + top-2 advancement
+  for (const groupId of allGroupIds) {
+    const userMatches  = user.groupMatches[groupId]  ?? []
+    const resultMatches = results.groupMatches[groupId] ?? []
+    for (const userMatch of userMatches) {
+      const resultMatch = resultMatches.find(m => m.id === userMatch.id)
+      if (userMatch.scores && resultMatch?.scores && !isUnpredicted(resultMatch.scores)) {
+        group += singleMatchPoints(userMatch.id, userMatch.scores, resultMatch.scores)
+      }
+    }
+    const actualTable = results.groupTables[groupId]
+    if (actualTable && actualTable.length >= 2) {
+      const userTop2   = (user.groupTables[groupId] ?? []).slice(0, 2).map(s => s.team)
+      const actualTop2 = actualTable.slice(0, 2).map(s => s.team)
+      group += advPts(userTop2, actualTop2, 5)
+    }
+  }
+
+  // Third-place qualification (5 pts each of 8 qualifiers)
+  if (user.thirdPlaceQualification.resolved && results.thirdPlaceQualification.resolved) {
+    const userQual   = user.thirdPlaceQualification.qualifiers.map(t => t.team)
+    const actualQual = results.thirdPlaceQualification.qualifiers.map(t => t.team)
+    group += advPts(userQual, actualQual, 5)
+  }
+
+  const ko = results.knockoutStages
+  const uko = user.knockoutStages
+
+  const r32 = koMatchPoints(uko.r32, ko.r32)
+    + (roundReady(ko.r16) ? advPts(roundTeams(uko.r16), roundTeams(ko.r16), KNOCKOUT_OLEH_POINTS.r32) : 0)
+
+  const r16 = koMatchPoints(uko.r16, ko.r16)
+    + (roundReady(ko.qf) ? advPts(roundTeams(uko.qf), roundTeams(ko.qf), KNOCKOUT_OLEH_POINTS.r16) : 0)
+
+  const qf = koMatchPoints(uko.qf, ko.qf)
+    + (roundReady(ko.sf) ? advPts(roundTeams(uko.sf), roundTeams(ko.sf), KNOCKOUT_OLEH_POINTS.qf) : 0)
+
+  const sf = koMatchPoints(uko.sf, ko.sf)
+    + (roundReady(ko.final) ? advPts(roundTeams(uko.final), roundTeams(ko.final), KNOCKOUT_OLEH_POINTS.sf) : 0)
+
+  const third = koMatchPoints(uko.thirdPlace, ko.thirdPlace)
+    + (results.thirdPlaceWinner && user.predictedThirdPlaceWinner === results.thirdPlaceWinner
+      ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0)
+
+  const final_pts = koMatchPoints(uko.final, ko.final)
+    + (results.champion && user.predictedChampion === results.champion
+      ? KNOCKOUT_OLEH_POINTS.champion : 0)
+
+  let goldenBoot = 0
+  if (results.goldenBootWinner) {
+    goldenBoot += (results.playerGoals?.[user.topGoalscorer] ?? 0) * 3
+    if (user.topGoalscorer === results.goldenBootWinner) goldenBoot += 10
+  }
+
+  const total = group + r32 + r16 + qf + sf + third + final_pts + goldenBoot
+  return { group, r32, r16, qf, sf, third, final: final_pts, goldenBoot, total }
 }

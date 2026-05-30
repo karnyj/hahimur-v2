@@ -16,6 +16,7 @@ export interface User {
   groupMatches: Record<string, GroupMatch[]>
   knockoutStages: KnockoutStages
   predictedChampion?: string
+  predictedThirdPlaceWinner?: string
 }
 
 function derivePredictions(groupMatches: Record<string, GroupMatch[]>, knockoutStages: KnockoutStages): PredictionsState {
