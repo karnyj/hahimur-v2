@@ -6,7 +6,7 @@ import type { User } from '../../users/index'
 import type { PredictionsState } from '../../shared/types'
 
 function u(label: string, predictions: PredictionsState, topGoalscorer = ''): User {
-  return { label, predictions, topGoalscorer, groupTables: {}, thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] }, knockoutBracket: [] }
+  return { label, predictions, topGoalscorer, groupMatches: {}, groupTables: {}, thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] }, knockoutBracket: [] }
 }
 
 function renderPage(matchId: string, users: User[]) {

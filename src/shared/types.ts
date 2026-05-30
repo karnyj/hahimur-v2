@@ -33,6 +33,10 @@ export type ThirdPlaceQualification =
   | { resolved: true;  all: ThirdPlaceStanding[]; qualifiers: ThirdPlaceStanding[] }
   | { resolved: false; all: ThirdPlaceStanding[]; tied: ThirdPlaceStanding[] }
 
+export interface GroupMatch extends Match {
+  scores?: MatchScores
+}
+
 export interface KnockoutMatch {
   matchNum: number
   home: string

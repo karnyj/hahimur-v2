@@ -1,4 +1,4 @@
-import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutMatch } from '../shared/types'
+import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutMatch, GroupMatch } from '../shared/types'
 
 import * as eldad_levi from './eldad-levi'
 import * as elrad_gome from './elrad-gome'
@@ -12,6 +12,7 @@ export interface User {
   topGoalscorer: string
   groupTables: Record<string, Standing[]>
   thirdPlaceQualification: ThirdPlaceQualification
+  groupMatches: Record<string, GroupMatch[]>
   knockoutBracket: KnockoutMatch[]
   predictedChampion?: string
 }

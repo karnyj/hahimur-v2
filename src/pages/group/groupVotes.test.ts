@@ -1,7 +1,8 @@
 import { computeGroupVotes } from './groupVotes'
 import type { User } from '../../users'
 
-const BASE: Pick<User, 'groupTables' | 'thirdPlaceQualification' | 'knockoutBracket'> = {
+const BASE: Pick<User, 'groupMatches' | 'groupTables' | 'thirdPlaceQualification' | 'knockoutBracket'> = {
+  groupMatches: {},
   groupTables: {},
   thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] },
   knockoutBracket: [],

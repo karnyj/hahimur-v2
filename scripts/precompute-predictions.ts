@@ -5,13 +5,13 @@ import { GROUPS } from '../src/shared/groups.ts'
 import { calculateStandings } from '../src/shared/standings.ts'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../src/formView/thirdPlace/thirdPlace.ts'
 import { buildKnockoutBracket } from '../src/formView/knockout/knockout.ts'
-import type { Standing, ThirdPlaceStanding, KnockoutMatch } from '../src/shared/types'
+import type { Standing, ThirdPlaceStanding, KnockoutMatch, GroupMatch } from '../src/shared/types'
 
 const [userFilePath] = process.argv.slice(2)
 
 if (!userFilePath) {
-  console.error('Usage: node --experimental-strip-types scripts/compute-group-tables.ts <user-file>')
-  console.error('Example: node --experimental-strip-types scripts/compute-group-tables.ts src/users/eldad-levi.ts')
+  console.error('Usage: node --experimental-strip-types scripts/precompute-predictions.ts <user-file>')
+  console.error('Example: node --experimental-strip-types scripts/precompute-predictions.ts src/users/eldad-levi.ts')
   process.exit(1)
 }
 
@@ -23,6 +23,16 @@ const groupTables: Record<string, Standing[]> = {}
 for (const [letter, { matches }] of Object.entries(GROUPS)) {
   const { standings } = calculateStandings(matches, predictions)
   groupTables[letter] = standings
+}
+
+const groupMatches: Record<string, GroupMatch[]> = {}
+for (const [letter, { matches }] of Object.entries(GROUPS)) {
+  groupMatches[letter] = matches.map(m => {
+    const pred = predictions[m.id]
+    const gm: GroupMatch = { ...m }
+    if (pred && pred.home !== null && pred.away !== null) gm.scores = pred
+    return gm
+  })
 }
 
 const groupStandings = Object.entries(groupTables).map(([group, standings]) => ({ group, standings }))
@@ -55,6 +65,23 @@ function serializeThirdPlaceStanding(s: ThirdPlaceStanding): string {
   return `    { team: '${s.team}', played: ${s.played}, won: ${s.won}, drawn: ${s.drawn}, lost: ${s.lost}, goalsFor: ${s.goalsFor}, goalsAgainst: ${s.goalsAgainst}, points: ${s.points}, group: '${s.group}' }`
 }
 
+function serializeGroupMatch(m: GroupMatch): string {
+  const fields: string[] = [
+    `id: '${m.id}'`,
+    `homeTeam: '${m.homeTeam}'`,
+    `awayTeam: '${m.awayTeam}'`,
+  ]
+  if (m.matchDate) fields.push(`matchDate: '${m.matchDate}'`)
+  if (m.kickoffIST) fields.push(`kickoffIST: '${m.kickoffIST}'`)
+  if (m.scores) {
+    let scores = `{ home: ${m.scores.home}, away: ${m.scores.away}`
+    if (m.scores.drawWinner) scores += `, drawWinner: '${m.scores.drawWinner}'`
+    scores += ' }'
+    fields.push(`scores: ${scores}`)
+  }
+  return `    { ${fields.join(', ')} }`
+}
+
 function serializeKOMatch(m: KnockoutMatch): string {
   const s = predictions[String(m.matchNum)]
   const fields: string[] = [
@@ -73,6 +100,15 @@ function serializeKOMatch(m: KnockoutMatch): string {
   if (m.kickoffIST) fields.push(`kickoffIST: '${m.kickoffIST}'`)
   return `  { ${fields.join(', ')} }`
 }
+
+const groupMatchesBlock: string[] = [`export const groupMatches: Record<string, GroupMatch[]> = {`]
+for (const [letter, matches] of Object.entries(groupMatches)) {
+  groupMatchesBlock.push(`  ${letter}: [`)
+  for (const m of matches) groupMatchesBlock.push(`${serializeGroupMatch(m)},`)
+  groupMatchesBlock.push(`  ],`)
+}
+groupMatchesBlock.push(`}`)
+groupMatchesBlock.push(``)
 
 const groupBlock: string[] = [`export const groupTables: Record<string, Standing[]> = {`]
 for (const [letter, standings] of Object.entries(groupTables)) {
@@ -119,11 +155,11 @@ if (predictedThirdPlaceWinner !== undefined) {
 }
 if (winnerLines.length > 0) winnerLines.push(``)
 
-const allBlocks = [...groupBlock, ...teamsBlock, ...qualBlock, ...bracketBlock, ...winnerLines].join('\n')
+const allBlocks = [...groupMatchesBlock, ...groupBlock, ...teamsBlock, ...qualBlock, ...bracketBlock, ...winnerLines].join('\n')
 
 let content = readFileSync(absPath, 'utf8')
 
-const neededTypes = ['Standing', 'ThirdPlaceStanding', 'ThirdPlaceQualification', 'KnockoutMatch']
+const neededTypes = ['Standing', 'ThirdPlaceStanding', 'ThirdPlaceQualification', 'KnockoutMatch', 'GroupMatch']
 for (const typeName of neededTypes) {
   if (!content.includes(typeName)) {
     content = content.replace(
@@ -133,7 +169,11 @@ for (const typeName of neededTypes) {
   }
 }
 
-const markerIdx = content.indexOf('export const groupTables')
+const idx1 = content.indexOf('export const groupMatches')
+const idx2 = content.indexOf('export const groupTables')
+const markerIdx = idx1 !== -1 && idx2 !== -1
+  ? Math.min(idx1, idx2)
+  : idx1 !== -1 ? idx1 : idx2
 if (markerIdx !== -1) {
   content = content.slice(0, markerIdx) + allBlocks
 } else {
