@@ -1,4 +1,4 @@
-import type { PredictionsState, Standing } from '../shared/types'
+import type { PredictionsState, Standing, ThirdPlaceStanding, ThirdPlaceQualification } from '../shared/types'
 
 export const predictions: PredictionsState = {
   A1: { home: 2, away: 0 },
@@ -194,5 +194,48 @@ export const groupTables: Record<string, Standing[]> = {
     { team: 'Croatia', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 5, goalsAgainst: 4, points: 4 },
     { team: 'Ghana', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4 },
     { team: 'Panama', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
+  ],
+}
+
+export const thirdPlaceTeams: ThirdPlaceStanding[] = [
+    { team: 'South Korea', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'A' },
+    { team: 'Canada', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'B' },
+    { team: 'Scotland', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 5, goalsAgainst: 5, points: 4, group: 'C' },
+    { team: 'Paraguay', played: 3, won: 0, drawn: 2, lost: 1, goalsFor: 2, goalsAgainst: 3, points: 2, group: 'D' },
+    { team: 'Ivory Coast', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'E' },
+    { team: 'Sweden', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 3, points: 4, group: 'F' },
+    { team: 'Iran', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 1, goalsAgainst: 5, points: 3, group: 'G' },
+    { team: 'Saudi Arabia', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 3, goalsAgainst: 7, points: 3, group: 'H' },
+    { team: 'Senegal', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 4, points: 4, group: 'I' },
+    { team: 'Austria', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 2, goalsAgainst: 1, points: 4, group: 'J' },
+    { team: 'DR Congo', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 1, goalsAgainst: 4, points: 1, group: 'K' },
+    { team: 'Ghana', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'L' },
+]
+
+export const thirdPlaceQualification: ThirdPlaceQualification = {
+  resolved: true,
+  all: [
+    { team: 'South Korea', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'A' },
+    { team: 'Ivory Coast', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'E' },
+    { team: 'Canada', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'B' },
+    { team: 'Ghana', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'L' },
+    { team: 'Austria', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 2, goalsAgainst: 1, points: 4, group: 'J' },
+    { team: 'Scotland', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 5, goalsAgainst: 5, points: 4, group: 'C' },
+    { team: 'Senegal', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 4, points: 4, group: 'I' },
+    { team: 'Sweden', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 3, points: 4, group: 'F' },
+    { team: 'Saudi Arabia', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 3, goalsAgainst: 7, points: 3, group: 'H' },
+    { team: 'Iran', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 1, goalsAgainst: 5, points: 3, group: 'G' },
+    { team: 'Paraguay', played: 3, won: 0, drawn: 2, lost: 1, goalsFor: 2, goalsAgainst: 3, points: 2, group: 'D' },
+    { team: 'DR Congo', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 1, goalsAgainst: 4, points: 1, group: 'K' },
+  ],
+  qualifiers: [
+    { team: 'South Korea', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'A' },
+    { team: 'Ivory Coast', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 6, goalsAgainst: 5, points: 4, group: 'E' },
+    { team: 'Canada', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'B' },
+    { team: 'Ghana', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 4, group: 'L' },
+    { team: 'Austria', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 2, goalsAgainst: 1, points: 4, group: 'J' },
+    { team: 'Scotland', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 5, goalsAgainst: 5, points: 4, group: 'C' },
+    { team: 'Senegal', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 4, points: 4, group: 'I' },
+    { team: 'Sweden', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 3, points: 4, group: 'F' },
   ],
 }
