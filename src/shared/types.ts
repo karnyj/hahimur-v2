@@ -38,6 +38,7 @@ export interface KnockoutMatch {
   home: string
   away: string
   resolved: boolean
+  scores?: MatchScores
   matchDate?: string
   kickoffIST?: string
 }

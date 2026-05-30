@@ -1,13 +1,18 @@
 import { useState, useRef, useEffect } from 'react'
+import type { User } from '../../users/index'
 import FormView from '../../formView/FormView'
 import PageLayout from '../../shared/PageLayout'
-import { USERS, USERS_SORTED } from '../../users/index'
 
-export default function FormsPage() {
+interface Props {
+  users: User[]
+  usersSorted: User[]
+}
+
+export default function FormsPage({ users, usersSorted }: Props) {
   const [selectedLabel, setSelectedLabel] = useState('')
   const [isOpen, setIsOpen] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
-  const selected = USERS.find(u => u.label === selectedLabel)
+  const selected = users.find(u => u.label === selectedLabel)
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -44,7 +49,7 @@ export default function FormsPage() {
 
           {isOpen && (
             <div className="user-picker__menu" role="listbox" aria-label="בחר שחקן">
-              {USERS_SORTED.map(u => (
+              {usersSorted.map(u => (
                 <button
                   key={u.label}
                   role="option"
@@ -61,7 +66,14 @@ export default function FormsPage() {
 
         {selected && (
           <section>
-            <FormView predictions={selected.predictions} topGoalscorer={selected.topGoalscorer} />
+            <FormView
+              predictions={selected.predictions}
+              topGoalscorer={selected.topGoalscorer}
+              groupTables={selected.groupTables}
+              thirdPlaceQualification={selected.thirdPlaceQualification}
+              knockoutBracket={selected.knockoutBracket}
+              predictedChampion={selected.predictedChampion}
+            />
           </section>
         )}
       </main>

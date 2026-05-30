@@ -1,4 +1,4 @@
-import type { PredictionsState, Standing, ThirdPlaceStanding, ThirdPlaceQualification } from '../shared/types'
+import type { PredictionsState, Standing, ThirdPlaceStanding, ThirdPlaceQualification, KnockoutMatch } from '../shared/types'
 
 export const predictions: PredictionsState = {
   A1: { home: 2, away: 0 },
@@ -239,3 +239,41 @@ export const thirdPlaceQualification: ThirdPlaceQualification = {
     { team: 'Ghana', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 4, points: 4, group: 'L' },
   ],
 }
+
+export const knockoutBracket: KnockoutMatch[] = [
+  { matchNum: 73, home: 'Czech Republic', away: 'Canada', resolved: true, scores: { home: 1, away: 1, drawWinner: 'home' }, matchDate: '28 ביוני', kickoffIST: '22:00' },
+  { matchNum: 74, home: 'Germany', away: 'Sweden', resolved: true, scores: { home: 2, away: 0 }, matchDate: '29 ביוני', kickoffIST: '23:30' },
+  { matchNum: 75, home: 'Netherlands', away: 'Morocco', resolved: true, scores: { home: 2, away: 1 }, matchDate: '30 ביוני', kickoffIST: '04:00' },
+  { matchNum: 76, home: 'Brazil', away: 'Japan', resolved: true, scores: { home: 2, away: 0 }, matchDate: '29 ביוני', kickoffIST: '20:00' },
+  { matchNum: 77, home: 'France', away: 'Iran', resolved: true, scores: { home: 3, away: 0 }, matchDate: '1 ביולי', kickoffIST: '00:00' },
+  { matchNum: 78, home: 'Ecuador', away: 'Norway', resolved: true, scores: { home: 1, away: 2 }, matchDate: '30 ביוני', kickoffIST: '20:00' },
+  { matchNum: 79, home: 'Mexico', away: 'Ivory Coast', resolved: true, scores: { home: 2, away: 1 }, matchDate: '1 ביולי', kickoffIST: '04:00' },
+  { matchNum: 80, home: 'England', away: 'Senegal', resolved: true, scores: { home: 2, away: 0 }, matchDate: '1 ביולי', kickoffIST: '19:00' },
+  { matchNum: 81, home: 'United States', away: 'Bosnia and Herzegovina', resolved: true, scores: { home: 2, away: 1 }, matchDate: '2 ביולי', kickoffIST: '03:00' },
+  { matchNum: 82, home: 'Belgium', away: 'South Korea', resolved: true, scores: { home: 2, away: 1 }, matchDate: '1 ביולי', kickoffIST: '23:00' },
+  { matchNum: 83, home: 'Colombia', away: 'Croatia', resolved: true, scores: { home: 2, away: 1 }, matchDate: '3 ביולי', kickoffIST: '02:00' },
+  { matchNum: 84, home: 'Spain', away: 'Austria', resolved: true, scores: { home: 2, away: 0 }, matchDate: '2 ביולי', kickoffIST: '22:00' },
+  { matchNum: 85, home: 'Switzerland', away: 'Algeria', resolved: true, scores: { home: 1, away: 0 }, matchDate: '3 ביולי', kickoffIST: '06:00' },
+  { matchNum: 86, home: 'Argentina', away: 'Uruguay', resolved: true, scores: { home: 2, away: 1 }, matchDate: '4 ביולי', kickoffIST: '01:00' },
+  { matchNum: 87, home: 'Portugal', away: 'Ghana', resolved: true, scores: { home: 2, away: 1 }, matchDate: '4 ביולי', kickoffIST: '04:30' },
+  { matchNum: 88, home: 'Turkey', away: 'Egypt', resolved: true, scores: { home: 2, away: 1 }, matchDate: '3 ביולי', kickoffIST: '21:00' },
+  { matchNum: 89, home: 'Germany', away: 'France', resolved: true, scores: { home: 1, away: 2 }, matchDate: '5 ביולי', kickoffIST: '00:00' },
+  { matchNum: 90, home: 'Czech Republic', away: 'Netherlands', resolved: true, scores: { home: 0, away: 2 }, matchDate: '4 ביולי', kickoffIST: '20:00' },
+  { matchNum: 91, home: 'Brazil', away: 'Norway', resolved: true, scores: { home: 2, away: 1 }, matchDate: '5 ביולי', kickoffIST: '23:00' },
+  { matchNum: 92, home: 'Mexico', away: 'England', resolved: true, scores: { home: 1, away: 2 }, matchDate: '6 ביולי', kickoffIST: '03:00' },
+  { matchNum: 93, home: 'Colombia', away: 'Spain', resolved: true, scores: { home: 1, away: 2 }, matchDate: '6 ביולי', kickoffIST: '22:00' },
+  { matchNum: 94, home: 'United States', away: 'Belgium', resolved: true, scores: { home: 1, away: 2 }, matchDate: '7 ביולי', kickoffIST: '03:00' },
+  { matchNum: 95, home: 'Argentina', away: 'Turkey', resolved: true, scores: { home: 2, away: 1 }, matchDate: '7 ביולי', kickoffIST: '19:00' },
+  { matchNum: 96, home: 'Switzerland', away: 'Portugal', resolved: true, scores: { home: 0, away: 2 }, matchDate: '7 ביולי', kickoffIST: '23:00' },
+  { matchNum: 97, home: 'France', away: 'Netherlands', resolved: true, scores: { home: 2, away: 1 }, matchDate: '9 ביולי', kickoffIST: '23:00' },
+  { matchNum: 98, home: 'Spain', away: 'Belgium', resolved: true, scores: { home: 2, away: 1 }, matchDate: '10 ביולי', kickoffIST: '22:00' },
+  { matchNum: 99, home: 'Brazil', away: 'England', resolved: true, scores: { home: 2, away: 1 }, matchDate: '12 ביולי', kickoffIST: '00:00' },
+  { matchNum: 100, home: 'Argentina', away: 'Portugal', resolved: true, scores: { home: 2, away: 1 }, matchDate: '12 ביולי', kickoffIST: '04:00' },
+  { matchNum: 101, home: 'France', away: 'Spain', resolved: true, scores: { home: 2, away: 1 }, matchDate: '14 ביולי', kickoffIST: '22:00' },
+  { matchNum: 102, home: 'Brazil', away: 'Argentina', resolved: true, scores: { home: 1, away: 1, drawWinner: 'home' }, matchDate: '15 ביולי', kickoffIST: '22:00' },
+  { matchNum: 103, home: 'Spain', away: 'Argentina', resolved: true, scores: { home: 2, away: 1 }, matchDate: '19 ביולי', kickoffIST: '00:00' },
+  { matchNum: 104, home: 'France', away: 'Brazil', resolved: true, scores: { home: 1, away: 2 }, matchDate: '19 ביולי', kickoffIST: '22:00' },
+]
+
+export const predictedChampion = 'Brazil'
+export const predictedThirdPlaceWinner = 'Spain'

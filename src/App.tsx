@@ -10,7 +10,7 @@ import type { GroupLetter } from './shared/groups'
 import { ALL_GROUP_LETTERS } from './shared/groups'
 import { useUpdateCheck } from './shared/useUpdateCheck'
 import { resolveMatch } from './pages/match/matchUtils'
-import { USERS } from './users/index'
+import { USERS, USERS_SORTED } from './users/index'
 
 const GROUP_STATS_RE = /^\/stats\/groups\/([a-l])$/
 import UpdateBanner from './shared/UpdateBanner'
@@ -34,7 +34,7 @@ export default function App() {
        pathname === '/leaderboard'                         ? <LeaderboardPage /> :
        pathname === '/results'                            ? <ResultsPage /> :
        pathname === '/stats'                             ? <StatsPage /> :
-       pathname === '/forms'                              ? <FormsPage /> :
+       pathname === '/forms'                              ? <FormsPage users={USERS} usersSorted={USERS_SORTED} /> :
        pathname === '/form'                               ? <FormPage /> :
        <HomePage />}
     </>

@@ -1,4 +1,4 @@
-import type { PredictionsState } from '../shared/types'
+import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutMatch } from '../shared/types'
 
 import * as eldad_levi from './eldad-levi'
 import * as elrad_gome from './elrad-gome'
@@ -10,6 +10,10 @@ export interface User {
   label: string
   predictions: PredictionsState
   topGoalscorer: string
+  groupTables: Record<string, Standing[]>
+  thirdPlaceQualification: ThirdPlaceQualification
+  knockoutBracket: KnockoutMatch[]
+  predictedChampion?: string
 }
 
 export const USERS: User[] = [

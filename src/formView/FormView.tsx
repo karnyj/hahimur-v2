@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { PredictionsState } from '../shared/types'
+import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutMatch } from '../shared/types'
 import { GROUP_MATCHES, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../shared/groups'
 import { calculateStandings } from '../shared/standings'
 import { useTournament } from '../shared/useTournament'
@@ -12,20 +12,42 @@ import ChampionBanner from './knockout/ChampionBanner'
 interface Props {
   predictions: PredictionsState
   topGoalscorer: string
+  groupTables?: Record<string, Standing[]>
+  thirdPlaceQualification?: ThirdPlaceQualification
+  knockoutBracket?: KnockoutMatch[]
+  predictedChampion?: string
 }
 
 const noop = () => {}
 
-export default function FormView({ predictions, topGoalscorer }: Props) {
+export default function FormView({
+  predictions,
+  topGoalscorer,
+  groupTables,
+  thirdPlaceQualification,
+  knockoutBracket,
+  predictedChampion,
+}: Props) {
   const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
   const activeMatches = GROUP_MATCHES[activeGroup] ?? []
 
-  const { standings: activeStandings } = useMemo(
+  const { standings: computedStandings } = useMemo(
     () => calculateStandings(activeMatches, predictions),
     [activeGroup, predictions]
   )
+  const activeStandings = groupTables?.[activeGroup] ?? computedStandings
 
-  const { thirdPlaceQual, allGroupsFilled, round32Matches, knockout, finalWinner } = useTournament(predictions)
+  const tournament = useTournament(predictions)
+  const thirdPlaceQual = thirdPlaceQualification ?? tournament.thirdPlaceQual
+  const allGroupsFilled = thirdPlaceQualification != null ? true : tournament.allGroupsFilled
+  const finalWinner = predictedChampion ?? tournament.finalWinner
+
+  const r32   = knockoutBracket?.filter(m => m.matchNum >= 73  && m.matchNum <= 88)  ?? tournament.round32Matches
+  const r16   = knockoutBracket?.filter(m => m.matchNum >= 89  && m.matchNum <= 96)  ?? tournament.knockout.r16
+  const qf    = knockoutBracket?.filter(m => m.matchNum >= 97  && m.matchNum <= 100) ?? tournament.knockout.qf
+  const sf    = knockoutBracket?.filter(m => m.matchNum >= 101 && m.matchNum <= 102) ?? tournament.knockout.sf
+  const third = knockoutBracket?.filter(m => m.matchNum === 103) ?? [tournament.knockout.thirdPlace]
+  const fin   = knockoutBracket?.filter(m => m.matchNum === 104) ?? [tournament.knockout.final]
 
   return (
     <>
@@ -70,32 +92,32 @@ export default function FormView({ predictions, topGoalscorer }: Props) {
 
       <section className="content-section">
         <div className="section-tag">שלב ה-32</div>
-        <KnockoutTable matches={round32Matches} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={r32} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       <section className="content-section">
         <div className="section-tag">שמינית גמר</div>
-        <KnockoutTable matches={knockout.r16} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={r16} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       <section className="content-section">
         <div className="section-tag">רבע גמר</div>
-        <KnockoutTable matches={knockout.qf} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={qf} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       <section className="content-section">
         <div className="section-tag">חצי גמר</div>
-        <KnockoutTable matches={knockout.sf} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={sf} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       <section className="content-section">
         <div className="section-tag">מקום שלישי</div>
-        <KnockoutTable matches={[knockout.thirdPlace]} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={third} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       <section className="content-section">
         <div className="section-tag">גמר</div>
-        <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={noop} readOnly />
+        <KnockoutTable matches={fin} predictions={predictions} onChange={noop} readOnly />
       </section>
 
       {topGoalscorer && (

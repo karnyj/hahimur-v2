@@ -4,7 +4,8 @@ import { pathToFileURL } from 'url'
 import { GROUPS } from '../src/shared/groups.ts'
 import { calculateStandings } from '../src/shared/standings.ts'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../src/formView/thirdPlace/thirdPlace.ts'
-import type { Standing, ThirdPlaceStanding } from '../src/shared/types'
+import { buildKnockoutBracket } from '../src/formView/knockout/knockout.ts'
+import type { Standing, ThirdPlaceStanding, KnockoutMatch } from '../src/shared/types'
 
 const [userFilePath] = process.argv.slice(2)
 
@@ -29,12 +30,48 @@ const groupStandings = Object.entries(groupTables).map(([group, standings]) => (
 const thirdPlaceTeams = getThirdPlaceTeams(groupStandings)
 const thirdPlaceQualification = qualifyBestThirdPlace(thirdPlaceTeams)
 
+const knockoutBracket = buildKnockoutBracket(predictions)
+
+function bracketWinner(matchNum: number): string | undefined {
+  const m = knockoutBracket.find(b => b.matchNum === matchNum)
+  if (!m || !m.home || !m.away) return undefined
+  const pred = predictions[String(matchNum)]
+  if (!pred || pred.home === null || pred.away === null) return undefined
+  if (pred.home > pred.away) return m.home
+  if (pred.away > pred.home) return m.away
+  if (pred.drawWinner === 'home') return m.home
+  if (pred.drawWinner === 'away') return m.away
+  return undefined
+}
+
+const predictedChampion = bracketWinner(104)
+const predictedThirdPlaceWinner = bracketWinner(103)
+
 function serializeStanding(s: Standing): string {
   return `    { team: '${s.team}', played: ${s.played}, won: ${s.won}, drawn: ${s.drawn}, lost: ${s.lost}, goalsFor: ${s.goalsFor}, goalsAgainst: ${s.goalsAgainst}, points: ${s.points} }`
 }
 
 function serializeThirdPlaceStanding(s: ThirdPlaceStanding): string {
   return `    { team: '${s.team}', played: ${s.played}, won: ${s.won}, drawn: ${s.drawn}, lost: ${s.lost}, goalsFor: ${s.goalsFor}, goalsAgainst: ${s.goalsAgainst}, points: ${s.points}, group: '${s.group}' }`
+}
+
+function serializeKOMatch(m: KnockoutMatch): string {
+  const s = predictions[String(m.matchNum)]
+  const fields: string[] = [
+    `matchNum: ${m.matchNum}`,
+    `home: '${m.home}'`,
+    `away: '${m.away}'`,
+    `resolved: ${m.resolved}`,
+  ]
+  if (s && s.home !== null && s.away !== null) {
+    let scores = `{ home: ${s.home}, away: ${s.away}`
+    if (s.drawWinner) scores += `, drawWinner: '${s.drawWinner}'`
+    scores += ' }'
+    fields.push(`scores: ${scores}`)
+  }
+  if (m.matchDate) fields.push(`matchDate: '${m.matchDate}'`)
+  if (m.kickoffIST) fields.push(`kickoffIST: '${m.kickoffIST}'`)
+  return `  { ${fields.join(', ')} }`
 }
 
 const groupBlock: string[] = [`export const groupTables: Record<string, Standing[]> = {`]
@@ -68,11 +105,25 @@ if (thirdPlaceQualification.resolved) {
 qualBlock.push(`}`)
 qualBlock.push(``)
 
-const allBlocks = [...groupBlock, ...teamsBlock, ...qualBlock].join('\n')
+const bracketBlock: string[] = [`export const knockoutBracket: KnockoutMatch[] = [`]
+for (const m of knockoutBracket) bracketBlock.push(`${serializeKOMatch(m)},`)
+bracketBlock.push(`]`)
+bracketBlock.push(``)
+
+const winnerLines: string[] = []
+if (predictedChampion !== undefined) {
+  winnerLines.push(`export const predictedChampion = '${predictedChampion}'`)
+}
+if (predictedThirdPlaceWinner !== undefined) {
+  winnerLines.push(`export const predictedThirdPlaceWinner = '${predictedThirdPlaceWinner}'`)
+}
+if (winnerLines.length > 0) winnerLines.push(``)
+
+const allBlocks = [...groupBlock, ...teamsBlock, ...qualBlock, ...bracketBlock, ...winnerLines].join('\n')
 
 let content = readFileSync(absPath, 'utf8')
 
-const neededTypes = ['Standing', 'ThirdPlaceStanding', 'ThirdPlaceQualification']
+const neededTypes = ['Standing', 'ThirdPlaceStanding', 'ThirdPlaceQualification', 'KnockoutMatch']
 for (const typeName of neededTypes) {
   if (!content.includes(typeName)) {
     content = content.replace(

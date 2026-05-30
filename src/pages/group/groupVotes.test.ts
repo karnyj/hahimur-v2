@@ -1,7 +1,14 @@
 import { computeGroupVotes } from './groupVotes'
 import type { User } from '../../users'
 
+const BASE: Pick<User, 'groupTables' | 'thirdPlaceQualification' | 'knockoutBracket'> = {
+  groupTables: {},
+  thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] },
+  knockoutBracket: [],
+}
+
 const southAfricaFirst: User = {
+  ...BASE,
   label: 'Test 2',
   topGoalscorer: '',
   predictions: {
@@ -15,6 +22,7 @@ const southAfricaFirst: User = {
 }
 
 const mexicoFirst: User = {
+  ...BASE,
   label: 'Test',
   topGoalscorer: '',
   predictions: {
@@ -53,6 +61,6 @@ test('returns correct 2nd-place vote when 1 user predicts Mexico first', () => {
 })
 
 test('ignores a user with no predictions', () => {
-  const noPredictions: User = { label: 'Empty', topGoalscorer: '', predictions: {} }
+  const noPredictions: User = { ...BASE, label: 'Empty', topGoalscorer: '', predictions: {} }
   expect(computeGroupVotes([noPredictions], 'A')).toEqual({})
 })

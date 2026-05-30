@@ -1,8 +1,8 @@
 import type { Standing, ThirdPlaceQualification, KnockoutMatch, PredictionsState } from '../../shared/types'
-import { ALLOCATION_MATRIX } from './allocationMatrix'
-import { GROUP_HEBREW, GROUP_MATCHES, ALL_GROUP_LETTERS } from '../../shared/groups'
-import { calculateStandings } from '../../shared/standings'
-import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../thirdPlace/thirdPlace'
+import { ALLOCATION_MATRIX } from './allocationMatrix.ts'
+import { GROUP_HEBREW, GROUP_MATCHES, ALL_GROUP_LETTERS } from '../../shared/groups.ts'
+import { calculateStandings } from '../../shared/standings.ts'
+import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../thirdPlace/thirdPlace.ts'
 
 type GroupData = { group: string; standings: Standing[]; allFilled: boolean }
 type Slot = { team: string; resolved: boolean }
