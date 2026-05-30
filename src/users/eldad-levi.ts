@@ -1,4 +1,4 @@
-import type { PredictionsState } from '../shared/types'
+import type { PredictionsState, Standing } from '../shared/types'
 
 export const predictions: PredictionsState = {
   A1: { home: 2, away: 1 },
@@ -121,3 +121,78 @@ export const predictions: PredictionsState = {
 
 export const topGoalscorer = 'קיליאן אמפבה '
 export const label = 'אלדד לוי'
+
+export const groupTables: Record<string, Standing[]> = {
+  A: [
+    { team: 'Czech Republic', played: 3, won: 2, drawn: 1, lost: 0, goalsFor: 4, goalsAgainst: 1, points: 7 },
+    { team: 'Mexico', played: 3, won: 2, drawn: 1, lost: 0, goalsFor: 4, goalsAgainst: 2, points: 7 },
+    { team: 'South Africa', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 1 },
+    { team: 'South Korea', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 1, goalsAgainst: 4, points: 1 },
+  ],
+  B: [
+    { team: 'Switzerland', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
+    { team: 'Canada', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 5, goalsAgainst: 2, points: 6 },
+    { team: 'Bosnia and Herzegovina', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 1, goalsAgainst: 5, points: 1 },
+    { team: 'Qatar', played: 3, won: 0, drawn: 1, lost: 2, goalsFor: 2, goalsAgainst: 7, points: 1 },
+  ],
+  C: [
+    { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 9, goalsAgainst: 2, points: 9 },
+    { team: 'Scotland', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 3, points: 4 },
+    { team: 'Morocco', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 4, points: 4 },
+    { team: 'Haiti', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 1, goalsAgainst: 7, points: 0 },
+  ],
+  D: [
+    { team: 'United States', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 4, goalsAgainst: 1, points: 9 },
+    { team: 'Paraguay', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 2, points: 4 },
+    { team: 'Turkey', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 3, points: 4 },
+    { team: 'Australia', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 4, points: 0 },
+  ],
+  E: [
+    { team: 'Germany', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 8, goalsAgainst: 0, points: 9 },
+    { team: 'Ivory Coast', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 5, goalsAgainst: 3, points: 6 },
+    { team: 'Ecuador', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 4, goalsAgainst: 5, points: 3 },
+    { team: 'Curaçao', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 9, points: 0 },
+  ],
+  F: [
+    { team: 'Netherlands', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 7, goalsAgainst: 2, points: 9 },
+    { team: 'Sweden', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 4, goalsAgainst: 4, points: 4 },
+    { team: 'Japan', played: 3, won: 1, drawn: 1, lost: 1, goalsFor: 3, goalsAgainst: 4, points: 4 },
+    { team: 'Tunisia', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 3, goalsAgainst: 7, points: 0 },
+  ],
+  G: [
+    { team: 'Belgium', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 8, goalsAgainst: 0, points: 9 },
+    { team: 'Egypt', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+    { team: 'New Zealand', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 6, points: 3 },
+    { team: 'Iran', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 1, goalsAgainst: 7, points: 0 },
+  ],
+  H: [
+    { team: 'Spain', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 10, goalsAgainst: 0, points: 9 },
+    { team: 'Uruguay', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 6, goalsAgainst: 3, points: 6 },
+    { team: 'Saudi Arabia', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 3, goalsAgainst: 6, points: 3 },
+    { team: 'Cape Verde', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 10, points: 0 },
+  ],
+  I: [
+    { team: 'France', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 7, goalsAgainst: 0, points: 9 },
+    { team: 'Senegal', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 3, points: 6 },
+    { team: 'Norway', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 3, goalsAgainst: 4, points: 3 },
+    { team: 'Iraq', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 7, points: 0 },
+  ],
+  J: [
+    { team: 'Argentina', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
+    { team: 'Austria', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 5, goalsAgainst: 2, points: 6 },
+    { team: 'Algeria', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 5, points: 3 },
+    { team: 'Jordan', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 1, goalsAgainst: 7, points: 0 },
+  ],
+  K: [
+    { team: 'Portugal', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 7, goalsAgainst: 1, points: 9 },
+    { team: 'Colombia', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 6, goalsAgainst: 2, points: 6 },
+    { team: 'DR Congo', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+    { team: 'Uzbekistan', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 8, points: 0 },
+  ],
+  L: [
+    { team: 'England', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 7, goalsAgainst: 0, points: 9 },
+    { team: 'Croatia', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 3, goalsAgainst: 2, points: 6 },
+    { team: 'Ghana', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+    { team: 'Panama', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
+  ],
+}
