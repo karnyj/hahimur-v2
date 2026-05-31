@@ -26,7 +26,11 @@ export function useTournament(predictions: PredictionsState) {
       if (d.isComplete) completedGroups.add(d.group)
     }
 
-    const thirdPlaceQual = qualifyBestThirdPlace(getThirdPlaceTeams(allGroupData))
+    const thirdPlaceTeams = getThirdPlaceTeams(allGroupData)
+    const allGroupsFilled = allGroupData.every(d => d.allFilled)
+    const thirdPlaceQual = allGroupsFilled
+      ? qualifyBestThirdPlace(thirdPlaceTeams)
+      : { resolved: false as const, all: thirdPlaceTeams, tied: [] as typeof thirdPlaceTeams }
     const round32Matches = resolveRound32(allGroupData, thirdPlaceQual)
     const knockout = resolveKnockout(round32Matches, predictions)
 
@@ -44,7 +48,7 @@ export function useTournament(predictions: PredictionsState) {
       groupsWithTies,
       completedGroups,
       thirdPlaceQual,
-      allGroupsFilled: allGroupData.every(d => d.allFilled),
+      allGroupsFilled,
       round32Matches,
       knockout,
       finalWinner,
