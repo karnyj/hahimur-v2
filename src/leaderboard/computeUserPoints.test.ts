@@ -25,9 +25,17 @@ function makeUser(overrides: Partial<User> = {}): User {
 
 test('returns all-zero breakdown with empty results', () => {
   const user = makeUser({ groupMatches: { A: [{ id: 'A1', homeTeam: 'X', awayTeam: 'Y', scores: { home: 2, away: 1 } }] } })
-  expect(computeUserPoints(user, EMPTY_RESULTS)).toEqual(
-    { group: 0, r32: 0, r16: 0, qf: 0, sf: 0, third: 0, final: 0, goldenBoot: 0, total: 0 }
-  )
+  expect(computeUserPoints(user, EMPTY_RESULTS)).toEqual({
+    group:      { matchPoints: 0, advancementPoints: 0, thirdPlaceQualification: 0, total: 0 },
+    r32:        { matchPoints: 0, advancementPoints: 0, total: 0 },
+    r16:        { matchPoints: 0, advancementPoints: 0, total: 0 },
+    qf:         { matchPoints: 0, advancementPoints: 0, total: 0 },
+    sf:         { matchPoints: 0, advancementPoints: 0, total: 0 },
+    third:      { matchPoints: 0, thirdPlaceWinner: 0, total: 0 },
+    final:      { matchPoints: 0, champion: 0, total: 0 },
+    goldenBoot: { goalsPoints: 0, winnerBonus: 0, total: 0 },
+    total: 0,
+  })
 })
 
 describe('group match points', () => {
@@ -39,7 +47,7 @@ describe('group match points', () => {
       ...EMPTY_RESULTS,
       groupMatches: { A: [{ id: 'A1', homeTeam: 'X', awayTeam: 'Y', scores: { home: 2, away: 1 } }] },
     }
-    expect(computeUserPoints(user, results).group).toBe(4)
+    expect(computeUserPoints(user, results).group.total).toBe(4)
   })
 
   test('correct result, wrong score earns 2 pts (פגיעה)', () => {
@@ -50,7 +58,7 @@ describe('group match points', () => {
       ...EMPTY_RESULTS,
       groupMatches: { A: [{ id: 'A1', homeTeam: 'X', awayTeam: 'Y', scores: { home: 3, away: 1 } }] },
     }
-    expect(computeUserPoints(user, results).group).toBe(2)
+    expect(computeUserPoints(user, results).group.total).toBe(2)
   })
 
   test('wrong result earns 0 pts', () => {
@@ -61,7 +69,7 @@ describe('group match points', () => {
       ...EMPTY_RESULTS,
       groupMatches: { A: [{ id: 'A1', homeTeam: 'X', awayTeam: 'Y', scores: { home: 0, away: 1 } }] },
     }
-    expect(computeUserPoints(user, results).group).toBe(0)
+    expect(computeUserPoints(user, results).group.total).toBe(0)
   })
 })
 
@@ -80,7 +88,7 @@ describe('group top-2 advancement', () => {
         { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
       ]},
     }
-    expect(computeUserPoints(user, results).group).toBe(10)
+    expect(computeUserPoints(user, results).group.total).toBe(10)
   })
 
   test('one top-2 team correct → 5 pts', () => {
@@ -97,7 +105,7 @@ describe('group top-2 advancement', () => {
         { team: 'Germany', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
       ]},
     }
-    expect(computeUserPoints(user, results).group).toBe(5)
+    expect(computeUserPoints(user, results).group.total).toBe(5)
   })
 
   test('no advancement points when group table not in results', () => {
@@ -107,7 +115,7 @@ describe('group top-2 advancement', () => {
         { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
       ]},
     })
-    expect(computeUserPoints(user, EMPTY_RESULTS).group).toBe(0)
+    expect(computeUserPoints(user, EMPTY_RESULTS).group.total).toBe(0)
   })
 })
 
@@ -123,7 +131,7 @@ describe('third-place qualification', () => {
       ...EMPTY_RESULTS,
       thirdPlaceQualification: { resolved: true, all: teams, qualifiers: teams },
     }
-    expect(computeUserPoints(user, results).group).toBe(40)
+    expect(computeUserPoints(user, results).group.total).toBe(40)
   })
 
   test('no qualifier points when results not resolved', () => {
@@ -133,7 +141,7 @@ describe('third-place qualification', () => {
     const user = makeUser({
       thirdPlaceQualification: { resolved: true, all: teams, qualifiers: teams },
     })
-    expect(computeUserPoints(user, EMPTY_RESULTS).group).toBe(0)
+    expect(computeUserPoints(user, EMPTY_RESULTS).group.total).toBe(0)
   })
 })
 
@@ -152,7 +160,7 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(7)
+    expect(computeUserPoints(user, results).r32.total).toBe(7)
   })
 
   test('R32 match skipped when teams differ (participation check)', () => {
@@ -169,7 +177,7 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(0)
+    expect(computeUserPoints(user, results).r32.total).toBe(0)
   })
 
   test('same teams in same stage but different slot → participates and scores', () => {
@@ -186,7 +194,7 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(7)
+    expect(computeUserPoints(user, results).r32.total).toBe(7)
   })
 
   test('same teams but flipped home/away in different slot → scores correctly', () => {
@@ -206,7 +214,7 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(5) // pagiya: Brazil wins in both
+    expect(computeUserPoints(user, results).r32.total).toBe(5) // pagiya: Brazil wins in both
   })
 
   test('flipped home/away with exact mirrored score → tzelifa', () => {
@@ -224,7 +232,7 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(7) // tzelifa
+    expect(computeUserPoints(user, results).r32.total).toBe(7) // tzelifa
   })
 
   test('Final exact score → 25 pts in final bucket', () => {
@@ -241,7 +249,7 @@ describe('knockout match points', () => {
         final: [{ matchNum: 104, home: 'Brazil', away: 'France', resolved: true, scores: { home: 1, away: 0 } }],
       },
     }
-    expect(computeUserPoints(user, results).final).toBe(25)
+    expect(computeUserPoints(user, results).final.total).toBe(25)
   })
 })
 
@@ -263,7 +271,7 @@ describe('knockout advancement (עולה)', () => {
       },
     }
     // Brazil correct (5 pts), France wrong (0), Germany not predicted (0) → 5 pts
-    expect(computeUserPoints(user, results).r32).toBe(5)
+    expect(computeUserPoints(user, results).r32.total).toBe(5)
   })
 
   test('R32 advancement: no points when R16 not yet populated in results', () => {
@@ -274,7 +282,7 @@ describe('knockout advancement (עולה)', () => {
         qf: [], sf: [], thirdPlace: [], final: [],
       },
     })
-    expect(computeUserPoints(user, EMPTY_RESULTS).r32).toBe(0)
+    expect(computeUserPoints(user, EMPTY_RESULTS).r32.total).toBe(0)
   })
 })
 
@@ -282,24 +290,24 @@ describe('champion and third-place winner', () => {
   test('correct champion prediction → 25 pts in final bucket', () => {
     const user = makeUser({ predictedChampion: 'Brazil' })
     const results: TournamentResults = { ...EMPTY_RESULTS, champion: 'Brazil' }
-    expect(computeUserPoints(user, results).final).toBe(25)
+    expect(computeUserPoints(user, results).final.total).toBe(25)
   })
 
   test('wrong champion prediction → 0', () => {
     const user = makeUser({ predictedChampion: 'France' })
     const results: TournamentResults = { ...EMPTY_RESULTS, champion: 'Brazil' }
-    expect(computeUserPoints(user, results).final).toBe(0)
+    expect(computeUserPoints(user, results).final.total).toBe(0)
   })
 
   test('correct third-place winner → 20 pts in third bucket', () => {
     const user = makeUser({ predictedThirdPlaceWinner: 'Argentina' })
     const results: TournamentResults = { ...EMPTY_RESULTS, thirdPlaceWinner: 'Argentina' }
-    expect(computeUserPoints(user, results).third).toBe(20)
+    expect(computeUserPoints(user, results).third.total).toBe(20)
   })
 
   test('no champion points when results has no champion', () => {
     const user = makeUser({ predictedChampion: 'Brazil' })
-    expect(computeUserPoints(user, EMPTY_RESULTS).final).toBe(0)
+    expect(computeUserPoints(user, EMPTY_RESULTS).final.total).toBe(0)
   })
 })
 
@@ -311,7 +319,7 @@ describe('golden boot (מלך שערים)', () => {
       goldenBootWinner: 'Ronaldo',
       playerGoals: { Messi: 5, Ronaldo: 7 },
     }
-    expect(computeUserPoints(user, results).goldenBoot).toBe(15)
+    expect(computeUserPoints(user, results).goldenBoot.total).toBe(15)
   })
 
   test('+10 bonus if predicted player wins golden boot', () => {
@@ -321,12 +329,12 @@ describe('golden boot (מלך שערים)', () => {
       goldenBootWinner: 'Messi',
       playerGoals: { Messi: 6 },
     }
-    expect(computeUserPoints(user, results).goldenBoot).toBe(28) // 6×3 + 10
+    expect(computeUserPoints(user, results).goldenBoot.total).toBe(28) // 6×3 + 10
   })
 
   test('0 pts when no golden boot winner yet', () => {
     const user = makeUser({ topGoalscorer: 'Messi' })
-    expect(computeUserPoints(user, EMPTY_RESULTS).goldenBoot).toBe(0)
+    expect(computeUserPoints(user, EMPTY_RESULTS).goldenBoot.total).toBe(0)
   })
 
   test('0 pts when predicted player scored no goals', () => {
@@ -336,7 +344,7 @@ describe('golden boot (מלך שערים)', () => {
       goldenBootWinner: 'Ronaldo',
       playerGoals: { Ronaldo: 7 },
     }
-    expect(computeUserPoints(user, results).goldenBoot).toBe(0)
+    expect(computeUserPoints(user, results).goldenBoot.total).toBe(0)
   })
 })
 
@@ -354,5 +362,5 @@ test('total is sum of all buckets', () => {
     playerGoals: { Messi: 3 },
   }
   const bd = computeUserPoints(user, results)
-  expect(bd.total).toBe(bd.group + bd.r32 + bd.r16 + bd.qf + bd.sf + bd.third + bd.final + bd.goldenBoot)
+  expect(bd.total).toBe(bd.group.total + bd.r32.total + bd.r16.total + bd.qf.total + bd.sf.total + bd.third.total + bd.final.total + bd.goldenBoot.total)
 })

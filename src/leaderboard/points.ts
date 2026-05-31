@@ -176,15 +176,46 @@ export function calculateGoldenBootPoints(goldenBoot: GoldenBoot): number {
   return pts
 }
 
+export interface GroupBreakdown {
+  matchPoints: number
+  advancementPoints: number
+  thirdPlaceQualification: number
+  total: number
+}
+
+export interface RoundBreakdown {
+  matchPoints: number
+  advancementPoints: number
+  total: number
+}
+
+export interface ThirdBreakdown {
+  matchPoints: number
+  thirdPlaceWinner: number
+  total: number
+}
+
+export interface FinalBreakdown {
+  matchPoints: number
+  champion: number
+  total: number
+}
+
+export interface GoldenBootBreakdown {
+  goalsPoints: number
+  winnerBonus: number
+  total: number
+}
+
 export interface PointsBreakdown {
-  group: number
-  r32: number
-  r16: number
-  qf: number
-  sf: number
-  third: number
-  final: number
-  goldenBoot: number
+  group: GroupBreakdown
+  r32: RoundBreakdown
+  r16: RoundBreakdown
+  qf: RoundBreakdown
+  sf: RoundBreakdown
+  third: ThirdBreakdown
+  final: FinalBreakdown
+  goldenBoot: GoldenBootBreakdown
   total: number
 }
 
@@ -258,24 +289,35 @@ export function calculatePointsBreakdown(
     ? advPts(getQualifiedThirdPlaceTeams(userPredictions) ?? [], actualThirdQual, 5)
     : 0
 
-  const group = sumGroupPoints(userPredictions, results) + thirdPlaceQualPts
-  const r32 = calculateRoundMatchPoints(R32_IDS, userPredictions, results, participating)
-            + (roundComplete(R32_IDS, results) ? advPts(teamsIn(userBracket, R16_IDS), teamsIn(actualBracket, R16_IDS), KNOCKOUT_OLEH_POINTS.r32) : 0)
-  const r16 = calculateRoundMatchPoints(R16_IDS, userPredictions, results, participating)
-            + (roundComplete(R16_IDS, results) ? advPts(teamsIn(userBracket, QF_IDS), teamsIn(actualBracket, QF_IDS), KNOCKOUT_OLEH_POINTS.r16) : 0)
-  const qf  = calculateRoundMatchPoints(QF_IDS, userPredictions, results, participating)
-            + (roundComplete(QF_IDS, results) ? advPts(teamsIn(userBracket, SF_IDS), teamsIn(actualBracket, SF_IDS), KNOCKOUT_OLEH_POINTS.qf) : 0)
-  const sf  = calculateRoundMatchPoints(SF_IDS, userPredictions, results, participating)
-            + (roundComplete(SF_IDS, results) ? advPts(teamsIn(userBracket, FINAL_ID), teamsIn(actualBracket, FINAL_ID), KNOCKOUT_OLEH_POINTS.sf) : 0)
-  const thirdActualWinner = bracketWinner('103', actualBracket, results)
-  const third = calculateRoundMatchPoints(THIRD_ID, userPredictions, results, participating)
-              + (thirdActualWinner !== undefined && bracketWinner('103', userBracket, userPredictions) === thirdActualWinner ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0)
-  const finalActualWinner = bracketWinner('104', actualBracket, results)
-  const final_pts = calculateRoundMatchPoints(FINAL_ID, userPredictions, results, participating)
-                  + (finalActualWinner !== undefined && bracketWinner('104', userBracket, userPredictions) === finalActualWinner ? KNOCKOUT_OLEH_POINTS.champion : 0)
-  const goldenBootPts = goldenBoot ? calculateGoldenBootPoints(goldenBoot) : 0
-  const total = group + r32 + r16 + qf + sf + third + final_pts + goldenBootPts
-  return { group, r32, r16, qf, sf, third, final: final_pts, goldenBoot: goldenBootPts, total }
+  const groupMatchPoints       = sumGroupPoints(userPredictions, results)
+  const r32MatchPoints         = calculateRoundMatchPoints(R32_IDS, userPredictions, results, participating)
+  const r32AdvancementPoints   = roundComplete(R32_IDS, results) ? advPts(teamsIn(userBracket, R16_IDS), teamsIn(actualBracket, R16_IDS), KNOCKOUT_OLEH_POINTS.r32) : 0
+  const r16MatchPoints         = calculateRoundMatchPoints(R16_IDS, userPredictions, results, participating)
+  const r16AdvancementPoints   = roundComplete(R16_IDS, results) ? advPts(teamsIn(userBracket, QF_IDS), teamsIn(actualBracket, QF_IDS), KNOCKOUT_OLEH_POINTS.r16) : 0
+  const qfMatchPoints          = calculateRoundMatchPoints(QF_IDS, userPredictions, results, participating)
+  const qfAdvancementPoints    = roundComplete(QF_IDS, results) ? advPts(teamsIn(userBracket, SF_IDS), teamsIn(actualBracket, SF_IDS), KNOCKOUT_OLEH_POINTS.qf) : 0
+  const sfMatchPoints          = calculateRoundMatchPoints(SF_IDS, userPredictions, results, participating)
+  const sfAdvancementPoints    = roundComplete(SF_IDS, results) ? advPts(teamsIn(userBracket, FINAL_ID), teamsIn(actualBracket, FINAL_ID), KNOCKOUT_OLEH_POINTS.sf) : 0
+  const thirdActualWinner      = bracketWinner('103', actualBracket, results)
+  const thirdMatchPoints       = calculateRoundMatchPoints(THIRD_ID, userPredictions, results, participating)
+  const thirdPlaceWinnerPts    = thirdActualWinner !== undefined && bracketWinner('103', userBracket, userPredictions) === thirdActualWinner ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0
+  const finalActualWinner      = bracketWinner('104', actualBracket, results)
+  const finalMatchPoints       = calculateRoundMatchPoints(FINAL_ID, userPredictions, results, participating)
+  const championPts            = finalActualWinner !== undefined && bracketWinner('104', userBracket, userPredictions) === finalActualWinner ? KNOCKOUT_OLEH_POINTS.champion : 0
+  const goldenBootGoalsPoints = goldenBoot ? (goldenBoot.actualGoals[goldenBoot.predictedPlayer] ?? 0) * 3 : 0
+  const goldenBootWinnerBonus = goldenBoot && goldenBoot.predictedPlayer === goldenBoot.goldenBootWinner ? 10 : 0
+
+  const group:           GroupBreakdown      = { matchPoints: groupMatchPoints, advancementPoints: 0, thirdPlaceQualification: thirdPlaceQualPts, total: groupMatchPoints + thirdPlaceQualPts }
+  const r32:             RoundBreakdown      = { matchPoints: r32MatchPoints, advancementPoints: r32AdvancementPoints, total: r32MatchPoints + r32AdvancementPoints }
+  const r16:             RoundBreakdown      = { matchPoints: r16MatchPoints, advancementPoints: r16AdvancementPoints, total: r16MatchPoints + r16AdvancementPoints }
+  const qf:              RoundBreakdown      = { matchPoints: qfMatchPoints, advancementPoints: qfAdvancementPoints, total: qfMatchPoints + qfAdvancementPoints }
+  const sf:              RoundBreakdown      = { matchPoints: sfMatchPoints, advancementPoints: sfAdvancementPoints, total: sfMatchPoints + sfAdvancementPoints }
+  const third:           ThirdBreakdown      = { matchPoints: thirdMatchPoints, thirdPlaceWinner: thirdPlaceWinnerPts, total: thirdMatchPoints + thirdPlaceWinnerPts }
+  const finalBreakdown:  FinalBreakdown      = { matchPoints: finalMatchPoints, champion: championPts, total: finalMatchPoints + championPts }
+  const goldenBootBreakdown: GoldenBootBreakdown = { goalsPoints: goldenBootGoalsPoints, winnerBonus: goldenBootWinnerBonus, total: goldenBootGoalsPoints + goldenBootWinnerBonus }
+
+  const total = group.total + r32.total + r16.total + qf.total + sf.total + third.total + finalBreakdown.total + goldenBootBreakdown.total
+  return { group, r32, r16, qf, sf, third, final: finalBreakdown, goldenBoot: goldenBootBreakdown, total }
 }
 
 export function calculateUserPoints(
@@ -319,64 +361,82 @@ function roundReady(matches: KnockoutMatch[]): boolean {
 }
 
 export function computeUserPoints(user: User, results: TournamentResults): PointsBreakdown {
-  let group = 0
+  let groupMatchPoints = 0
+  let groupAdvancementPoints = 0
 
   const allGroupIds = new Set([...Object.keys(user.groupMatches), ...Object.keys(user.groupTables)])
 
-  // Group match points + top-2 advancement
   for (const groupId of allGroupIds) {
-    const userMatches  = user.groupMatches[groupId]  ?? []
+    const userMatches   = user.groupMatches[groupId]  ?? []
     const resultMatches = results.groupMatches[groupId] ?? []
     for (const userMatch of userMatches) {
       const resultMatch = resultMatches.find(m => m.id === userMatch.id)
       if (userMatch.scores && resultMatch?.scores && !isUnpredicted(resultMatch.scores)) {
-        group += singleMatchPoints(userMatch.id, userMatch.scores, resultMatch.scores)
+        groupMatchPoints += singleMatchPoints(userMatch.id, userMatch.scores, resultMatch.scores)
       }
     }
     const actualTable = results.groupTables[groupId]
     if (actualTable && actualTable.length >= 2) {
       const userTop2   = (user.groupTables[groupId] ?? []).slice(0, 2).map(s => s.team)
       const actualTop2 = actualTable.slice(0, 2).map(s => s.team)
-      group += advPts(userTop2, actualTop2, 5)
+      groupAdvancementPoints += advPts(userTop2, actualTop2, 5)
     }
   }
 
-  // Third-place qualification (5 pts each of 8 qualifiers)
+  let thirdPlaceQualification = 0
   if (user.thirdPlaceQualification.resolved && results.thirdPlaceQualification.resolved) {
     const userQual   = user.thirdPlaceQualification.qualifiers.map(t => t.team)
     const actualQual = results.thirdPlaceQualification.qualifiers.map(t => t.team)
-    group += advPts(userQual, actualQual, 5)
+    thirdPlaceQualification = advPts(userQual, actualQual, 5)
   }
 
-  const ko = results.knockoutStages
+  const ko  = results.knockoutStages
   const uko = user.knockoutStages
 
-  const r32 = koMatchPoints(uko.r32, ko.r32)
-    + (roundReady(ko.r16) ? advPts(user.predictedR16Teams ?? roundTeams(uko.r16), roundTeams(ko.r16), KNOCKOUT_OLEH_POINTS.r32) : 0)
+  const r32MatchPoints = koMatchPoints(uko.r32, ko.r32)
+  const r32AdvancementPoints = roundReady(ko.r16)
+    ? advPts(user.predictedR16Teams ?? roundTeams(uko.r16), roundTeams(ko.r16), KNOCKOUT_OLEH_POINTS.r32)
+    : 0
 
-  const r16 = koMatchPoints(uko.r16, ko.r16)
-    + (roundReady(ko.qf) ? advPts(user.predictedQFTeams ?? roundTeams(uko.qf), roundTeams(ko.qf), KNOCKOUT_OLEH_POINTS.r16) : 0)
+  const r16MatchPoints = koMatchPoints(uko.r16, ko.r16)
+  const r16AdvancementPoints = roundReady(ko.qf)
+    ? advPts(user.predictedQFTeams ?? roundTeams(uko.qf), roundTeams(ko.qf), KNOCKOUT_OLEH_POINTS.r16)
+    : 0
 
-  const qf = koMatchPoints(uko.qf, ko.qf)
-    + (roundReady(ko.sf) ? advPts(user.predictedSFTeams ?? roundTeams(uko.sf), roundTeams(ko.sf), KNOCKOUT_OLEH_POINTS.qf) : 0)
+  const qfMatchPoints = koMatchPoints(uko.qf, ko.qf)
+  const qfAdvancementPoints = roundReady(ko.sf)
+    ? advPts(user.predictedSFTeams ?? roundTeams(uko.sf), roundTeams(ko.sf), KNOCKOUT_OLEH_POINTS.qf)
+    : 0
 
-  const sf = koMatchPoints(uko.sf, ko.sf)
-    + (roundReady(ko.final) ? advPts(user.predictedFinalTeams ?? roundTeams(uko.final), roundTeams(ko.final), KNOCKOUT_OLEH_POINTS.sf) : 0)
+  const sfMatchPoints = koMatchPoints(uko.sf, ko.sf)
+  const sfAdvancementPoints = roundReady(ko.final)
+    ? advPts(user.predictedFinalTeams ?? roundTeams(uko.final), roundTeams(ko.final), KNOCKOUT_OLEH_POINTS.sf)
+    : 0
 
-  const third = koMatchPoints(uko.thirdPlace, ko.thirdPlace)
-    + (results.thirdPlaceWinner && user.predictedThirdPlaceWinner === results.thirdPlaceWinner
-      ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0)
+  const thirdMatchPoints = koMatchPoints(uko.thirdPlace, ko.thirdPlace)
+  const thirdPlaceWinnerPts = results.thirdPlaceWinner && user.predictedThirdPlaceWinner === results.thirdPlaceWinner
+    ? KNOCKOUT_OLEH_POINTS.thirdPlaceWinner : 0
 
-  const final_pts = koMatchPoints(uko.final, ko.final)
-    + (results.champion && user.predictedChampion === results.champion
-      ? KNOCKOUT_OLEH_POINTS.champion : 0)
+  const finalMatchPoints = koMatchPoints(uko.final, ko.final)
+  const championPts = results.champion && user.predictedChampion === results.champion
+    ? KNOCKOUT_OLEH_POINTS.champion : 0
 
-  let goldenBoot = 0
+  let goldenBootGoalsPoints = 0
+  let goldenBootWinnerBonus = 0
   if (results.goldenBootWinner) {
-    goldenBoot += (results.playerGoals?.[user.topGoalscorer] ?? 0) * 3
-    if (user.topGoalscorer === results.goldenBootWinner) goldenBoot += 10
+    goldenBootGoalsPoints = (results.playerGoals?.[user.topGoalscorer] ?? 0) * 3
+    if (user.topGoalscorer === results.goldenBootWinner) goldenBootWinnerBonus = 10
   }
 
-  const total = group + r32 + r16 + qf + sf + third + final_pts + goldenBoot
-  return { group, r32, r16, qf, sf, third, final: final_pts, goldenBoot, total }
+  const group:      GroupBreakdown      = { matchPoints: groupMatchPoints, advancementPoints: groupAdvancementPoints, thirdPlaceQualification, total: groupMatchPoints + groupAdvancementPoints + thirdPlaceQualification }
+  const r32:        RoundBreakdown      = { matchPoints: r32MatchPoints, advancementPoints: r32AdvancementPoints, total: r32MatchPoints + r32AdvancementPoints }
+  const r16:        RoundBreakdown      = { matchPoints: r16MatchPoints, advancementPoints: r16AdvancementPoints, total: r16MatchPoints + r16AdvancementPoints }
+  const qf:         RoundBreakdown      = { matchPoints: qfMatchPoints, advancementPoints: qfAdvancementPoints, total: qfMatchPoints + qfAdvancementPoints }
+  const sf:         RoundBreakdown      = { matchPoints: sfMatchPoints, advancementPoints: sfAdvancementPoints, total: sfMatchPoints + sfAdvancementPoints }
+  const third:      ThirdBreakdown      = { matchPoints: thirdMatchPoints, thirdPlaceWinner: thirdPlaceWinnerPts, total: thirdMatchPoints + thirdPlaceWinnerPts }
+  const final:      FinalBreakdown      = { matchPoints: finalMatchPoints, champion: championPts, total: finalMatchPoints + championPts }
+  const goldenBoot: GoldenBootBreakdown = { goalsPoints: goldenBootGoalsPoints, winnerBonus: goldenBootWinnerBonus, total: goldenBootGoalsPoints + goldenBootWinnerBonus }
+
+  const total = group.total + r32.total + r16.total + qf.total + sf.total + third.total + final.total + goldenBoot.total
+  return { group, r32, r16, qf, sf, third, final, goldenBoot, total }
 }

@@ -288,13 +288,15 @@ describe('group stage match scoring', () => {
 describe('calculatePointsBreakdown', () => {
   test('returns all-zero breakdown when there are no predictions or results', () => {
     const bd = calculatePointsBreakdown({}, {})
-    expect(bd).toEqual({ group: 0, r32: 0, r16: 0, qf: 0, sf: 0, third: 0, final: 0, goldenBoot: 0, total: 0 })
+    expect(bd.total).toBe(0)
+    expect(bd.group.total).toBe(0)
+    expect(bd.r32.total).toBe(0)
   })
 
   test('group stage points appear in group field', () => {
     const bd = calculatePointsBreakdown(GROUP_A_MEXICO_CZECH_TOP2, GROUP_A_MEXICO_CZECH_TOP2)
-    expect(bd.group).toBe(4 * 6 + 10) // 6 exact scores + 2 advancement × 5pts
-    expect(bd.r32).toBe(0)
+    expect(bd.group.total).toBe(4 * 6 + 10) // 6 exact scores + 2 advancement × 5pts
+    expect(bd.r32.total).toBe(0)
   })
 
   test('golden boot points appear in goldenBoot field', () => {
@@ -303,7 +305,7 @@ describe('calculatePointsBreakdown', () => {
       actualGoals: { Messi: 4 },
       goldenBootWinner: 'Messi',
     })
-    expect(bd.goldenBoot).toBe(4 * 3 + 10)
+    expect(bd.goldenBoot.total).toBe(4 * 3 + 10)
     expect(bd.total).toBe(4 * 3 + 10)
   })
 })

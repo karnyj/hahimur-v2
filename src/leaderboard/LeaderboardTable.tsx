@@ -55,14 +55,14 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
                     {rank <= 3 ? MEDALS[rank] : rank}
                   </td>
                   <td className="lb-td lb-td--name">{row.label}</td>
-                  <td className="lb-td">{row.group || '—'}</td>
-                  <td className="lb-td">{row.r32 || '—'}</td>
-                  <td className="lb-td">{row.r16 || '—'}</td>
-                  <td className="lb-td">{row.qf || '—'}</td>
-                  <td className="lb-td">{row.sf || '—'}</td>
-                  <td className="lb-td">{row.third || '—'}</td>
-                  <td className="lb-td">{row.final || '—'}</td>
-                  <td className="lb-td">{row.goldenBoot || '—'}</td>
+                  <td className="lb-td">{row.group.total || '—'}</td>
+                  <td className="lb-td">{row.r32.total || '—'}</td>
+                  <td className="lb-td">{row.r16.total || '—'}</td>
+                  <td className="lb-td">{row.qf.total || '—'}</td>
+                  <td className="lb-td">{row.sf.total || '—'}</td>
+                  <td className="lb-td">{row.third.total || '—'}</td>
+                  <td className="lb-td">{row.final.total || '—'}</td>
+                  <td className="lb-td">{row.goldenBoot.total || '—'}</td>
                   <td className="lb-td lb-td--total">{row.total}</td>
                 </tr>
               )
@@ -98,7 +98,7 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
                     {BREAKDOWN.map(({ key, label }) => (
                       <div key={key} className="lb-card__stat">
                         <span className="lb-card__stat-label">{label}</span>
-                        <span className="lb-card__stat-value">{row[key] || '—'}</span>
+                        <span className="lb-card__stat-value">{(row[key] as { total: number }).total || '—'}</span>
                       </div>
                     ))}
                   </div>
