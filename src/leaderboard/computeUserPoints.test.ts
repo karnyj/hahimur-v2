@@ -172,7 +172,7 @@ describe('knockout match points', () => {
     expect(computeUserPoints(user, results).r32).toBe(0)
   })
 
-  test('match with different match number is ignored', () => {
+  test('same teams in same stage but different slot → participates and scores', () => {
     const user = makeUser({
       knockoutStages: {
         r32: [{ matchNum: 73, home: 'Brazil', away: 'France', resolved: true, scores: { home: 2, away: 1 } }],
@@ -186,7 +186,45 @@ describe('knockout match points', () => {
         r16: [], qf: [], sf: [], thirdPlace: [], final: [],
       },
     }
-    expect(computeUserPoints(user, results).r32).toBe(0)
+    expect(computeUserPoints(user, results).r32).toBe(7)
+  })
+
+  test('same teams but flipped home/away in different slot → scores correctly', () => {
+    const user = makeUser({
+      knockoutStages: {
+        r32: [{ matchNum: 73, home: 'Brazil', away: 'France', resolved: true, scores: { home: 2, away: 1 } }],
+        r16: [], qf: [], sf: [], thirdPlace: [], final: [],
+      },
+    })
+    // France is home in actual, Brazil is away — user predicted Brazil(home) 2-1 France(away)
+    // After flip: predicted becomes { home: 1, away: 2 } (France's perspective)
+    // Actual: France 0-2 Brazil → winner is away (Brazil) → pagiya (correct winner, wrong score)
+    const results: TournamentResults = {
+      ...EMPTY_RESULTS,
+      knockoutStages: {
+        r32: [{ matchNum: 74, home: 'France', away: 'Brazil', resolved: true, scores: { home: 0, away: 2 } }],
+        r16: [], qf: [], sf: [], thirdPlace: [], final: [],
+      },
+    }
+    expect(computeUserPoints(user, results).r32).toBe(5) // pagiya: Brazil wins in both
+  })
+
+  test('flipped home/away with exact mirrored score → tzelifa', () => {
+    const user = makeUser({
+      knockoutStages: {
+        r32: [{ matchNum: 73, home: 'Brazil', away: 'France', resolved: true, scores: { home: 2, away: 1 } }],
+        r16: [], qf: [], sf: [], thirdPlace: [], final: [],
+      },
+    })
+    // After flip: predicted becomes { home: 1, away: 2 } → matches actual exactly
+    const results: TournamentResults = {
+      ...EMPTY_RESULTS,
+      knockoutStages: {
+        r32: [{ matchNum: 74, home: 'France', away: 'Brazil', resolved: true, scores: { home: 1, away: 2 } }],
+        r16: [], qf: [], sf: [], thirdPlace: [], final: [],
+      },
+    }
+    expect(computeUserPoints(user, results).r32).toBe(7) // tzelifa
   })
 
   test('Final exact score → 25 pts in final bucket', () => {

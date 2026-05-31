@@ -293,15 +293,20 @@ export function calculateUserPoints(
 }
 
 function koMatchPoints(userMatches: KnockoutMatch[], resultMatches: KnockoutMatch[]): number {
-  return userMatches.reduce((total, userMatch) => {
-    const resultMatch = resultMatches.find(m => m.matchNum === userMatch.matchNum)
-    if (!resultMatch || !userMatch.scores || !resultMatch.scores) return total
-    if (isUnpredicted(resultMatch.scores)) return total
-    const sameTeams =
-      (userMatch.home === resultMatch.home && userMatch.away === resultMatch.away) ||
-      (userMatch.home === resultMatch.away && userMatch.away === resultMatch.home)
-    if (!sameTeams) return total
-    return total + singleMatchPoints(String(userMatch.matchNum), userMatch.scores, resultMatch.scores)
+  return resultMatches.reduce((total, resultMatch) => {
+    if (!resultMatch.scores || isUnpredicted(resultMatch.scores)) return total
+    if (!resultMatch.home || !resultMatch.away) return total
+    const userMatch = userMatches.find(m =>
+      m.home && m.away &&
+      ((m.home === resultMatch.home && m.away === resultMatch.away) ||
+       (m.home === resultMatch.away && m.away === resultMatch.home))
+    )
+    if (!userMatch || !userMatch.scores || isUnpredicted(userMatch.scores)) return total
+    const flipped = userMatch.home === resultMatch.away
+    const predicted: MatchScores = flipped
+      ? { home: userMatch.scores.away, away: userMatch.scores.home, drawWinner: userMatch.scores.drawWinner === 'home' ? 'away' : userMatch.scores.drawWinner === 'away' ? 'home' : undefined }
+      : userMatch.scores
+    return total + singleMatchPoints(String(resultMatch.matchNum), predicted, resultMatch.scores)
   }, 0)
 }
 
