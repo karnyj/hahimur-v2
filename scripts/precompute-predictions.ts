@@ -108,7 +108,7 @@ function serializeKOMatch(m: KnockoutMatch): string {
 // --- build file ---
 
 const lines: string[] = [
-  `import type { Standing, ThirdPlaceStanding, ThirdPlaceQualification, KnockoutMatch, KnockoutStages, GroupMatch } from '../shared/types'`,
+  `import type { Standing, ThirdPlaceStanding, ThirdPlaceQualification, KnockoutStages, GroupMatch } from '../shared/types'`,
   ``,
 ]
 

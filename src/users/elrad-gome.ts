@@ -269,7 +269,7 @@ export const knockoutStages: KnockoutStages = {
 
 export const predictedChampion = 'Portugal'
 export const predictedThirdPlaceWinner = 'Spain'
-export const predictedR16Teams = ['Germany', 'Czech Republic', 'Brazil', 'Ivory Coast', 'Colombia', 'Turkey', 'Argentina', 'Switzerland', 'France', 'Netherlands', 'Norway', 'England', 'Spain', 'Belgium', 'United States', 'Portugal']
-export const predictedQFTeams = ['France', 'Spain', 'Norway', 'Argentina', 'Netherlands', 'Belgium', 'England', 'Portugal']
-export const predictedSFTeams = ['France', 'England', 'Spain', 'Portugal']
+export const predictedR16Teams = ['Germany', 'France', 'Czech Republic', 'Netherlands', 'Brazil', 'Norway', 'Ivory Coast', 'England', 'Colombia', 'Spain', 'Turkey', 'Belgium', 'Argentina', 'United States', 'Switzerland', 'Portugal']
+export const predictedQFTeams = ['France', 'Netherlands', 'Spain', 'Belgium', 'Norway', 'England', 'Argentina', 'Portugal']
+export const predictedSFTeams = ['France', 'Spain', 'England', 'Portugal']
 export const predictedFinalTeams = ['France', 'Portugal']
