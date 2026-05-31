@@ -77,7 +77,7 @@ for (const [letter, standings] of Object.entries(groupTables)) {
 }
 lines.push(`}`, ``)
 
-const thirdPlaceTeams: ThirdPlaceStanding[] = raw.thirdPlaceTeams
+const thirdPlaceTeams: ThirdPlaceStanding[] = raw.thirdPlaceTeams ?? raw.thirdPlaceQualification?.all ?? []
 lines.push(`export const thirdPlaceTeams: ThirdPlaceStanding[] = [`)
 for (const s of thirdPlaceTeams) lines.push(`${serializeThirdPlaceStanding(s)},`)
 lines.push(`]`, ``)
