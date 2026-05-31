@@ -139,7 +139,6 @@ export function computeGroupBreakdown(user: User, results: TournamentResults): G
     user.thirdPlaceQualification.qualifiers.forEach(t => userR32Set.add(t.team))
   }
 
-  const actualR32Set = new Set<string>()
   const allGroupIds = new Set([...Object.keys(user.groupMatches), ...Object.keys(user.groupTables)])
   for (const groupId of allGroupIds) {
     const userMatches   = user.groupMatches[groupId]  ?? []
@@ -150,8 +149,12 @@ export function computeGroupBreakdown(user: User, results: TournamentResults): G
         matchPoints += singleMatchPoints(userMatch.id, userMatch.scores, resultMatch.scores)
       }
     }
+  }
+
+  const actualR32Set = new Set<string>()
+  for (const groupId of Object.keys(results.groupTables)) {
     const actualTable = results.groupTables[groupId]
-    const groupComplete = actualTable?.length >= 2 && actualTable.every(s => s.played === actualTable.length - 1)
+    const groupComplete = actualTable.length >= 2 && actualTable.every(s => s.played === actualTable.length - 1)
     if (groupComplete) {
       actualTable.slice(0, 2).forEach(s => actualR32Set.add(s.team))
     }

@@ -135,6 +135,25 @@ describe('R32 qualification points', () => {
     expect(computeUserPoints(user, results).group.advancementPoints).toBe(10)
   })
 
+  test('predicted third-place qualifier, team finished top-2 → 5 pts', () => {
+    const s = (team: string, pos: number): ThirdPlaceStanding => ({
+      team, played: 3, won: 3 - pos, drawn: 0, lost: pos, goalsFor: 6 - pos * 2, goalsAgainst: pos * 2, points: 9 - pos * 3, group: 'A',
+    })
+    const user = makeUser({
+      groupTables: { A: [s('France', 0), s('Germany', 1), s('Brazil', 2), s('Spain', 3)] },
+      thirdPlaceQualification: { resolved: true, all: [s('Brazil', 2)], qualifiers: [s('Brazil', 2)] },
+    })
+    const results: TournamentResults = {
+      ...EMPTY_RESULTS,
+      groupTables: { A: [s('Brazil', 0), s('France', 1), s('Germany', 2), s('Spain', 3)] },
+      // thirdPlaceQualification not resolved — Brazil came top-2, not third place
+    }
+    // France: predicted top-2, finished top-2 (+5)
+    // Germany: predicted top-2, finished 3rd (0)
+    // Brazil: predicted third-place qualifier, but finished top-2 — still advanced (+5)
+    expect(computeUserPoints(user, results).group.advancementPoints).toBe(10)
+  })
+
   test('all 8 third-place qualifiers correct → 40 pts', () => {
     const teams = ['T1','T2','T3','T4','T5','T6','T7','T8'].map(team => ({
       team, played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3, group: 'A',
