@@ -79,6 +79,8 @@ describe('group top-2 advancement', () => {
       groupTables: { A: [
         { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
         { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+        { team: 'Germany', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+        { team: 'Spain', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
       ]},
     })
     const results: TournamentResults = {
@@ -86,6 +88,8 @@ describe('group top-2 advancement', () => {
       groupTables: { A: [
         { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
         { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+        { team: 'Germany', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+        { team: 'Spain', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
       ]},
     }
     expect(computeUserPoints(user, results).group.total).toBe(10)
@@ -96,6 +100,8 @@ describe('group top-2 advancement', () => {
       groupTables: { A: [
         { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
         { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+        { team: 'Germany', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+        { team: 'Spain', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
       ]},
     })
     const results: TournamentResults = {
@@ -103,6 +109,8 @@ describe('group top-2 advancement', () => {
       groupTables: { A: [
         { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
         { team: 'Germany', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+        { team: 'France', played: 3, won: 1, drawn: 0, lost: 2, goalsFor: 2, goalsAgainst: 4, points: 3 },
+        { team: 'Spain', played: 3, won: 0, drawn: 0, lost: 3, goalsFor: 0, goalsAgainst: 6, points: 0 },
       ]},
     }
     expect(computeUserPoints(user, results).group.total).toBe(5)
@@ -116,6 +124,25 @@ describe('group top-2 advancement', () => {
       ]},
     })
     expect(computeUserPoints(user, EMPTY_RESULTS).group.total).toBe(0)
+  })
+
+  test('no advancement points when group table has unplayed standings (all played=0)', () => {
+    const user = makeUser({
+      groupTables: { A: [
+        { team: 'Brazil', played: 3, won: 3, drawn: 0, lost: 0, goalsFor: 6, goalsAgainst: 0, points: 9 },
+        { team: 'France', played: 3, won: 2, drawn: 0, lost: 1, goalsFor: 4, goalsAgainst: 2, points: 6 },
+      ]},
+    })
+    const results: TournamentResults = {
+      ...EMPTY_RESULTS,
+      groupTables: { A: [
+        { team: 'Brazil', played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 },
+        { team: 'France', played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 },
+        { team: 'Germany', played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 },
+        { team: 'Spain', played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 },
+      ]},
+    }
+    expect(computeUserPoints(user, results).group.total).toBe(0)
   })
 })
 

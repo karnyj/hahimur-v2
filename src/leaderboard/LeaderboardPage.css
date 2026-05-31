@@ -326,3 +326,139 @@
 
 .lb-row--rank-2 .lb-td--total  { color: var(--ink); font-size: 18px; }
 .lb-row--rank-3 .lb-td--total  { color: var(--muted); }
+
+/* ── Always-visible stacked sub-fields (desktop) ── */
+
+.lb-td--detail {
+  vertical-align: top;
+  padding: 9px 8px 7px;
+}
+
+.lb-td-total {
+  display: block;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  line-height: 1.15;
+}
+
+.lb-td-subs {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1px 5px;
+  margin-top: 4px;
+}
+
+.lb-td-sub {
+  display: flex;
+  align-items: baseline;
+  gap: 2px;
+  white-space: nowrap;
+}
+
+.lb-td-sub-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 7.5px;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  opacity: 0.5;
+}
+
+.lb-td-sub-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10.5px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+.lb-row--rank-1 .lb-td-sub-value { color: var(--navy); opacity: 0.7; }
+
+/* ── Mobile section breakdown ── */
+
+.lb-card__sections {
+  border-top: 1px solid rgba(200, 184, 122, 0.25);
+}
+
+.lb-card__section {
+  border-bottom: 1px solid rgba(200, 184, 122, 0.15);
+}
+
+.lb-card__section:last-child {
+  border-bottom: none;
+}
+
+.lb-card__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 7px 12px 3px;
+}
+
+.lb-card__section-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.22em;
+  color: var(--muted);
+}
+
+.lb-card__section-total {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+.lb-card__section-fields {
+  display: flex;
+  padding: 0 8px 6px;
+}
+
+.lb-card__section-field {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2px 4px 2px;
+  border-left: 1px solid rgba(200, 184, 122, 0.15);
+}
+
+.lb-card__section-field:last-child {
+  border-left: none;
+}
+
+.lb-card__sf-label {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  opacity: 0.75;
+  margin-bottom: 1px;
+  white-space: nowrap;
+}
+
+.lb-card__sf-value {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Flat (always-open) card variant ── */
+
+.lb-card--flat {
+  cursor: default;
+}
+
+.lb-card--flat:active {
+  background: var(--paper);
+}
+
+.lb-card--rank-1.lb-card--flat:active {
+  background: linear-gradient(to left, rgba(212, 160, 22, 0.07) 0%, var(--paper) 65%);
+}

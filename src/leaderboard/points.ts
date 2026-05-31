@@ -144,7 +144,8 @@ export function computeGroupBreakdown(user: User, results: TournamentResults): G
       }
     }
     const actualTable = results.groupTables[groupId]
-    if (actualTable && actualTable.length >= 2) {
+    const groupComplete = actualTable?.length >= 2 && actualTable.every(s => s.played === actualTable.length - 1)
+    if (groupComplete) {
       const userTop2   = (user.groupTables[groupId] ?? []).slice(0, 2).map(s => s.team)
       const actualTop2 = actualTable.slice(0, 2).map(s => s.team)
       advancementPoints += advPts(userTop2, actualTop2, 5)

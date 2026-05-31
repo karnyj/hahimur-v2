@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import React from 'react'
 import type { PointsBreakdown } from './points'
 
 export interface LeaderboardRow extends PointsBreakdown {
@@ -7,7 +7,9 @@ export interface LeaderboardRow extends PointsBreakdown {
 
 const MEDALS: Record<number, string> = { 1: '🥇', 2: '🥈', 3: '🥉' }
 
-const BREAKDOWN: { key: keyof PointsBreakdown; label: string }[] = [
+type RoundKey = 'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'third' | 'final' | 'goldenBoot'
+
+const ROUNDS: { key: RoundKey; label: string }[] = [
   { key: 'group',      label: 'בתים' },
   { key: 'r32',        label: 'שלב 32' },
   { key: 'r16',        label: 'שמינית' },
@@ -18,12 +20,23 @@ const BREAKDOWN: { key: keyof PointsBreakdown; label: string }[] = [
   { key: 'goldenBoot', label: 'מלך שערים' },
 ]
 
-export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
-  const [expanded, setExpanded] = useState<string | null>(null)
+type SubField = { key: string; label: string }
 
+const SUB_FIELDS: Record<RoundKey, SubField[]> = {
+  group:      [{ key: 'matchPoints', label: "מש'" }, { key: 'advancementPoints', label: "קיד'" }, { key: 'thirdPlaceQualification', label: 'מ"ש' }],
+  r32:        [{ key: 'matchPoints', label: "מש'" }, { key: 'advancementPoints', label: "קיד'" }],
+  r16:        [{ key: 'matchPoints', label: "מש'" }, { key: 'advancementPoints', label: "קיד'" }],
+  qf:         [{ key: 'matchPoints', label: "מש'" }, { key: 'advancementPoints', label: "קיד'" }],
+  sf:         [{ key: 'matchPoints', label: "מש'" }, { key: 'advancementPoints', label: "קיד'" }],
+  third:      [{ key: 'matchPoints', label: "מש'" }, { key: 'thirdPlaceWinner', label: 'זוכה' }],
+  final:      [{ key: 'matchPoints', label: "מש'" }, { key: 'champion', label: 'אלוף' }],
+  goldenBoot: [{ key: 'goalsPoints', label: "שע'" }, { key: 'winnerBonus', label: "בונ'" }],
+}
+
+export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
   return (
     <>
-      {/* Desktop: full table */}
+      {/* Desktop: each round cell stacks total + non-zero sub-fields below it */}
       <div className="lb-scroll lb-desktop">
         <table className="lb-table">
           <thead>
@@ -55,14 +68,25 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
                     {rank <= 3 ? MEDALS[rank] : rank}
                   </td>
                   <td className="lb-td lb-td--name">{row.label}</td>
-                  <td className="lb-td">{row.group.total || '—'}</td>
-                  <td className="lb-td">{row.r32.total || '—'}</td>
-                  <td className="lb-td">{row.r16.total || '—'}</td>
-                  <td className="lb-td">{row.qf.total || '—'}</td>
-                  <td className="lb-td">{row.sf.total || '—'}</td>
-                  <td className="lb-td">{row.third.total || '—'}</td>
-                  <td className="lb-td">{row.final.total || '—'}</td>
-                  <td className="lb-td">{row.goldenBoot.total || '—'}</td>
+                  {ROUNDS.map(({ key }) => {
+                    const data = row[key] as unknown as Record<string, number>
+                    const activeSubs = SUB_FIELDS[key].filter(sf => (data[sf.key] ?? 0) > 0)
+                    return (
+                      <td key={key} className="lb-td lb-td--detail">
+                        <span className="lb-td-total">{data.total || '—'}</span>
+                        {activeSubs.length > 0 && (
+                          <div className="lb-td-subs">
+                            {activeSubs.map(sf => (
+                              <span key={sf.key} className="lb-td-sub">
+                                <span className="lb-td-sub-label">{sf.label}</span>
+                                <span className="lb-td-sub-value">{data[sf.key]}</span>
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </td>
+                    )
+                  })}
                   <td className="lb-td lb-td--total">{row.total}</td>
                 </tr>
               )
@@ -71,38 +95,46 @@ export default function LeaderboardTable({ rows }: { rows: LeaderboardRow[] }) {
         </table>
       </div>
 
-      {/* Mobile: expandable cards */}
+      {/* Mobile: flat cards, always-visible per-round sections */}
       <div className="lb-mobile">
         {rows.map((row, i) => {
           const rank = i + 1
-          const isOpen = expanded === row.label
           const rankCls = rank <= 3 ? `lb-card--rank-${rank}` : ''
           return (
             <div
               key={row.label}
-              className={`lb-card ${rankCls} ${isOpen ? 'lb-card--open' : ''}`}
+              className={`lb-card lb-card--flat ${rankCls}`}
               style={{ '--delay': `${i * 60}ms` } as React.CSSProperties}
-              onClick={() => setExpanded(isOpen ? null : row.label)}
             >
               <div className="lb-card__header">
-                <span className="lb-card__rank">
-                  {rank <= 3 ? MEDALS[rank] : rank}
-                </span>
+                <span className="lb-card__rank">{rank <= 3 ? MEDALS[rank] : rank}</span>
                 <span className="lb-card__name">{row.label}</span>
                 <span className="lb-card__total">{row.total}</span>
-                <span className="lb-card__chevron">›</span>
               </div>
-              <div className="lb-card__body">
-                <div className="lb-card__inner">
-                  <div className="lb-card__grid">
-                    {BREAKDOWN.map(({ key, label }) => (
-                      <div key={key} className="lb-card__stat">
-                        <span className="lb-card__stat-label">{label}</span>
-                        <span className="lb-card__stat-value">{(row[key] as { total: number }).total || '—'}</span>
+              <div className="lb-card__sections">
+                {ROUNDS.map(({ key, label }) => {
+                  const data = row[key] as unknown as Record<string, number>
+                  const activeSubs = SUB_FIELDS[key].filter(sf => (data[sf.key] ?? 0) > 0)
+                  if (data.total === 0) return null
+                  return (
+                    <div key={key} className="lb-card__section">
+                      <div className="lb-card__section-header">
+                        <span className="lb-card__section-label">{label}</span>
+                        <span className="lb-card__section-total">{data.total}</span>
                       </div>
-                    ))}
-                  </div>
-                </div>
+                      {activeSubs.length > 0 && (
+                        <div className="lb-card__section-fields">
+                          {activeSubs.map(sf => (
+                            <div key={sf.key} className="lb-card__section-field">
+                              <span className="lb-card__sf-label">{sf.label}</span>
+                              <span className="lb-card__sf-value">{data[sf.key]}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
             </div>
           )
