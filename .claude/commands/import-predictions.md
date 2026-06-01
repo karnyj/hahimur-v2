@@ -6,20 +6,19 @@ The user will provide some or all of: a JSON file path, an output slug, and a di
 
 ### 1. Collect arguments
 
-You need three values:
+You need two values:
 - `<input-json>` — path to the raw export JSON (e.g. `raw_exports/foo-wc2026-predictions.json`)
 - `<output-slug>` — kebab-case filename for the user (e.g. `foo-bar`)
-- `<name>` — display name in Hebrew (e.g. `"פו בר"`)
 
-If any are missing, ask the user before continuing.
+The display name is read from the `label` field in the JSON. If any are missing, ask the user before continuing.
 
-### 2. Run the precompute script in import mode
+### 2. Run the import script
 
 ```bash
-node --experimental-strip-types scripts/precompute-predictions.ts <input-json> <output-slug> "<name>"
+node --experimental-strip-types scripts/import-user.ts <input-json> <output-slug>
 ```
 
-This creates `src/users/<output-slug>.ts` with predictions and all precomputed data in one step.
+This creates `src/users/<output-slug>.ts` with all predictions.
 
 ### 3. Add the user to the index
 

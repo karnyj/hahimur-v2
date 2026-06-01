@@ -6,6 +6,7 @@ import * as idan_melamed from './idan-melamed'
 import * as oren_laniado from './oren-laniado'
 import * as roi_reisfeld from './roi-reisfeld'
 import * as tal_lichter from './tal-lichter'
+import * as tomer_agafim_friedler from './tomer-agafim-friedler'
 import * as yaniv_klein from './yaniv-klein'
 
 export interface User {
@@ -49,6 +50,7 @@ export const USERS: User[] = [
   toUser(oren_laniado),
   toUser(roi_reisfeld),
   toUser(tal_lichter),
+  toUser(tomer_agafim_friedler),
   toUser(yaniv_klein),
 ]
 
