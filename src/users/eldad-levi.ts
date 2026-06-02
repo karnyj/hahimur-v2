@@ -1,6 +1,6 @@
 import type { Standing, ThirdPlaceQualification, KnockoutStages, GroupMatch } from '../shared/types'
 
-export const topGoalscorer = 'קיליאן אמפבה '
+export const topGoalscorer = 'קיליאן אמבפה'
 export const label = 'אלדד לוי'
 
 export const groupMatches: Record<string, GroupMatch[]> = {

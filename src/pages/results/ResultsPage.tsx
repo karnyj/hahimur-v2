@@ -18,19 +18,27 @@ import '../../leaderboard/LeaderboardPage.css'
 import '../../pages/form/FormPage.css'
 import './ResultsPage.css'
 
+export function clampGoals(real: number, entered: number): number {
+  return Math.max(real, entered)
+}
+
 const GROUP_MATCH_TEAMS: Record<string, { homeTeam: string; awayTeam: string }> = {}
 Object.values(GROUPS).forEach(group =>
   group.matches.forEach(m => { GROUP_MATCH_TEAMS[m.id] = { homeTeam: m.homeTeam, awayTeam: m.awayTeam } })
 )
 
-const LOCKED_MATCH_IDS = new Set<string>([
-  ...Object.values(realTournamentResults.groupMatches).flat()
-    .filter(m => m.scores?.home != null && m.scores?.away != null)
-    .map(m => m.id),
-  ...Object.values(realTournamentResults.knockoutStages).flat()
-    .filter(m => m.scores?.home != null && m.scores?.away != null)
-    .map(m => String(m.matchNum)),
-])
+export function getLockedMatchIds(results: TournamentResults): Set<string> {
+  return new Set<string>([
+    ...Object.values(results.groupMatches).flat()
+      .filter(m => m.scores?.home != null && m.scores?.away != null)
+      .map(m => m.id),
+    ...Object.values(results.knockoutStages).flat()
+      .filter(m => m.scores?.home != null && m.scores?.away != null)
+      .map(m => String(m.matchNum)),
+  ])
+}
+
+const LOCKED_MATCH_IDS = getLockedMatchIds(realTournamentResults)
 
 function getInitialState(): PredictionsState {
   const state: PredictionsState = {}
@@ -73,9 +81,21 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
   )
 }
 
+const predictedPlayers = (users: User[]) =>
+  [...new Set(users.map(u => u.topGoalscorer).filter(Boolean))]
+
 export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
   const [activeGroup, setActiveGroup] = useState('A')
+  const [playerGoals, setPlayerGoals] = useState<Record<string, number>>(
+    () => realTournamentResults.playerGoals ?? {}
+  )
+
+  const players = predictedPlayers(users)
+  const maxGoals = Math.max(0, ...players.map(p => playerGoals[p] ?? 0))
+  const goldenBootWinner = maxGoals > 0
+    ? players.filter(p => (playerGoals[p] ?? 0) === maxGoals)
+    : undefined
 
   const updateMatch = (matchId: string, scores: MatchScores) => {
     setEditedResults(prev => ({ ...prev, [matchId]: scores }))
@@ -109,6 +129,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
 
   const reset = () => {
     setEditedResults(getInitialState())
+    setPlayerGoals(realTournamentResults.playerGoals ?? {})
   }
 
   const { thirdPlaceQual, allGroupsFilled, allGroupData, groupsWithTies, round32Matches, knockout, finalWinner } = useTournament(editedResults)
@@ -155,6 +176,8 @@ export default function ResultsPage({ users }: { users: User[] }) {
     },
     champion: finalWinner ?? undefined,
     thirdPlaceWinner,
+    goldenBootWinner,
+    playerGoals,
   }
 
   const rows = users.map(user => ({
@@ -252,6 +275,22 @@ export default function ResultsPage({ users }: { users: User[] }) {
           </CollapsibleSection>
           <CollapsibleSection label="גמר">
             <KnockoutTable matches={[knockout.final]} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
+          </CollapsibleSection>
+          <CollapsibleSection label="מלך השערים">
+            <div className="pg-scorer-list">
+              {players.map(player => (
+                <div key={player} className={`pg-scorer-row${goldenBootWinner?.includes(player) ? ' pg-scorer-row--winner' : ''}`}>
+                  <span className="pg-scorer-name">{player}</span>
+                  <input
+                    type="number"
+                    min={realTournamentResults.playerGoals?.[player] ?? 0}
+                    className="pg-scorer-input"
+                    value={playerGoals[player] ?? 0}
+                    onChange={e => setPlayerGoals(prev => ({ ...prev, [player]: clampGoals(realTournamentResults.playerGoals?.[player] ?? 0, Number(e.target.value)) }))}
+                  />
+                </div>
+              ))}
+            </div>
           </CollapsibleSection>
         </div>
 

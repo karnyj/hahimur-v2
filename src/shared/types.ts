@@ -65,7 +65,7 @@ export interface TournamentResults {
   knockoutStages: KnockoutStages
   champion?: string
   thirdPlaceWinner?: string
-  goldenBootWinner?: string
+  goldenBootWinner?: string | string[]
   playerGoals?: Record<string, number>
 }
 

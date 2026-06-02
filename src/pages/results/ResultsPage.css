@@ -315,3 +315,59 @@
 .pg-collapsible--open .pg-collapsible-inner {
   padding-bottom: 20px;
 }
+
+/* ── Goal scorer section ─────────────────────────────────────── */
+
+.pg-scorer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pg-scorer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border: 1.5px solid rgba(200, 184, 122, 0.4);
+  transition: border-color 0.15s;
+}
+
+.pg-scorer-row--winner {
+  border-color: var(--gold);
+  background: rgba(200, 184, 122, 0.08);
+}
+
+.pg-scorer-name {
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  color: var(--navy);
+}
+
+.pg-scorer-row--winner .pg-scorer-name {
+  font-weight: 700;
+}
+
+.pg-scorer-input {
+  width: 56px;
+  padding: 4px 8px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: var(--navy);
+  background: transparent;
+  border: 1.5px solid rgba(11, 34, 68, 0.25);
+  outline: none;
+  transition: border-color 0.15s;
+  -moz-appearance: textfield;
+}
+
+.pg-scorer-input:focus {
+  border-color: var(--navy);
+}
+
+.pg-scorer-input::-webkit-inner-spin-button,
+.pg-scorer-input::-webkit-outer-spin-button {
+  opacity: 1;
+}
