@@ -42,7 +42,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 0.5rem;
-  padding: 0 0 0.5rem;
+  /* match row padding + asymmetric borders (3px right, 1px left) so columns align */
+  padding: 0 calc(0.85rem + 3px) 0.5rem calc(0.85rem + 1px);
   direction: rtl;
   border-bottom: 1px solid var(--border);
   margin-bottom: 0.5rem;
@@ -143,11 +144,68 @@
   flex-shrink: 0;
 }
 
+.finals-team-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  line-height: 1;
+}
+
 .finals-name {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 1.1rem;
   color: var(--navy);
   line-height: 1;
+}
+
+.finals-total {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  direction: rtl;
+}
+
+.finals-total-dots {
+  display: flex;
+  flex-direction: row;
+  gap: 3px;
+  direction: rtl;
+}
+
+.finals-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.finals-dot--filled {
+  background: color-mix(in srgb, var(--navy) 65%, transparent);
+  animation: dot-pop 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: calc(var(--dot-i, 0) * 30ms + var(--row-i, 0) * 50ms + 120ms);
+}
+
+.finals-row:first-child .finals-dot--filled {
+  background: color-mix(in srgb, var(--gold) 90%, transparent);
+}
+
+.finals-dot--empty {
+  background: transparent;
+  border: 1px solid color-mix(in srgb, var(--muted) 35%, transparent);
+}
+
+@keyframes dot-pop {
+  from { transform: scale(0); }
+  to   { transform: scale(1); }
+}
+
+.finals-total-label {
+  font-family: 'Heebo', sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+  opacity: 0.65;
+  letter-spacing: 0.01em;
 }
 
 /* ── Stat cell ───────────────────────────────────────────────── */
@@ -217,6 +275,126 @@
 }
 
 .finals-picker--runner {
+  color: color-mix(in srgb, var(--navy) 75%, transparent);
+  background: color-mix(in srgb, var(--navy) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--navy) 18%, transparent);
+}
+
+/* ── Matchups List ───────────────────────────────────────────── */
+
+.stats-eyebrow--section {
+  margin-top: 2.5rem;
+}
+
+.matchups-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.matchup-row {
+  display: grid;
+  grid-template-columns: 2.75rem 1fr;
+  column-gap: 0.75rem;
+  align-items: center;
+  padding: 0.65rem 0.85rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-right: 3px solid var(--navy);
+  direction: rtl;
+  animation: row-slide-in 0.3s ease both;
+  animation-delay: calc(var(--row-i, 0) * 50ms);
+}
+
+.matchup-row:first-child {
+  border-right-color: var(--gold);
+  border-color: color-mix(in srgb, var(--gold) 40%, var(--border));
+}
+
+.matchup-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  color: var(--navy);
+  text-align: center;
+  opacity: 0.55;
+  align-self: center;
+}
+
+.matchup-row:first-child .matchup-count {
+  color: var(--gold);
+  opacity: 1;
+}
+
+.matchup-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+/* Symmetric duel: TeamA [right] × TeamB [left] */
+.matchup-duel {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.4rem;
+  direction: rtl;
+}
+
+.matchup-team {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Team A: flag(outer-right) then name(inward) */
+.matchup-team--a {
+  justify-content: flex-start; /* RTL: aligns to right */
+}
+
+/* Team B: name(inward) then flag(outer-left) */
+.matchup-team--b {
+  justify-content: flex-end; /* RTL: aligns to left */
+}
+
+.matchup-sep {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  color: var(--muted);
+  opacity: 0.45;
+  text-align: center;
+  user-select: none;
+}
+
+.matchup-flag {
+  width: 1.4rem;
+  height: 1rem;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+.matchup-name {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.05rem;
+  color: var(--navy);
+  line-height: 1;
+}
+
+.matchup-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.matchup-picker {
+  font-size: 8.5px;
+  font-weight: 700;
+  border-radius: 2px;
+  padding: 0.15em 0.4em;
+  white-space: nowrap;
   color: color-mix(in srgb, var(--navy) 75%, transparent);
   background: color-mix(in srgb, var(--navy) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--navy) 18%, transparent);

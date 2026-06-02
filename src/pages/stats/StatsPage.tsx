@@ -8,6 +8,7 @@ interface TeamFinalStat {
   team: string
   championPickers: string[]
   runnerUpPickers: string[]
+  total: number
 }
 
 function computeFinalStats(users: User[]): TeamFinalStat[] {
@@ -29,11 +30,36 @@ function computeFinalStats(users: User[]): TeamFinalStat[] {
   }
 
   return [...map.entries()]
-    .map(([team, { championPickers, runnerUpPickers }]) => ({ team, championPickers, runnerUpPickers }))
+    .map(([team, { championPickers, runnerUpPickers }]) => ({
+      team,
+      championPickers,
+      runnerUpPickers,
+      total: championPickers.length + runnerUpPickers.length,
+    }))
     .sort((a, b) => {
       const diff = b.championPickers.length - a.championPickers.length
       return diff !== 0 ? diff : b.runnerUpPickers.length - a.runnerUpPickers.length
     })
+}
+
+interface FinalMatchup {
+  teams: [string, string]
+  pickers: string[]
+}
+
+function computeFinalMatchups(users: User[]): FinalMatchup[] {
+  const map = new Map<string, { teams: [string, string]; pickers: string[] }>()
+
+  for (const user of users) {
+    if (user.predictedFinalTeams?.length === 2) {
+      const sorted = [...user.predictedFinalTeams].sort() as [string, string]
+      const key = sorted.join('|')
+      if (!map.has(key)) map.set(key, { teams: sorted, pickers: [] })
+      map.get(key)!.pickers.push(user.label)
+    }
+  }
+
+  return [...map.values()].sort((a, b) => b.pickers.length - a.pickers.length)
 }
 
 interface Props {
@@ -42,6 +68,7 @@ interface Props {
 
 export default function StatsPage({ users = USERS }: Props) {
   const stats = computeFinalStats(users)
+  const matchups = computeFinalMatchups(users)
 
   return (
     <PageLayout title="Stats">
@@ -61,8 +88,8 @@ export default function StatsPage({ users = USERS }: Props) {
           </span>
         </div>
 
-        <ol className="finals-list">
-          {stats.map(({ team, championPickers, runnerUpPickers }, i) => {
+        <ol className="finals-list" data-section="finals">
+          {stats.map(({ team, championPickers, runnerUpPickers, total }, i) => {
             const teamInfo = TEAMS[team]
             const iso = teamInfo?.iso ?? ''
             const hebrewName = teamInfo?.he ?? team
@@ -75,7 +102,21 @@ export default function StatsPage({ users = USERS }: Props) {
                 <div className="finals-team">
                   <span className="finals-rank">{i + 1}</span>
                   <span className={`fi fi-${iso} finals-flag`} aria-hidden="true" />
-                  <span className="finals-name">{hebrewName}</span>
+                  <div className="finals-team-info">
+                    <span className="finals-name">{hebrewName}</span>
+                    <div className="finals-total" data-col="total">
+                      <div className="finals-total-dots" aria-hidden="true">
+                        {Array.from({ length: users.length }, (_, di) => (
+                          <span
+                            key={di}
+                            className={`finals-dot ${di < total ? 'finals-dot--filled' : 'finals-dot--empty'}`}
+                            style={{ '--dot-i': di } as React.CSSProperties}
+                          />
+                        ))}
+                      </div>
+                      <span className="finals-total-label">{total} מתוך {users.length} העלו אותה לגמר</span>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="finals-cell finals-cell--champ" data-col="champion">
@@ -98,6 +139,42 @@ export default function StatsPage({ users = USERS }: Props) {
                       ))}
                     </div>
                   )}
+                </div>
+              </li>
+            )
+          })}
+        </ol>
+        <p className="stats-eyebrow stats-eyebrow--section">גמרים</p>
+        <p className="stats-subtitle">כמה מהמשתתפים ניחשו כל מפגש גמר</p>
+
+        <ol className="matchups-list" data-section="matchups">
+          {matchups.map(({ teams, pickers }, i) => {
+            const infoA = TEAMS[teams[0]]
+            const infoB = TEAMS[teams[1]]
+            return (
+              <li
+                key={teams.join('|')}
+                className="matchup-row"
+                style={{ '--row-i': i } as React.CSSProperties}
+              >
+                <span className="matchup-count" data-col="count">{pickers.length}</span>
+                <div className="matchup-content">
+                  <div className="matchup-duel">
+                    <span className="matchup-team matchup-team--a">
+                      <span className={`fi fi-${infoA?.iso ?? ''} matchup-flag`} aria-hidden="true" />
+                      <span className="matchup-name">{infoA?.he ?? teams[0]}</span>
+                    </span>
+                    <span className="matchup-sep">×</span>
+                    <span className="matchup-team matchup-team--b">
+                      <span className="matchup-name">{infoB?.he ?? teams[1]}</span>
+                      <span className={`fi fi-${infoB?.iso ?? ''} matchup-flag`} aria-hidden="true" />
+                    </span>
+                  </div>
+                  <div className="matchup-pickers">
+                    {pickers.map(label => (
+                      <span key={label} className="matchup-picker">{label}</span>
+                    ))}
+                  </div>
                 </div>
               </li>
             )
