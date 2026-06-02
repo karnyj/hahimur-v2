@@ -5,10 +5,11 @@ interface Props {
   players: string[]
   realGoals: Record<string, number>
   defaultWinner: string | undefined
+  pickersByPlayer?: Record<string, string[]>
   onChange: (goals: Record<string, number>, winner: string | undefined) => void
 }
 
-export default function GoalScorerSection({ players, realGoals, defaultWinner, onChange }: Props) {
+export default function GoalScorerSection({ players, realGoals, defaultWinner, pickersByPlayer, onChange }: Props) {
   const [playerGoals, setPlayerGoals] = useState<Record<string, number>>(realGoals)
   const [goldenBootWinner, setGoldenBootWinner] = useState<string | undefined>(defaultWinner)
 
@@ -37,7 +38,16 @@ export default function GoalScorerSection({ players, realGoals, defaultWinner, o
             disabled={maxGoals === 0 || (playerGoals[player] ?? 0) < maxGoals}
             onChange={() => setGoldenBootWinner(prev => prev === player ? undefined : player)}
           />
-          <span className="pg-scorer-name">{player}</span>
+          <div className="pg-scorer-player">
+            <span className="pg-scorer-name">{player}</span>
+            {pickersByPlayer?.[player]?.length ? (
+              <div className="pg-scorer-pickers">
+                {pickersByPlayer[player].map(label => (
+                  <span key={label} className="pg-scorer-picker">{label}</span>
+                ))}
+              </div>
+            ) : null}
+          </div>
           <input
             type="number"
             aria-label={player}

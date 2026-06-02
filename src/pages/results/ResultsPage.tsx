@@ -85,6 +85,16 @@ function CollapsibleSection({ label, children }: CollapsibleSectionProps) {
 const predictedPlayers = (users: User[]) =>
   [...new Set(users.map(u => u.topGoalscorer).filter(Boolean))]
 
+const pickersByPlayer = (users: User[]): Record<string, string[]> => {
+  const map: Record<string, string[]> = {}
+  for (const user of users) {
+    if (user.topGoalscorer) {
+      ;(map[user.topGoalscorer] ??= []).push(user.label)
+    }
+  }
+  return map
+}
+
 export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
   const [activeGroup, setActiveGroup] = useState('A')
@@ -289,6 +299,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
               players={players}
               realGoals={realTournamentResults.playerGoals ?? {}}
               defaultWinner={goalScorerState.goldenBootWinner}
+              pickersByPlayer={pickersByPlayer(users)}
               onChange={(goals, winner) => setGoalScorerState({ playerGoals: goals, goldenBootWinner: winner })}
             />
           </CollapsibleSection>

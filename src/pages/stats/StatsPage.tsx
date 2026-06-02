@@ -62,6 +62,24 @@ function computeFinalMatchups(users: User[]): FinalMatchup[] {
   return [...map.values()].sort((a, b) => b.pickers.length - a.pickers.length)
 }
 
+interface GoalScorerStat {
+  player: string
+  pickers: string[]
+}
+
+function computeGoalScorerStats(users: User[]): GoalScorerStat[] {
+  const map = new Map<string, string[]>()
+  for (const user of users) {
+    if (user.topGoalscorer) {
+      if (!map.has(user.topGoalscorer)) map.set(user.topGoalscorer, [])
+      map.get(user.topGoalscorer)!.push(user.label)
+    }
+  }
+  return [...map.entries()]
+    .map(([player, pickers]) => ({ player, pickers }))
+    .sort((a, b) => b.pickers.length - a.pickers.length)
+}
+
 interface Props {
   users?: User[]
 }
@@ -69,6 +87,7 @@ interface Props {
 export default function StatsPage({ users = USERS }: Props) {
   const stats = computeFinalStats(users)
   const matchups = computeFinalMatchups(users)
+  const goalScorers = computeGoalScorerStats(users)
 
   return (
     <PageLayout title="Stats">
@@ -179,6 +198,29 @@ export default function StatsPage({ users = USERS }: Props) {
               </li>
             )
           })}
+        </ol>
+
+        <p className="stats-eyebrow stats-eyebrow--section">מלך שערים</p>
+        <p className="stats-subtitle">מי ניחש איזה שחקן יהיה מלך השערים</p>
+
+        <ol className="matchups-list" data-section="golden-boot">
+          {goalScorers.map(({ player, pickers }, i) => (
+            <li
+              key={player}
+              className="matchup-row"
+              style={{ '--row-i': i } as React.CSSProperties}
+            >
+              <span className="matchup-count" data-col="count">{pickers.length}</span>
+              <div className="matchup-content">
+                <span className="matchup-name">{player}</span>
+                <div className="matchup-pickers">
+                  {pickers.map(label => (
+                    <span key={label} className="matchup-picker">{label}</span>
+                  ))}
+                </div>
+              </div>
+            </li>
+          ))}
         </ol>
       </main>
     </PageLayout>

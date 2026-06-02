@@ -331,6 +331,7 @@
   padding: 8px 12px;
   border: 1.5px solid rgba(200, 184, 122, 0.4);
   transition: border-color 0.15s;
+  gap: 0.5rem;
 }
 
 .pg-scorer-row--winner {
@@ -378,4 +379,34 @@
 .pg-scorer-input::-webkit-inner-spin-button,
 .pg-scorer-input::-webkit-outer-spin-button {
   opacity: 1;
+}
+
+.pg-scorer-player {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  flex: 1;
+}
+
+.pg-scorer-pickers {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+}
+
+.pg-scorer-picker {
+  font-size: 8.5px;
+  font-weight: 700;
+  border-radius: 2px;
+  padding: 0.15em 0.4em;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--navy) 75%, transparent);
+  background: color-mix(in srgb, var(--navy) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--navy) 18%, transparent);
+}
+
+.pg-scorer-row--winner .pg-scorer-picker {
+  color: color-mix(in srgb, var(--gold) 80%, var(--ink));
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+  border-color: color-mix(in srgb, var(--gold) 35%, transparent);
 }
