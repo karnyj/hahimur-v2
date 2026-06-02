@@ -64,6 +64,15 @@ describe('GoalScorerSection', () => {
     expect(lastCall[1]).toBeUndefined()
   })
 
+  test('winner is cleared when their goals drop to zero', async () => {
+    const { onChange } = setup()
+    await userEvent.type(goalInput('Messi'), '1')
+    await userEvent.click(checkbox('Messi'))
+    fireEvent.change(goalInput('Messi'), { target: { value: '0' } })
+    const lastCall = onChange.mock.calls.at(-1)!
+    expect(lastCall[1]).toBeUndefined()
+  })
+
   test('goals cannot go below the real floor', () => {
     const { onChange } = setup(['Messi'], { Messi: 3 })
     fireEvent.change(goalInput('Messi'), { target: { value: '1' } })

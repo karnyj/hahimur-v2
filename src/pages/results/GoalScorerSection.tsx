@@ -18,7 +18,7 @@ export default function GoalScorerSection({ players, realGoals, defaultWinner, p
   useEffect(() => {
     setGoldenBootWinner(prev => {
       if (!prev) return prev
-      return (playerGoals[prev] ?? 0) < maxGoals ? undefined : prev
+      return maxGoals === 0 || (playerGoals[prev] ?? 0) < maxGoals ? undefined : prev
     })
   }, [playerGoals])
 
