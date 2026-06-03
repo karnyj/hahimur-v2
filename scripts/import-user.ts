@@ -1,4 +1,4 @@
-import { readFileSync, writeFileSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync } from 'fs'
 import { resolve } from 'path'
 import type { Standing, ThirdPlaceStanding, ThirdPlaceQualification, KnockoutStages, KnockoutMatch, GroupMatch } from '../src/shared/types'
 
@@ -11,6 +11,27 @@ if (!inputPath || !outputSlug) {
 }
 
 const raw = JSON.parse(readFileSync(resolve(inputPath), 'utf8'))
+
+if (!raw.topGoalscorer) {
+  console.error('Error: missing or empty topGoalscorer in JSON')
+  process.exit(1)
+}
+if (!raw.topGoalscorer.trim().includes(' ')) {
+  console.error(`Error: topGoalscorer "${raw.topGoalscorer}" looks like only a last name — expected a full name (e.g. "קיליאן אמבפה")`)
+  process.exit(1)
+}
+
+const usersDir = resolve('src/users')
+const knownGoalscorers = new Set(
+  readdirSync(usersDir)
+    .filter(f => f.endsWith('.ts') && f !== 'index.ts')
+    .map(f => readFileSync(resolve(usersDir, f), 'utf8').match(/export const topGoalscorer = '(.+)'/)?.[1])
+    .filter(Boolean)
+)
+if (!knownGoalscorers.has(raw.topGoalscorer)) {
+  console.warn(`Warning: topGoalscorer "${raw.topGoalscorer}" doesn't match any existing user.`)
+  console.warn(`Known values: ${[...knownGoalscorers].join(', ')}`)
+}
 
 // --- serialize ---
 
@@ -55,7 +76,7 @@ const lines: string[] = [
   ``,
 ]
 
-lines.push(`export const topGoalscorer = '${raw.topGoalscorer ?? ''}'`)
+lines.push(`export const topGoalscorer = '${raw.topGoalscorer}'`)
 lines.push(`export const label = '${raw.label ?? ''}'`)
 lines.push(``)
 
