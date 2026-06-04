@@ -1,13 +1,49 @@
-import { readFileSync, writeFileSync, readdirSync } from 'fs'
-import { resolve } from 'path'
+import { readFileSync, writeFileSync, readdirSync, copyFileSync } from 'fs'
+import { resolve, basename } from 'path'
 import type { Standing, ThirdPlaceStanding, ThirdPlaceQualification, KnockoutStages, KnockoutMatch, GroupMatch } from '../src/shared/types'
 
-const [inputPath, outputSlug] = process.argv.slice(2)
+const DOWNLOADS = '/mnt/c/Users/idanm/Downloads'
+const RAW_EXPORTS = resolve('raw_exports')
 
-if (!inputPath || !outputSlug) {
-  console.error('Usage: node --experimental-strip-types scripts/import-user.ts <input.json> <output-slug>')
-  console.error('Example: node --experimental-strip-types scripts/import-user.ts exports/idan.json idan-melamed')
-  process.exit(1)
+function findNewDownloads(): string[] {
+  const existing = new Set(readdirSync(RAW_EXPORTS))
+  return readdirSync(DOWNLOADS)
+    .filter(f => f.startsWith('wc2026-predictions-') && f.endsWith('.json') && !existing.has(f))
+}
+
+let [arg1, arg2] = process.argv.slice(2)
+let inputPath: string
+let outputSlug: string
+
+if (arg1?.endsWith('.json')) {
+  // explicit: import-user.ts <input.json> <output-slug>
+  if (!arg2) {
+    console.error('Usage: node --experimental-strip-types scripts/import-user.ts <input.json> <output-slug>')
+    process.exit(1)
+  }
+  inputPath = arg1
+  outputSlug = arg2
+} else {
+  // auto-detect from Downloads: import-user.ts <output-slug>
+  if (!arg1) {
+    console.error('Usage: node --experimental-strip-types scripts/import-user.ts [<input.json>] <output-slug>')
+    process.exit(1)
+  }
+  outputSlug = arg1
+  const newFiles = findNewDownloads()
+  if (newFiles.length === 0) {
+    console.error('No new wc2026-predictions-*.json files found in Downloads.')
+    process.exit(1)
+  }
+  if (newFiles.length > 1) {
+    console.error('Multiple new files found in Downloads — specify which one explicitly:')
+    newFiles.forEach(f => console.error(`  ${f}`))
+    process.exit(1)
+  }
+  const filename = newFiles[0]
+  copyFileSync(`${DOWNLOADS}/${filename}`, `${RAW_EXPORTS}/${filename}`)
+  console.log(`Copied: ${filename} → raw_exports/`)
+  inputPath = `${RAW_EXPORTS}/${filename}`
 }
 
 const raw = JSON.parse(readFileSync(resolve(inputPath), 'utf8'))

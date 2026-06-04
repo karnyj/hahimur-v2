@@ -11,6 +11,7 @@ import * as oded_livnat from './oded-livnat'
 import * as yaniv_klein from './yaniv-klein'
 import * as aviram_hareuveni from './aviram-hareuveni'
 import * as lior_moldovan from './lior-moldovan'
+import * as noam_biran from './noam-biran'
 import * as raz_kobi from './raz-kobi'
 
 export interface User {
@@ -59,6 +60,7 @@ export const USERS: User[] = [
   toUser(yaniv_klein),
   toUser(aviram_hareuveni),
   toUser(lior_moldovan),
+  toUser(noam_biran),
   toUser(raz_kobi),
 ]
 
