@@ -14,7 +14,13 @@
       "Bash(node --experimental-strip-types scripts/import-user.ts *)",
       "Bash(cp *)",
       "Bash(sed -i *)",
-      "Bash(npx tsc *)"
+      "Bash(npx tsc *)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s http://localhost:5199)",
+      "Bash(node check-matchups.js)",
+      "Bash(node check-matchups.cjs)",
+      "Bash(kill %1)",
+      "Bash(pkill -f \"vite --port\")"
     ]
   }
 }

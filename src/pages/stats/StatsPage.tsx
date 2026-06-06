@@ -44,22 +44,34 @@ function computeFinalStats(users: User[]): TeamFinalStat[] {
 
 interface FinalMatchup {
   teams: [string, string]
-  pickers: string[]
+  wins: [number, number]
+  winnerPickers: [string[], string[]]
 }
 
 function computeFinalMatchups(users: User[]): FinalMatchup[] {
-  const map = new Map<string, { teams: [string, string]; pickers: string[] }>()
+  const map = new Map<string, { teams: [string, string]; wins: [number, number]; winnerPickers: [string[], string[]] }>()
 
   for (const user of users) {
     if (user.predictedFinalTeams?.length === 2) {
       const sorted = [...user.predictedFinalTeams].sort() as [string, string]
       const key = sorted.join('|')
-      if (!map.has(key)) map.set(key, { teams: sorted, pickers: [] })
-      map.get(key)!.pickers.push(user.label)
+      if (!map.has(key)) map.set(key, { teams: sorted, wins: [0, 0], winnerPickers: [[], []] })
+      const entry = map.get(key)!
+      if (user.predictedChampion === sorted[0]) {
+        entry.wins[0]++
+        entry.winnerPickers[0].push(user.label)
+      } else if (user.predictedChampion === sorted[1]) {
+        entry.wins[1]++
+        entry.winnerPickers[1].push(user.label)
+      }
     }
   }
 
-  return [...map.values()].sort((a, b) => b.pickers.length - a.pickers.length)
+  return [...map.values()].sort((a, b) => {
+    const totalA = a.wins[0] + a.wins[1]
+    const totalB = b.wins[0] + b.wins[1]
+    return totalB - totalA
+  })
 }
 
 interface TeamStageStat {
@@ -208,32 +220,42 @@ export default function StatsPage({ users = USERS }: Props) {
         <p className="stats-subtitle">כמה מהמשתתפים ניחשו כל מפגש גמר</p>
 
         <ol className="matchups-list" data-section="matchups">
-          {matchups.map(({ teams, pickers }, i) => {
+          {matchups.map(({ teams, wins, winnerPickers }, i) => {
             const infoA = TEAMS[teams[0]]
             const infoB = TEAMS[teams[1]]
+            const total = wins[0] + wins[1]
             return (
               <li
                 key={teams.join('|')}
                 className="matchup-row"
                 style={{ '--row-i': i } as React.CSSProperties}
               >
-                <span className="matchup-count" data-col="count">{pickers.length}</span>
+                <span className="matchup-count" data-col="count">{total}</span>
                 <div className="matchup-content">
                   <div className="matchup-duel">
                     <span className="matchup-team matchup-team--a">
                       <span className={`fi fi-${infoA?.iso ?? ''} matchup-flag`} aria-hidden="true" />
                       <span className="matchup-name">{infoA?.he ?? teams[0]}</span>
                     </span>
+                    <span className="matchup-win matchup-win--a">{wins[0]}</span>
                     <span className="matchup-sep">×</span>
+                    <span className="matchup-win matchup-win--b">{wins[1]}</span>
                     <span className="matchup-team matchup-team--b">
                       <span className="matchup-name">{infoB?.he ?? teams[1]}</span>
                       <span className={`fi fi-${infoB?.iso ?? ''} matchup-flag`} aria-hidden="true" />
                     </span>
                   </div>
-                  <div className="matchup-pickers">
-                    {pickers.map(label => (
-                      <span key={label} className="matchup-picker">{label}</span>
-                    ))}
+                  <div className="matchup-pickers-split">
+                    <div className="matchup-pickers matchup-pickers--a">
+                      {winnerPickers[0].map((label: string) => (
+                        <span key={label} className="matchup-picker matchup-picker--a">{label}</span>
+                      ))}
+                    </div>
+                    <div className="matchup-pickers matchup-pickers--b">
+                      {winnerPickers[1].map((label: string) => (
+                        <span key={label} className="matchup-picker matchup-picker--b">{label}</span>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </li>
