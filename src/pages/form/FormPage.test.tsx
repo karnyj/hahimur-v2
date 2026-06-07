@@ -1,16 +1,14 @@
 import { render, screen, within, fireEvent } from '@testing-library/react'
-import { vi, afterEach } from 'vitest'
+import { vi } from 'vitest'
 import FormPage from './FormPage'
 import { GROUPS } from '../../shared/groups'
 
 vi.mock('../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
-vi.mock('../../shared/Countdown', () => ({ default: () => null }))
 vi.mock('../../formView/knockout/KnockoutTable', () => ({ default: () => null }))
 vi.mock('../../formView/thirdPlace/ThirdPlaceTable', () => ({ default: () => null }))
 vi.mock('../../formView/knockout/ChampionBanner', () => ({ default: () => null }))
 
 beforeEach(() => localStorage.clear())
-afterEach(() => vi.useRealTimers())
 
 function setup() {
   render(<FormPage />)
@@ -226,28 +224,3 @@ describe('Knockout stages', () => {
   })
 })
 
-describe('Deadline lock', () => {
-  test('group score inputs are editable before the deadline', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-06-06T20:59:59Z')) // 23:59:59 Jerusalem time
-    render(<FormPage />)
-    const groupSection = document.querySelector('section.content-section') as HTMLElement
-    expect(within(groupSection).getAllByRole('textbox').length).toBeGreaterThan(0)
-  })
-
-  test('group score inputs are hidden and save button is disabled after the deadline', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-06-06T21:00:01Z')) // 00:00:01 Jerusalem time
-    render(<FormPage />)
-    const groupSection = document.querySelector('section.content-section') as HTMLElement
-    expect(within(groupSection).queryAllByRole('textbox')).toHaveLength(0)
-    expect(screen.getByRole('button', { name: /שמור/i })).toBeDisabled()
-  })
-
-  test('goalscorer input is disabled after the deadline', () => {
-    vi.useFakeTimers()
-    vi.setSystemTime(new Date('2026-06-06T21:00:01Z')) // 00:00:01 Jerusalem time
-    render(<FormPage />)
-    expect(screen.getByPlaceholderText('שם השחקן...')).toBeDisabled()
-  })
-})

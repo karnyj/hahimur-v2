@@ -3,10 +3,10 @@ import Nav, { USER_STORAGE_EVENT } from './Nav'
 
 beforeEach(() => localStorage.clear())
 
-test('regular user sees home and form links', () => {
+test('regular user sees only home link', () => {
   render(<Nav />)
   expect(screen.getByText('בית')).toBeInTheDocument()
-  expect(screen.getByText('הטופס')).toBeInTheDocument()
+  expect(screen.queryByText('הטופס')).not.toBeInTheDocument()
   expect(screen.queryByText('תוצאות')).not.toBeInTheDocument()
 })
 
@@ -14,7 +14,7 @@ test('ליכטטור sees home and admin links', () => {
   localStorage.setItem('userName', 'ליכטטור')
   render(<Nav />)
   expect(screen.getByText('בית')).toBeInTheDocument()
-  expect(screen.getByText('הטופס')).toBeInTheDocument()
+  expect(screen.queryByText('הטופס')).not.toBeInTheDocument()
   expect(screen.getByText('טפסים')).toBeInTheDocument()
 })
 

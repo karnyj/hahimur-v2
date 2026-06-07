@@ -7,7 +7,6 @@ import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'
 import { useTournament } from '../../shared/useTournament'
 import PageLayout from '../../shared/PageLayout'
 import { USER_STORAGE_EVENT } from '../../Nav'
-import Countdown from '../../shared/Countdown'
 import MatchRow from '../../formView/groupStage/MatchRow'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
 import ThirdPlaceTable from '../../formView/thirdPlace/ThirdPlaceTable'
@@ -16,7 +15,6 @@ import ChampionBanner from '../../formView/knockout/ChampionBanner'
 import type { User } from '../../users'
 import { derivePredictions } from '../../users'
 
-const SUBMISSION_DEADLINE = new Date('2026-06-07T00:00:00+03:00')
 const STORAGE_KEY = 'user'
 
 function slugify(name: string): string {
@@ -73,15 +71,6 @@ export default function FormPage() {
   const [predictions, setPredictions] = useState<PredictionsState>(() => loadFromStorage().predictions)
   const [topGoalscorer, setTopGoalscorer] = useState<string>(() => loadFromStorage().topGoalscorer)
   const [userName, setUserName] = useState<string>(() => loadFromStorage().userName)
-  const [locked, setLocked] = useState(() => Date.now() >= SUBMISSION_DEADLINE.getTime())
-
-  useEffect(() => {
-    if (locked) return
-    const id = setInterval(() => {
-      if (Date.now() >= SUBMISSION_DEADLINE.getTime()) setLocked(true)
-    }, 1000)
-    return () => clearInterval(id)
-  }, [locked])
   const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
   const activeMatches = GROUP_MATCHES[activeGroup] ?? []
   const { standings: activeStandings, tiedTeams: activeTiedTeams } = useMemo(
@@ -197,7 +186,6 @@ export default function FormPage() {
 
   return (
     <PageLayout title="ההימור 2026">
-      <Countdown targetDate={SUBMISSION_DEADLINE} label="לסגירת הטפסים" />
 
       <main>
         <div className="group-grid">
@@ -235,7 +223,6 @@ export default function FormPage() {
               match={match}
               scores={predictions[match.id]}
               onChange={(scores) => updateScores(match.id, scores)}
-              readOnly={locked}
             />
           ))}
           <StandingsTable standings={activeStandings} />
@@ -248,32 +235,32 @@ export default function FormPage() {
 
         <section className="content-section">
           <div className="section-tag">שלב ה-32</div>
-          <KnockoutTable matches={round32Matches} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={round32Matches} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">שמינית גמר</div>
-          <KnockoutTable matches={knockout.r16} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={knockout.r16} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">רבע גמר</div>
-          <KnockoutTable matches={knockout.qf} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={knockout.qf} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">חצי גמר</div>
-          <KnockoutTable matches={knockout.sf} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={knockout.sf} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">מקום שלישי</div>
-          <KnockoutTable matches={[knockout.thirdPlace]} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={[knockout.thirdPlace]} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
           <div className="section-tag">גמר</div>
-          <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={updateScores} readOnly={locked} />
+          <KnockoutTable matches={[knockout.final]} predictions={predictions} onChange={updateScores} />
         </section>
 
         <section className="content-section">
@@ -285,7 +272,6 @@ export default function FormPage() {
               placeholder="שם השחקן..."
               value={topGoalscorer}
               onChange={e => updateTopGoalscorer(e.target.value)}
-              disabled={locked}
             />
           </div>
         </section>
@@ -305,7 +291,7 @@ export default function FormPage() {
 
         <section className="content-section save-section">
           <p className="save-hint">כשתסיים למלא את כל ההימורים, שמור אותם כקובץ</p>
-          <button className="save-button" onClick={saveToFile} disabled={locked}>
+          <button className="save-button" onClick={saveToFile}>
             <span className="save-button-icon">↓</span>
             שמור טופס
           </button>

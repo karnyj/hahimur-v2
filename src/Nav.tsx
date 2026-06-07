@@ -2,12 +2,10 @@ import { useState, useEffect } from 'react'
 
 const LINKS = [
   { href: '/', label: 'בית' },
-  { href: '/form', label: 'הטופס' },
 ]
 
 const ADMIN_LINKS = [
   { href: '/', label: 'בית' },
-  { href: '/form', label: 'הטופס' },
   { href: '/forms', label: 'טפסים' },
   { href: '/results', label: 'תוצאות' },
   { href: '/stats', label: 'סטטיסטיקות' },
