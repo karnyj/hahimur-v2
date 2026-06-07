@@ -14,6 +14,15 @@ const STAGE_LABELS: Record<string, string> = {
   champion: '★ אלופה',
 }
 
+const STAGE_LABELS_INVERTED: Record<string, string> = {
+  r32: 'לא העלו לשלב ה-32',
+  r16: 'לא העלו לשמינית',
+  qf: 'לא העלו לרבע',
+  sf: 'לא העלו לחצי',
+  final: 'לא העלו לגמר',
+  champion: 'לא בחרו כאלופה',
+}
+
 interface TeamFinalStat {
   team: string
   championPickers: string[]
@@ -148,12 +157,14 @@ interface Props {
 
 interface StagePopup {
   pickers: string[]
+  col: string
   stageLabel: string
   teamName: string
   left: number
   top: number
   above: boolean
   arrowLeft: number
+  inverted?: boolean
 }
 
 export default function StatsPage({ users = USERS }: Props) {
@@ -161,6 +172,8 @@ export default function StatsPage({ users = USERS }: Props) {
   const matchups = computeFinalMatchups(users)
   const goalScorers = computeGoalScorerStats(users)
   const teamStageStats = computeTeamStageStats(users)
+
+  const allUserLabels = users.map(u => u.label)
 
   const [popup, setPopup] = useState<StagePopup | null>(null)
   const popupRef = useRef<HTMLDivElement>(null)
@@ -179,7 +192,7 @@ export default function StatsPage({ users = USERS }: Props) {
     }
   }, [popup])
 
-  const openPopup = (e: React.MouseEvent<HTMLTableCellElement>, pickers: string[], teamName: string, col: string) => {
+  const openPopup = (e: React.MouseEvent<HTMLTableCellElement>, pickers: string[], teamName: string, col: string, inverted?: boolean) => {
     if (!pickers.length) return
     const rect = e.currentTarget.getBoundingClientRect()
     const popupWidth = 190
@@ -188,12 +201,14 @@ export default function StatsPage({ users = USERS }: Props) {
     const above = rect.bottom + 160 > window.innerHeight
     setPopup({
       pickers,
+      col,
       stageLabel: STAGE_LABELS[col] ?? col,
       teamName,
       left: clampedLeft,
       top: above ? rect.top - 8 : rect.bottom + 8,
       above,
       arrowLeft: rect.left + rect.width / 2 - clampedLeft,
+      inverted,
     })
   }
 
@@ -343,7 +358,7 @@ export default function StatsPage({ users = USERS }: Props) {
 
         <p className="stats-eyebrow stats-eyebrow--section">נבחרות לפי שלב</p>
         <p className="stats-subtitle">כמה משתתפים העלו כל נבחרת לכל שלב</p>
-        <p className="stages-tap-hint">לחצו על כל חלק בטבלה כדי לראות מי העלה את הנבחרת לשלב הזה</p>
+        <p className="stages-tap-hint">לחצו על כל חלק בטבלה כדי לראות מי העלה (או לא העלה) את הנבחרת לשלב הזה</p>
 
         <div className="stages-wrap">
           <table className="stages-table" dir="rtl" data-section="team-stages">
@@ -363,15 +378,20 @@ export default function StatsPage({ users = USERS }: Props) {
                 const teamInfo = TEAMS[team]
                 const teamName = teamInfo?.he ?? team
                 const cell = (pickers: string[], col: string, extra?: string) => {
-                  const interactive = pickers.length > 0
+                  const inverted = pickers.length > 20
+                  const displayPickers = inverted
+                    ? allUserLabels.filter(l => !pickers.includes(l))
+                    : pickers
+                  const showCount = pickers.length > 0
+                  const interactive = displayPickers.length > 0
                   return (
                     <td
                       className={`stages-td${extra ? ` ${extra}` : ''}${interactive ? ' stages-td--interactive' : ''}`}
                       data-col={col}
                       data-zero={pickers.length === 0 || undefined}
-                      onClick={interactive ? (e) => openPopup(e, pickers, teamName, col) : undefined}
+                      onClick={interactive ? (e) => openPopup(e, displayPickers, teamName, col, inverted) : undefined}
                     >
-                      {interactive
+                      {showCount
                         ? <span className="stages-cell-count">{pickers.length}</span>
                         : '–'}
                     </td>
@@ -409,7 +429,7 @@ export default function StatsPage({ users = USERS }: Props) {
           >
             <div className="stage-popup-header">
               <span className="stage-popup-team">{popup.teamName}</span>
-              <span className="stage-popup-stage">{popup.stageLabel}</span>
+              <span className="stage-popup-stage">{popup.inverted ? (STAGE_LABELS_INVERTED[popup.col] ?? popup.stageLabel) : popup.stageLabel}</span>
             </div>
             <div className="stage-popup-pickers">
               {popup.pickers.map(name => (
