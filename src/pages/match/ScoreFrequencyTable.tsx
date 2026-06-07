@@ -12,19 +12,20 @@ export default function ScoreFrequencyTable({ matchId, users }: { matchId: strin
   }
   const total = [...counts.values()].reduce((s, n) => s + n, 0)
   const parseKey = (key: string) => { const [h, aw] = key.split('-').map(Number); return { h, aw } }
+  const maxCount = Math.max(...counts.values())
   const rows = [...counts.entries()]
     .sort((a, b) => { const pa = parseKey(a[0]), pb = parseKey(b[0]); return compareScores(pa.h, pa.aw, pb.h, pb.aw) })
-    .map(([key, count]) => ({ key, count, pct: Math.round((count / total) * 100) }))
+    .map(([key, count]) => ({ key, count, pct: Math.round((count / total) * 100), isLeader: count === maxCount }))
 
   if (rows.length === 0) return null
 
   return (
     <div data-testid="score-freq-table" className="score-freq">
-      {rows.map(({ key, count, pct }, i) => (
+      {rows.map(({ key, count, pct, isLeader }, i) => (
         <div
           key={key}
           data-testid="score-freq-row"
-          className={`score-freq__row${i === 0 ? ' score-freq__row--leader' : ''}`}
+          className={`score-freq__row${isLeader ? ' score-freq__row--leader' : ''}`}
           style={{ '--bar-pct': `${pct}%`, '--row-delay': `${i * 80}ms`, animationDelay: `${i * 80}ms` } as React.CSSProperties}
         >
           <div className="score-freq__content">

@@ -46,9 +46,14 @@ test('sorts home wins before draws', () => {
   expect(rows[1]).toHaveTextContent('0–0')
 })
 
-test('marks first row as leader', () => {
-  render(<ScoreFrequencyTable matchId="M1" users={[u('א', 2, 1), u('ב', 0, 0)]} />)
+test('marks the most popular scoreline as leader', () => {
+  render(<ScoreFrequencyTable matchId="M1" users={[
+    u('א', 2, 1),
+    u('ב', 2, 1),
+    u('ג', 0, 0),
+  ]} />)
   const rows = screen.getAllByTestId('score-freq-row')
+  // 1–2 appears twice (leader), 0–0 appears once
   expect(rows[0]).toHaveClass('score-freq__row--leader')
   expect(rows[1]).not.toHaveClass('score-freq__row--leader')
 })
