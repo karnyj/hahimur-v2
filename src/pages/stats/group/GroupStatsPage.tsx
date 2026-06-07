@@ -1,7 +1,7 @@
 import { GROUP_HEBREW, GROUP_MATCHES } from '../../../shared/groups'
 import type { GroupLetter } from '../../../shared/groups'
 import { calculateStandings } from '../../../shared/standings'
-import { computeGroupVotes } from '../../group/groupVotes'
+import { computeGroupVotes, computeGroupVotePickers } from '../../group/groupVotes'
 import { USERS } from '../../../users/index'
 import { tournamentResults } from '../../../tournament-results'
 import PageLayout from '../../../shared/PageLayout'
@@ -22,6 +22,7 @@ export default function GroupStatsPage({ groupLetter }: Props) {
   const scores = Object.fromEntries(groupMatches.map(m => [m.id, m.scores ?? { home: null, away: null }]))
   const { standings } = calculateStandings(matches, scores)
   const votes = computeGroupVotes(USERS, groupLetter)
+  const pickers = computeGroupVotePickers(USERS, groupLetter)
 
   return (
     <PageLayout title={`קבוצה ${hebrew}`}>
@@ -33,7 +34,7 @@ export default function GroupStatsPage({ groupLetter }: Props) {
 
         <section>
           <h2>תחזיות הקבוצה</h2>
-          <GroupVoteMatrix votes={votes} />
+          <GroupVoteMatrix votes={votes} pickers={pickers} />
         </section>
 
         <section>
