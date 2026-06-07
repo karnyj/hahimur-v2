@@ -26,6 +26,13 @@
   padding: 3px 10px;
   border-radius: 2px;
   margin-bottom: 1.75rem;
+  text-decoration: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.match-header__group-badge:hover {
+  border-color: var(--gold);
+  background: rgba(212, 160, 22, 0.08);
 }
 
 .match-header__teams {

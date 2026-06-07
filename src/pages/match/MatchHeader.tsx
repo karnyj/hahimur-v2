@@ -18,7 +18,7 @@ type Props = {
 export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore }: Props) {
   return (
     <div className="match-header">
-      <div className="match-header__group-badge">בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]}</div>
+      <a className="match-header__group-badge" href={`/stats/groups/${match.id[0].toLowerCase()}`}>בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]} ›</a>
 
       <div className="match-header__teams">
         <div className="match-team">

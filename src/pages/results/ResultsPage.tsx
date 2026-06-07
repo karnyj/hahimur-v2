@@ -247,6 +247,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
                   </button>
                 ))}
               </div>
+              <a href={`/stats/groups/${activeGroup.toLowerCase()}`} className="pg-group-stats-link">סטטיסטיקות בית {GROUPS[activeGroup].he} →</a>
             </div>
 
             {activeAllFilled && activeTiedTeams.size > 0 && (

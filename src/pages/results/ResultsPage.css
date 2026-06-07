@@ -91,6 +91,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 5px;
+  flex: 1;
 }
 
 .pg-group-btn {
@@ -119,6 +120,30 @@
 .pg-group-btn--error {
   border-color: #c0392b;
   color: #c0392b;
+}
+
+.pg-group-stats-link {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  padding: 5px 11px;
+  color: rgba(11, 34, 68, 0.38);
+  text-decoration: none;
+  border: 1.5px solid rgba(200, 184, 122, 0.55);
+  white-space: nowrap;
+  transition: border-color 0.12s, color 0.12s;
+}
+
+.pg-group-stats-link:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+@media (max-width: 500px) {
+  .pg-group-stats-link {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 .pg-random-btn {
