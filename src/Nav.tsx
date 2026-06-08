@@ -2,6 +2,7 @@ export const USER_STORAGE_EVENT = 'userStorageUpdated'
 
 const LINKS = [
   { href: '/', label: 'בית' },
+  { href: '/updates', label: 'עדכונים' },
   { href: '/forms', label: 'טפסים' },
   { href: '/results', label: 'תוצאות' },
   { href: '/stats', label: 'סטטיסטיקות' },

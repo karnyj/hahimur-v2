@@ -20,7 +20,12 @@
       "Bash(node check-matchups.js)",
       "Bash(node check-matchups.cjs)",
       "Bash(kill %1)",
-      "Bash(pkill -f \"vite --port\")"
+      "Bash(pkill -f \"vite --port\")",
+      "Bash(curl -s http://localhost:5199/)",
+      "Read(//usr/bin/**)",
+      "Bash(ls ~/.cache/ms-playwright/chromium*/chrome-linux/chrome 2>/dev/null || echo \"not found\")",
+      "Read(//home/idanmel/.cache/ms-playwright/**)",
+      "Read(//tmp/**)"
     ]
   }
 }

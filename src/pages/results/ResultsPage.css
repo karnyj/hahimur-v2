@@ -239,9 +239,17 @@
 
 .pg-view-toggle {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   gap: 5px;
   margin-bottom: 1rem;
   margin-top: 4px;
+  width: 100%;
+}
+
+.pg-view-toggle .pg-group-btn {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
 
 /* ── Date band ───────────────────────────────────────────────── */
@@ -391,6 +399,7 @@
 
 .pg-collapsible-inner {
   overflow: hidden;
+  width: 100%;
 }
 
 .pg-collapsible--open .pg-collapsible-inner {

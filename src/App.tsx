@@ -1,4 +1,5 @@
 import FormPage from './pages/form/FormPage'
+import UpdatesPage from './pages/updates/UpdatesPage'
 import FormsPage from './pages/forms/FormsPage'
 import HomePage from './pages/home/HomePage'
 import LeaderboardPage from './leaderboard/LeaderboardPage'
@@ -36,6 +37,7 @@ export default function App() {
        pathname === '/stats'                             ? <StatsPage users={USERS} /> :
        pathname === '/forms'                              ? <FormsPage users={USERS} usersSorted={USERS_SORTED} /> :
        pathname === '/form'                               ? <FormPage /> :
+       pathname === '/updates'                           ? <UpdatesPage /> :
        <HomePage />}
     </>
   )
