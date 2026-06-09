@@ -1,4 +1,4 @@
-import { computeUserPoints, computeGroupBreakdown } from './points'
+import { computeUserPoints, computeGroupBreakdown, singleMatchOutcome } from './points'
 import { GROUPS } from '../shared/groups'
 import type { GroupLetter } from '../shared/groups'
 import type { TournamentResults } from '../shared/types'
@@ -24,4 +24,35 @@ export function buildLeaderboardRows(users: User[], results: TournamentResults, 
 
 export function groupScopeLabel(scope: Scope): string | undefined {
   return scope !== 'all' ? `בית ${GROUPS[scope].he}` : undefined
+}
+
+export interface HitsRow {
+  label: string
+  tzelifaCount: number
+  pgiyaCount: number
+}
+
+export function buildHitsRows(users: User[], results: TournamentResults, scope: Scope): HitsRow[] {
+  const groupIds = scope === 'all' ? Object.keys(results.groupMatches) : [scope]
+
+  const resultById: Record<string, typeof results.groupMatches[string][number]> = {}
+  for (const groupId of groupIds) {
+    for (const m of results.groupMatches[groupId] ?? []) resultById[m.id] = m
+  }
+
+  return users.map(user => {
+    let tzelifaCount = 0
+    let pgiyaCount = 0
+    for (const groupId of groupIds) {
+      for (const userMatch of user.groupMatches[groupId] ?? []) {
+        const outcome = singleMatchOutcome(
+          userMatch.scores ?? { home: null, away: null },
+          resultById[userMatch.id]?.scores ?? { home: null, away: null },
+        )
+        if (outcome === 'tzelifa') tzelifaCount++
+        else if (outcome === 'pgiya') pgiyaCount++
+      }
+    }
+    return { label: user.label, tzelifaCount, pgiyaCount }
+  }).sort((a, b) => b.tzelifaCount - a.tzelifaCount || b.pgiyaCount - a.pgiyaCount)
 }

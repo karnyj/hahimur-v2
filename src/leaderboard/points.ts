@@ -41,14 +41,21 @@ function isDraw(scores: MatchScores): boolean {
   return scores.home === scores.away
 }
 
+export type MatchOutcome = 'tzelifa' | 'pgiya' | 'miss'
+
+export function singleMatchOutcome(predicted: MatchScores, actual: MatchScores): MatchOutcome {
+  if (isUnpredicted(predicted) || isUnpredicted(actual)) return 'miss'
+  if (isExactMatch(predicted, actual)) return 'tzelifa'
+  if (isDraw(predicted) !== isDraw(actual)) return 'miss'
+  if (winner(predicted) === winner(actual)) return 'pgiya'
+  return 'miss'
+}
+
 export function singleMatchPoints(matchId: string, predicted: MatchScores, actual: MatchScores): number {
-  if (isUnpredicted(predicted)) return 0
-  if (isUnpredicted(actual)) return 0
+  const outcome = singleMatchOutcome(predicted, actual)
+  if (outcome === 'miss') return 0
   const { pagiya, tzelifa } = ROUND_POINTS[roundOf(matchId)]
-  if (isExactMatch(predicted, actual)) return tzelifa
-  if (isDraw(predicted) !== isDraw(actual)) return 0
-  if (winner(predicted) === winner(actual)) return pagiya
-  return 0
+  return outcome === 'tzelifa' ? tzelifa : pagiya
 }
 
 function advPts(predicted: string[], actual: string[], pts: number): number {

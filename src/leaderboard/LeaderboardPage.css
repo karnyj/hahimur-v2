@@ -589,6 +589,12 @@
   margin-left: 8px;
 }
 
+.lb-mode-bar {
+  display: flex;
+  gap: 5px;
+  margin-top: 8px;
+}
+
 /* ── Scope primary columns (תוצאה / עולות in group scope view) ── */
 
 .lb-td--scope-col {

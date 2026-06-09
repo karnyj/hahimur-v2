@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import type { Standing, ThirdPlaceStanding, TournamentResults } from '../shared/types'
 import type { User } from '../users'
-import { computeUserPoints } from './points'
+import { computeUserPoints, singleMatchOutcome } from './points'
 
 const EMPTY_RESULTS: TournamentResults = {
   groupMatches: {},
@@ -442,4 +442,30 @@ test('total is sum of all buckets', () => {
   }
   const bd = computeUserPoints(user, results)
   expect(bd.total).toBe(bd.group.total + bd.r32.total + bd.r16.total + bd.qf.total + bd.sf.total + bd.third.total + bd.final.total + bd.goldenBoot.total)
+})
+
+describe('singleMatchOutcome', () => {
+  test('exact score → tzelifa', () => {
+    expect(singleMatchOutcome({ home: 2, away: 1 }, { home: 2, away: 1 })).toBe('tzelifa')
+  })
+
+  test('correct winner, wrong score → pgiya', () => {
+    expect(singleMatchOutcome({ home: 1, away: 0 }, { home: 3, away: 1 })).toBe('pgiya')
+  })
+
+  test('wrong winner → miss', () => {
+    expect(singleMatchOutcome({ home: 2, away: 0 }, { home: 0, away: 1 })).toBe('miss')
+  })
+
+  test('predicted draw, actual non-draw → miss', () => {
+    expect(singleMatchOutcome({ home: 1, away: 1 }, { home: 2, away: 1 })).toBe('miss')
+  })
+
+  test('unpredicted score → miss', () => {
+    expect(singleMatchOutcome({ home: null, away: null }, { home: 2, away: 1 })).toBe('miss')
+  })
+
+  test('no result yet → miss', () => {
+    expect(singleMatchOutcome({ home: 1, away: 0 }, { home: null, away: null })).toBe('miss')
+  })
 })
