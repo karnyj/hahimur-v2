@@ -546,3 +546,61 @@
   padding-right: 10px;
   padding-left: 4px;
 }
+
+/* ── Scope selector ── */
+
+.lb-scope-wrap {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem 1.25rem;
+}
+
+.lb-scope-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+}
+
+.lb-scope-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1rem;
+  letter-spacing: 0.05em;
+  padding: 5px 11px;
+  background: transparent;
+  border: 1.5px solid rgba(200, 184, 122, 0.55);
+  color: rgba(11, 34, 68, 0.38);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+
+.lb-scope-btn:hover {
+  border-color: var(--navy);
+  color: var(--navy);
+}
+
+.lb-scope-btn--active {
+  background: var(--navy);
+  color: var(--gold);
+  border-color: var(--navy);
+}
+
+.lb-scope-btn--reset {
+  margin-left: 8px;
+}
+
+/* ── Scope primary columns (תוצאה / עולות in group scope view) ── */
+
+.lb-td--scope-col {
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 17px;
+  color: var(--navy);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.03em;
+  padding: 12px 10px;
+}
+
+.lb-row--rank-1 .lb-td--scope-col { color: var(--gold); font-size: 18px; }
+.lb-row--rank-2 .lb-td--scope-col { color: var(--ink); }
+.lb-row--rank-3 .lb-td--scope-col { color: var(--muted); }

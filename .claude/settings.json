@@ -31,7 +31,8 @@
       "Bash(git -C /home/idanmel/hahimur add src/pages/updates/updates.ts .claude/settings.json)",
       "Bash(git -C /home/idanmel/hahimur commit -m ' *)",
       "Bash(npm install *)",
-      "Bash(git pull *)"
+      "Bash(git pull *)",
+      "Bash(git checkout *)"
     ]
   }
 }

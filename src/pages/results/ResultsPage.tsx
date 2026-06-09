@@ -5,9 +5,11 @@ import MatchRow from '../../formView/groupStage/MatchRow'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
 import KnockoutTable from '../../formView/knockout/KnockoutTable'
 import ThirdPlaceTable from '../../formView/thirdPlace/ThirdPlaceTable'
-import { computeUserPoints } from '../../leaderboard/points'
 import type { User } from '../../users/index'
 import LeaderboardTable from '../../leaderboard/LeaderboardTable'
+import { buildLeaderboardRows, groupScopeLabel } from '../../leaderboard/leaderboardRows'
+import type { Scope } from '../../leaderboard/leaderboardRows'
+import LeaderboardScopeBar from '../../leaderboard/LeaderboardScopeBar'
 import { calculateStandings } from '../../shared/standings'
 import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'
 import { useTournament } from '../../shared/useTournament'
@@ -108,6 +110,7 @@ function matchSortKey(matchDate: string | undefined, kickoffIST: string | undefi
 
 export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
+  const [lbScope, setLbScope] = useState<Scope>('all')
   const [activeGroup, setActiveGroup] = useState('A')
   const [groupStageView, setGroupStageView] = useState<'by-group' | 'by-date'>('by-group')
   const [goalScorerState, setGoalScorerState] = useState(() => ({
@@ -231,10 +234,8 @@ export default function ResultsPage({ users }: { users: User[] }) {
     playerGoals: goalScorerState.playerGoals,
   }
 
-  const rows = users.map(user => ({
-    label: user.label,
-    ...computeUserPoints(user, tournamentResults),
-  })).sort((a, b) => b.total - a.total)
+  const rows = buildLeaderboardRows(users, tournamentResults, lbScope)
+  const lbScopeLabel = groupScopeLabel(lbScope)
 
   return (
     <PageLayout title="תוצאות">
@@ -247,7 +248,8 @@ export default function ResultsPage({ users }: { users: User[] }) {
             <span className="pg-lb-live-dot" aria-hidden="true" />
             <span className="pg-lb-subtitle">מתעדכן בזמן אמת</span>
           </div>
-          <LeaderboardTable rows={rows} />
+          <LeaderboardScopeBar scope={lbScope} onScopeChange={setLbScope} />
+          <LeaderboardTable rows={rows} scopeLabel={lbScopeLabel} />
         </section>
 
         {/* Simulation callout */}
