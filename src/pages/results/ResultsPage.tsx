@@ -11,7 +11,7 @@ import HitsTable from '../../leaderboard/HitsTable'
 import { buildLeaderboardRows, buildHitsRows, groupScopeLabel } from '../../leaderboard/leaderboardRows'
 import type { Scope } from '../../leaderboard/leaderboardRows'
 import LeaderboardScopeBar from '../../leaderboard/LeaderboardScopeBar'
-import LeaderboardModeBar from '../../leaderboard/LeaderboardModeBar'
+import LeaderboardModeBar, { modeToSortBy } from '../../leaderboard/LeaderboardModeBar'
 import type { Mode } from '../../leaderboard/LeaderboardModeBar'
 import { calculateStandings } from '../../shared/standings'
 import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'
@@ -239,7 +239,8 @@ export default function ResultsPage({ users }: { users: User[] }) {
   }
 
   const rows = buildLeaderboardRows(users, tournamentResults, lbScope)
-  const hitsRows = buildHitsRows(users, tournamentResults, lbScope)
+  const lbSortBy = modeToSortBy(lbMode)
+  const hitsRows = buildHitsRows(users, tournamentResults, lbScope, lbSortBy)
   const lbScopeLabel = groupScopeLabel(lbScope)
 
   return (
@@ -257,7 +258,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
           <LeaderboardModeBar mode={lbMode} onModeChange={setLbMode} />
           {lbMode === 'points'
             ? <LeaderboardTable rows={rows} scopeLabel={lbScopeLabel} />
-            : <HitsTable rows={hitsRows} />
+            : <HitsTable rows={hitsRows} sortBy={lbSortBy} />
           }
         </section>
 

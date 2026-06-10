@@ -1,4 +1,14 @@
-export type Mode = 'points' | 'hits'
+export type Mode = 'points' | 'pgiya' | 'tzelifa'
+
+export function modeToSortBy(mode: Mode): 'pgiya' | 'tzelifa' {
+  return mode === 'pgiya' ? 'pgiya' : 'tzelifa'
+}
+
+const MODES: Array<{ key: Mode; label: string }> = [
+  { key: 'points', label: 'נקודות' },
+  { key: 'pgiya', label: 'פגיעות' },
+  { key: 'tzelifa', label: 'צליפות' },
+]
 
 export default function LeaderboardModeBar({ mode, onModeChange }: {
   mode: Mode
@@ -6,16 +16,14 @@ export default function LeaderboardModeBar({ mode, onModeChange }: {
 }) {
   return (
     <div className="lb-mode-bar">
-      <button
-        type="button"
-        className={`lb-scope-btn${mode === 'points' ? ' lb-scope-btn--active' : ''}`}
-        onClick={() => onModeChange('points')}
-      >נקודות</button>
-      <button
-        type="button"
-        className={`lb-scope-btn${mode === 'hits' ? ' lb-scope-btn--active' : ''}`}
-        onClick={() => onModeChange('hits')}
-      >פגיעות</button>
+      {MODES.map(({ key, label }) => (
+        <button
+          key={key}
+          type="button"
+          className={`lb-scope-btn${mode === key ? ' lb-scope-btn--active' : ''}`}
+          onClick={() => onModeChange(key)}
+        >{label}</button>
+      ))}
     </div>
   )
 }

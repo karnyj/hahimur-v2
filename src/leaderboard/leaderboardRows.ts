@@ -32,7 +32,7 @@ export interface HitsRow {
   pgiyaCount: number
 }
 
-export function buildHitsRows(users: User[], results: TournamentResults, scope: Scope): HitsRow[] {
+export function buildHitsRows(users: User[], results: TournamentResults, scope: Scope, sortBy: 'pgiya' | 'tzelifa' = 'tzelifa'): HitsRow[] {
   const groupIds = scope === 'all' ? Object.keys(results.groupMatches) : [scope]
 
   const resultById: Record<string, typeof results.groupMatches[string][number]> = {}
@@ -54,5 +54,8 @@ export function buildHitsRows(users: User[], results: TournamentResults, scope: 
       }
     }
     return { label: user.label, tzelifaCount, pgiyaCount }
-  }).sort((a, b) => b.tzelifaCount - a.tzelifaCount || b.pgiyaCount - a.pgiyaCount)
+  }).sort(sortBy === 'pgiya'
+    ? (a, b) => b.pgiyaCount - a.pgiyaCount || b.tzelifaCount - a.tzelifaCount
+    : (a, b) => b.tzelifaCount - a.tzelifaCount || b.pgiyaCount - a.pgiyaCount
+  )
 }

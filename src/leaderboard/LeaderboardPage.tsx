@@ -7,7 +7,7 @@ import { tournamentResults } from '../tournament-results'
 import { buildLeaderboardRows, buildHitsRows, groupScopeLabel } from './leaderboardRows'
 import type { Scope } from './leaderboardRows'
 import LeaderboardScopeBar from './LeaderboardScopeBar'
-import LeaderboardModeBar from './LeaderboardModeBar'
+import LeaderboardModeBar, { modeToSortBy } from './LeaderboardModeBar'
 import type { Mode } from './LeaderboardModeBar'
 import './LeaderboardPage.css'
 
@@ -16,7 +16,8 @@ export default function LeaderboardPage() {
   const [mode, setMode] = useState<Mode>('points')
 
   const pointsRows = buildLeaderboardRows(USERS_SORTED, tournamentResults, scope)
-  const hitsRows = buildHitsRows(USERS_SORTED, tournamentResults, scope)
+  const sortBy = modeToSortBy(mode)
+  const hitsRows = buildHitsRows(USERS_SORTED, tournamentResults, scope, sortBy)
   const scopeLabel = groupScopeLabel(scope)
 
   return (
@@ -28,7 +29,7 @@ export default function LeaderboardPage() {
         </div>
         {mode === 'points'
           ? <LeaderboardTable rows={pointsRows} scopeLabel={scopeLabel} />
-          : <HitsTable rows={hitsRows} />
+          : <HitsTable rows={hitsRows} sortBy={sortBy} />
         }
       </div>
     </PageLayout>
