@@ -34,7 +34,8 @@
       "Bash(git pull *)",
       "Bash(git checkout *)",
       "Bash(git -C /home/idanmel/hahimur add src/pages/group/groupVotes.ts src/pages/group/groupVotes.test.ts src/pages/stats/group/GroupStatsPage.tsx src/pages/group/GroupAdvanceTable.tsx src/pages/group/GroupAdvanceTable.css)",
-      "Bash(npx eslint *)"
+      "Bash(npx eslint *)",
+      "WebSearch"
     ]
   }
 }

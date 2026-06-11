@@ -1,17 +1,11 @@
-import { isUnpredicted, type MatchScores } from '../../shared/types'
+import type { MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
-import { compareScores, resultGroup } from './matchUtils'
+import { compareScores, resultGroup, scoreFrequencies } from './matchUtils'
 
 type Props = { matchId: string; users: User[]; actualScore?: MatchScores | null }
 
 export default function ScoreFrequencyTable({ matchId, users, actualScore = null }: Props) {
-  const counts = new Map<string, number>()
-  for (const u of users) {
-    const p = u.predictions[matchId]
-    if (!p || isUnpredicted(p)) continue
-    const key = `${p.home}-${p.away}`
-    counts.set(key, (counts.get(key) ?? 0) + 1)
-  }
+  const counts = scoreFrequencies(users, matchId)
   const total = [...counts.values()].reduce((s, n) => s + n, 0)
   const parseKey = (key: string) => { const [h, aw] = key.split('-').map(Number); return { h, aw } }
   const maxCount = Math.max(...counts.values())
