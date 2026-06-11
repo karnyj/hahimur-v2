@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import Nav from '../../Nav'
-import type { Match, Score } from '../../shared/types'
+import { tournamentResults } from '../../tournament-results'
+import type { Match, MatchScores, Score } from '../../shared/types'
 import type { User } from '../../users/index'
 import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
@@ -17,6 +18,11 @@ type Props = {
   users: User[]
 }
 
+function realScoreFor(matchId: string): MatchScores | null {
+  const s = tournamentResults.groupMatches[matchId[0]]?.find(m => m.id === matchId)?.scores
+  return s && s.home !== null && s.away !== null ? s : null
+}
+
 export default function MatchPredictionsPage({ match, home, away, users }: Props) {
   const [homeScore, setHomeScore] = useState<Score>(null)
   const [awayScore, setAwayScore] = useState<Score>(null)
@@ -30,33 +36,52 @@ export default function MatchPredictionsPage({ match, home, away, users }: Props
     )
   }
 
+  const realScore = realScoreFor(match.id)
+  const actualScore = realScore ?? (homeScore !== null && awayScore !== null ? { home: homeScore, away: awayScore } : null)
+  const scorers = realScore
+    ? Object.entries(tournamentResults.playerMatchGoals ?? {})
+        .filter(([, byMatch]) => (byMatch[match.id] ?? 0) > 0)
+        .map(([player, byMatch]) => ({ player, goals: byMatch[match.id] }))
+    : []
+
   return (
     <>
       <MatchHeader
         match={match} home={home} away={away}
         homeScore={homeScore} awayScore={awayScore}
         onHomeScore={setHomeScore} onAwayScore={setAwayScore}
+        realScore={realScore}
       />
       <Nav />
 
       <div className="match-predictions">
+        {scorers.length > 0 && (
+          <div className="match-scorers" data-testid="match-scorers" dir="rtl">
+            {scorers.map(s => (
+              <span key={s.player} className="match-scorers__item">
+                ⚽ {s.player}{s.goals > 1 ? ` ×${s.goals}` : ''}
+              </span>
+            ))}
+          </div>
+        )}
+
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">ניחושים</span>
           <h2 className="section-heading__title">סך הכל</h2>
         </header>
-        <PredictionSummary matchId={match.id} homeLabel={home.he} awayLabel={away.he} users={users} />
+        <PredictionSummary matchId={match.id} homeLabel={home.he} awayLabel={away.he} users={users} actualScore={actualScore} />
 
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">סטטיסטיקה</span>
           <h2 className="section-heading__title">התפלגות תוצאות</h2>
         </header>
-        <ScoreFrequencyTable matchId={match.id} users={users} />
+        <ScoreFrequencyTable matchId={match.id} users={users} actualScore={actualScore} />
 
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">ניחושים</span>
           <h2 className="section-heading__title">פירוט</h2>
         </header>
-        <PredictionsList matchId={match.id} users={users} actualScore={homeScore !== null && awayScore !== null ? { home: homeScore, away: awayScore } : null} />
+        <PredictionsList matchId={match.id} users={users} actualScore={actualScore} matchGoals={Object.fromEntries(scorers.map(s => [s.player, s.goals]))} />
       </div>
     </>
   )

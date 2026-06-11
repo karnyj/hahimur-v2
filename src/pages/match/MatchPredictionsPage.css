@@ -162,6 +162,75 @@
   text-shadow: 0 0 18px rgba(212, 160, 22, 0.45);
 }
 
+/* ── Final (real) score ─────────────────────────────────────── */
+
+.match-header__vs--final {
+  flex-direction: column;
+  align-items: center;
+  padding: 10px 20px 9px;
+  gap: 0;
+}
+
+.match-header__final-score {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.match-header__final-digit {
+  position: relative;
+  z-index: 1;
+  min-width: 44px;
+  line-height: 72px;
+  color: #ffe9b0;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 62px;
+  text-align: center;
+  text-shadow:
+    0 0 14px rgba(212, 160, 22, 0.55),
+    0 0 42px rgba(212, 160, 22, 0.25);
+  user-select: none;
+}
+
+.match-header__vs--final .match-header__vs-text {
+  font-size: 2.6rem;
+  color: rgba(212, 160, 22, 0.55);
+  padding: 0 14px;
+  transform: translateY(-3px);
+}
+
+.match-header__final-badge {
+  position: relative;
+  z-index: 1;
+  align-self: stretch;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 0.64rem;
+  letter-spacing: 0.32em;
+  text-indent: 0.32em; /* re-center: letter-spacing trails the last glyph */
+  color: rgba(212, 160, 22, 0.8);
+  user-select: none;
+}
+
+.match-header__final-badge::before,
+.match-header__final-badge::after {
+  content: '';
+  width: 26px;
+  height: 1px;
+}
+
+.match-header__final-badge::before {
+  background: linear-gradient(to right, transparent, rgba(212, 160, 22, 0.5));
+}
+
+.match-header__final-badge::after {
+  background: linear-gradient(to left, transparent, rgba(212, 160, 22, 0.5));
+}
+
 .match-header__vs-line {
   width: 1px;
   height: 28px;
@@ -631,6 +700,84 @@
 @keyframes freq-fill {
   from { transform: scaleX(0); }
   to   { transform: scaleX(1); }
+}
+
+/* ── Result-aware states (after a real score) ───────────────── */
+
+/* frequency table: the scoreline that actually happened */
+.score-freq__row--exact .score-freq__score {
+  color: var(--gold);
+  text-shadow: 0 0 24px rgba(212, 160, 22, 0.65);
+}
+
+.score-freq__row--exact .score-freq__count {
+  color: rgba(239, 228, 184, 0.9);
+}
+
+.score-freq__row--exact .score-freq__fill {
+  background: var(--gold);
+}
+
+/* correct outcome, wrong score: a softer tint */
+.score-freq__row--outcome .score-freq__score {
+  color: rgba(239, 228, 184, 0.85);
+}
+
+.score-freq__row--outcome .score-freq__fill {
+  background: rgba(212, 160, 22, 0.45);
+}
+
+/* summary bar: light the column that happened, dim the rest */
+.pred-summary__col--off {
+  opacity: 0.35;
+}
+
+.pred-summary__col--actual .pred-summary__count {
+  text-shadow: 0 0 32px rgba(212, 160, 22, 0.75);
+}
+
+.pred-summary__col--actual .pred-summary__label {
+  color: rgba(239, 228, 184, 0.9);
+}
+
+/* points recap line above the predictions list */
+.points-recap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.7rem;
+  margin-bottom: 1rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.82rem;
+  letter-spacing: 0.06em;
+}
+
+.points-recap__dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: rgba(212, 160, 22, 0.4);
+}
+
+.points-recap__item--exact   { color: var(--gold); font-weight: 700; }
+.points-recap__item--partial { color: var(--navy); font-weight: 500; }
+.points-recap__item--miss    { color: var(--muted); }
+
+/* real goals by picked players in this match */
+.match-scorers {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.4rem;
+  margin-bottom: 1.4rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--navy);
+}
+
+.match-scorers__item {
+  white-space: nowrap;
 }
 
 .prediction-row__sep {

@@ -1,5 +1,5 @@
 import { GROUPS } from '../../shared/groups'
-import type { Score } from '../../shared/types'
+import type { MatchScores, Score } from '../../shared/types'
 import ScoreInput from '../../formView/ScoreInput'
 
 type Team = { iso: string; he: string }
@@ -13,9 +13,10 @@ type Props = {
   awayScore: Score
   onHomeScore: (v: Score) => void
   onAwayScore: (v: Score) => void
+  realScore?: MatchScores | null
 }
 
-export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore }: Props) {
+export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore, realScore = null }: Props) {
   return (
     <div className="match-header">
       <a className="match-header__group-badge" href={`/stats/groups/${match.id[0].toLowerCase()}`}>בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]} ›</a>
@@ -26,11 +27,22 @@ export default function MatchHeader({ match, home, away, homeScore, awayScore, o
           <span className="match-team__name">{away.he}</span>
         </div>
 
-        <div className="match-header__vs">
-          <ScoreInput label={away.he} value={awayScore} onChange={onAwayScore} />
-          <span className="match-header__vs-text">–</span>
-          <ScoreInput label={home.he} value={homeScore} onChange={onHomeScore} />
-        </div>
+        {realScore ? (
+          <div className="match-header__vs match-header__vs--final" data-testid="real-score">
+            <div className="match-header__final-score">
+              <span className="match-header__final-digit">{realScore.away}</span>
+              <span className="match-header__vs-text">–</span>
+              <span className="match-header__final-digit">{realScore.home}</span>
+            </div>
+            <span className="match-header__final-badge">נגמר</span>
+          </div>
+        ) : (
+          <div className="match-header__vs">
+            <ScoreInput label={away.he} value={awayScore} onChange={onAwayScore} />
+            <span className="match-header__vs-text">–</span>
+            <ScoreInput label={home.he} value={homeScore} onChange={onHomeScore} />
+          </div>
+        )}
 
         <div className="match-team">
           <span className={`fi fi-${home.iso} match-team__flag`} />
@@ -40,10 +52,14 @@ export default function MatchHeader({ match, home, away, homeScore, awayScore, o
 
       <div className="match-header__meta">
         <span>{match.matchDate}</span>
-        <span className="match-header__meta-dot" />
-        <span>{match.kickoffIST}</span>
-        <span className="match-header__meta-dot" />
-        <span>שעון ישראל</span>
+        {!realScore && (
+          <>
+            <span className="match-header__meta-dot" />
+            <span>{match.kickoffIST}</span>
+            <span className="match-header__meta-dot" />
+            <span>שעון ישראל</span>
+          </>
+        )}
       </div>
     </div>
   )

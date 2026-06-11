@@ -1,8 +1,10 @@
-import { isUnpredicted } from '../../shared/types'
+import { isUnpredicted, type MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
-import { compareScores } from './matchUtils'
+import { compareScores, resultGroup } from './matchUtils'
 
-export default function ScoreFrequencyTable({ matchId, users }: { matchId: string; users: User[] }) {
+type Props = { matchId: string; users: User[]; actualScore?: MatchScores | null }
+
+export default function ScoreFrequencyTable({ matchId, users, actualScore = null }: Props) {
   const counts = new Map<string, number>()
   for (const u of users) {
     const p = u.predictions[matchId]
@@ -19,13 +21,21 @@ export default function ScoreFrequencyTable({ matchId, users }: { matchId: strin
 
   if (rows.length === 0) return null
 
+  const rowClass = (key: string, isLeader: boolean) => {
+    if (!actualScore) return isLeader ? ' score-freq__row--leader' : ''
+    const { h, aw } = parseKey(key)
+    if (h === actualScore.home && aw === actualScore.away) return ' score-freq__row--exact'
+    if (resultGroup(h, aw) === resultGroup(actualScore.home!, actualScore.away!)) return ' score-freq__row--outcome'
+    return ''
+  }
+
   return (
     <div data-testid="score-freq-table" className="score-freq">
       {rows.map(({ key, count, pct, isLeader }, i) => (
         <div
           key={key}
           data-testid="score-freq-row"
-          className={`score-freq__row${isLeader ? ' score-freq__row--leader' : ''}`}
+          className={`score-freq__row${rowClass(key, isLeader)}`}
           style={{ '--bar-pct': `${pct}%`, '--row-delay': `${i * 80}ms`, animationDelay: `${i * 80}ms` } as React.CSSProperties}
         >
           <div className="score-freq__content">
