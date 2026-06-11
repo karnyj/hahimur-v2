@@ -65,6 +65,16 @@ export function extractGroupScores(apiMatches: ApiMatch[]): {
   return { scores, unmapped }
 }
 
+// Test hook: pretend a match finished, e.g. "A1=9-9" (used by the
+// workflow's fake_finished input to rehearse the update path).
+export function parseFakeFinished(spec: string): { id: string; home: number; away: number } | null {
+  const m = spec.match(/^(\w+)=(\d+)-(\d+)$/)
+  if (!m) return null
+  const known = Object.values(GROUPS).some(g => g.matches.some(match => match.id === m[1]))
+  if (!known) return null
+  return { id: m[1], home: parseInt(m[2]), away: parseInt(m[3]) }
+}
+
 function loadToken(): string | undefined {
   if (process.env.FOOTBALL_DATA_TOKEN) return process.env.FOOTBALL_DATA_TOKEN
   const envPath = join(__dirname, '../.env.local')
@@ -93,6 +103,16 @@ async function main(): Promise<void> {
   console.log(`Fetched ${matches.length} matches from football-data.org`)
 
   const { scores: fetched, unmapped } = extractGroupScores(matches)
+
+  if (process.env.FAKE_FINISHED) {
+    const fake = parseFakeFinished(process.env.FAKE_FINISHED)
+    if (!fake) {
+      console.error(`Bad FAKE_FINISHED value "${process.env.FAKE_FINISHED}", expected e.g. A1=9-9`)
+      process.exit(1)
+    }
+    fetched[fake.id] = { home: fake.home, away: fake.away }
+    console.log(`Injected fake finished score ${fake.id}: ${fake.home}-${fake.away}`)
+  }
 
   const merged = readGroupScores()
 

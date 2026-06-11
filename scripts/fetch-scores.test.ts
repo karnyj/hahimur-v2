@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { extractGroupScores, type ApiMatch } from './fetch-scores'
+import { extractGroupScores, parseFakeFinished, type ApiMatch } from './fetch-scores'
 
 function apiMatch(over: Partial<ApiMatch> & { home: string; away: string }): ApiMatch {
   return {
@@ -11,6 +11,21 @@ function apiMatch(over: Partial<ApiMatch> & { home: string; away: string }): Api
     ...over,
   }
 }
+
+describe('parseFakeFinished', () => {
+  it('parses a fake finished score spec like A1=9-9', () => {
+    expect(parseFakeFinished('A1=9-9')).toEqual({ id: 'A1', home: 9, away: 9 })
+  })
+
+  it('rejects malformed specs', () => {
+    expect(parseFakeFinished('A1')).toBeNull()
+    expect(parseFakeFinished('A1=x-2')).toBeNull()
+  })
+
+  it('rejects unknown match IDs', () => {
+    expect(parseFakeFinished('Z9=1-0')).toBeNull()
+  })
+})
 
 describe('extractGroupScores', () => {
   it('maps a finished match to its match ID by team names', () => {

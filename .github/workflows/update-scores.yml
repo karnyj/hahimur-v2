@@ -2,8 +2,12 @@ name: Update match scores
 
 on:
   schedule:
-    - cron: '*/30 * * 6,7 *' # every 30 minutes during June–July (tournament window)
+    - cron: '*/5 * * 6,7 *' # every 5 minutes during June–July (tournament window)
   workflow_dispatch:
+    inputs:
+      fake_finished:
+        description: 'Test only: pretend a match finished, e.g. A1=9-9. Pushes to the score-update-test branch instead of master, so nothing deploys.'
+        required: false
 
 permissions:
   contents: write
@@ -24,9 +28,11 @@ jobs:
         run: node scripts/fetch-scores.ts
         env:
           FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+          FAKE_FINISHED: ${{ inputs.fake_finished }}
       - name: Commit, push, and trigger deploy
         env:
           GH_TOKEN: ${{ github.token }}
+          FAKE_FINISHED: ${{ inputs.fake_finished }}
         run: |
           if git diff --quiet src/tournament-results.ts; then
             echo "No score changes."
@@ -35,9 +41,17 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add src/tournament-results.ts
-          git commit -m "auto: update match scores from football-data.org"
-          git pull --rebase origin master
-          git push
-          # Pushes made with GITHUB_TOKEN don't trigger the CI workflow,
-          # so dispatch it explicitly to test, build, and deploy.
-          gh workflow run ci.yml --ref master
+          if [ -n "$FAKE_FINISHED" ]; then
+            # Rehearsal: same commit/push/dispatch path, but on a test branch
+            # where ci.yml's master-only deploy step is skipped.
+            git commit -m "test: fake score $FAKE_FINISHED (do not merge)"
+            git push -f origin HEAD:score-update-test
+            gh workflow run ci.yml --ref score-update-test
+          else
+            git commit -m "auto: update match scores from football-data.org"
+            git pull --rebase origin master
+            git push
+            # Pushes made with GITHUB_TOKEN don't trigger the CI workflow,
+            # so dispatch it explicitly to test, build, and deploy.
+            gh workflow run ci.yml --ref master
+          fi
