@@ -12,9 +12,8 @@ in PROGRESS.md but never built.
 2. **"Prophet of the day"** — who scored the most points in the last matchday.
    One line on the home page or leaderboard. A daily winner even when overall
    ranks barely move.
-3. **Today's matches on the home page** — kickoff times (Israel time) plus the
-   consensus prediction per match ("19 מתוך 27 הלכו על צרפת"). Filter over
-   `matchOrder.ts` + the aggregation ScoreFrequencyTable already does.
+3. ~~**Today's matches on the home page**~~ ✅ Done — home page shows the next
+   match with the crowd's favorite score, and keeps showing it until it ends.
 4. **Upset highlight** — when a finished match was predicted by ≤3 people, badge
    it and name who called it ("רק עידן ניחש 0-2"). Match drill-down already sorts
    by accuracy; this is mostly surfacing.
@@ -30,6 +29,14 @@ in PROGRESS.md but never built.
    highlighted.
 8. **Golden boot race page** — who picked which scorer, goals so far. Makes the
    newly shipped goal-tracking data visible.
+
+## Low priority (not needed, but Eyal & Eldad always loved this kind of thing)
+
+11. **"Banality index" (מדד הבנאליות)** — per player, how often they predicted
+    with the crowd vs. against it. E.g. a match where the majority said X wins
+    and you picked something else counts as "against the stream". A simple table:
+    times with the flow / times against. Consensus-per-match already exists in
+    the aggregation logic, so this is mostly counting.
 
 ## Glue with the group chat
 
