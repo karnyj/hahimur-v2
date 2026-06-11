@@ -14,9 +14,11 @@ type Props = {
   onHomeScore: (v: Score) => void
   onAwayScore: (v: Score) => void
   realScore?: MatchScores | null
+  live?: boolean
 }
 
-export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore, realScore = null }: Props) {
+export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore, realScore = null, live = false }: Props) {
+  const showLive = live && !realScore
   return (
     <div className="match-header">
       <a className="match-header__group-badge" href={`/stats/groups/${match.id[0].toLowerCase()}`}>בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]} ›</a>
@@ -50,17 +52,27 @@ export default function MatchHeader({ match, home, away, homeScore, awayScore, o
         </div>
       </div>
 
-      <div className="match-header__meta">
-        <span>{match.matchDate}</span>
-        {!realScore && (
-          <>
-            <span className="match-header__meta-dot" />
-            <span>{match.kickoffIST}</span>
-            <span className="match-header__meta-dot" />
-            <span>שעון ישראל</span>
-          </>
-        )}
-      </div>
+      {showLive ? (
+        <div className="match-header__live" data-testid="live-indicator" dir="rtl">
+          <span className="match-header__live-badge">
+            <span className="match-header__live-dot" />
+            המשחק בעיצומו
+          </span>
+          <span className="match-header__live-hint">הזינו את התוצאה הנוכחית וראו מי לוקח נקודות</span>
+        </div>
+      ) : (
+        <div className="match-header__meta">
+          <span>{match.matchDate}</span>
+          {!realScore && (
+            <>
+              <span className="match-header__meta-dot" />
+              <span>{match.kickoffIST}</span>
+              <span className="match-header__meta-dot" />
+              <span>שעון ישראל</span>
+            </>
+          )}
+        </div>
+      )}
     </div>
   )
 }

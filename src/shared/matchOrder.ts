@@ -13,6 +13,10 @@ export function matchSortKey(matchDate: string | undefined, kickoffIST: string |
   return ((month * 100 + day) * 100 + hh) * 100 + mm
 }
 
+// How long after kickoff a match is considered in progress when no final
+// score has been recorded yet (covers stoppage time and halftime).
+export const MATCH_WINDOW_MS = 3 * 60 * 60 * 1000
+
 // Kickoff times are stored as Israel daylight time, and the whole tournament
 // (June–July 2026) falls inside IDT, so a fixed UTC+3 offset and year are enough.
 const IST_OFFSET_HOURS = 3
@@ -21,4 +25,10 @@ export function kickoffDate(matchDate: string | undefined, kickoffIST: string | 
   if (!matchDate || !kickoffIST) return null
   const { month, day, hh, mm } = parseMatchDateTime(matchDate, kickoffIST)
   return new Date(Date.UTC(2026, month - 1, day, hh - IST_OFFSET_HOURS, mm))
+}
+
+export function isLive(match: { matchDate?: string; kickoffIST?: string }, now: Date): boolean {
+  const kickoff = kickoffDate(match.matchDate, match.kickoffIST)?.getTime()
+  if (kickoff === undefined) return false
+  return now.getTime() >= kickoff && now.getTime() < kickoff + MATCH_WINDOW_MS
 }

@@ -257,6 +257,49 @@
   display: inline-block;
 }
 
+/* ── Live match ─────────────────────────────────────────────── */
+
+.match-header__live {
+  margin-top: 1.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.45rem;
+  position: relative;
+}
+
+.match-header__live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: #ff7a7a;
+}
+
+.match-header__live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red, #c0272d);
+  box-shadow: 0 0 8px rgba(192, 39, 45, 0.8);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.78); }
+}
+
+.match-header__live-hint {
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: rgba(239, 228, 184, 0.65);
+}
+
 /* ── Section Headings ───────────────────────────────────────── */
 
 .section-heading {

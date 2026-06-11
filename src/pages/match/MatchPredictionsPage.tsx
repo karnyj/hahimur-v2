@@ -3,6 +3,7 @@ import Nav from '../../Nav'
 import { tournamentResults } from '../../tournament-results'
 import type { Match, MatchScores, Score } from '../../shared/types'
 import type { User } from '../../users/index'
+import { isLive } from '../../shared/matchOrder'
 import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
@@ -16,6 +17,7 @@ type Props = {
   home: Team | null
   away: Team | null
   users: User[]
+  now?: Date
 }
 
 function realScoreFor(matchId: string): MatchScores | null {
@@ -23,7 +25,7 @@ function realScoreFor(matchId: string): MatchScores | null {
   return s && s.home !== null && s.away !== null ? s : null
 }
 
-export default function MatchPredictionsPage({ match, home, away, users }: Props) {
+export default function MatchPredictionsPage({ match, home, away, users, now = new Date() }: Props) {
   const [homeScore, setHomeScore] = useState<Score>(null)
   const [awayScore, setAwayScore] = useState<Score>(null)
 
@@ -50,7 +52,7 @@ export default function MatchPredictionsPage({ match, home, away, users }: Props
         match={match} home={home} away={away}
         homeScore={homeScore} awayScore={awayScore}
         onHomeScore={setHomeScore} onAwayScore={setAwayScore}
-        realScore={realScore}
+        realScore={realScore} live={isLive(match, now)}
       />
       <Nav />
 

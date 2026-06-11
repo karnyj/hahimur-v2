@@ -32,3 +32,26 @@ test('renders group badge with group letter and match number', () => {
   const badge = document.querySelector('.match-header__group-badge')!
   expect(badge.textContent).toContain('1')
 })
+
+test('shows live indicator and what-if hint when live', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} live />)
+  expect(screen.getByTestId('live-indicator')).toBeInTheDocument()
+  expect(screen.getByText('המשחק בעיצומו')).toBeInTheDocument()
+  expect(screen.getByText('הזינו את התוצאה הנוכחית וראו מי לוקח נקודות')).toBeInTheDocument()
+})
+
+test('hides kickoff time while live', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} live />)
+  expect(screen.queryByText('21:00')).not.toBeInTheDocument()
+})
+
+test('shows no live indicator by default', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} />)
+  expect(screen.queryByTestId('live-indicator')).not.toBeInTheDocument()
+})
+
+test('final score wins over live: no live indicator once a real score exists', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} live realScore={{ home: 2, away: 1 }} />)
+  expect(screen.queryByTestId('live-indicator')).not.toBeInTheDocument()
+  expect(screen.getByTestId('real-score')).toBeInTheDocument()
+})

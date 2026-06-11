@@ -16,16 +16,27 @@ function u(label: string, predictions: PredictionsState, topGoalscorer = ''): Us
   return { label, predictions, topGoalscorer, groupMatches: {}, groupTables: {}, thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] }, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] } }
 }
 
-function renderPage(matchId: string, users: User[]) {
+function renderPage(matchId: string, users: User[], now?: Date) {
   const match = findMatch(matchId)
   const home = match ? TEAMS[match.homeTeam] : null
   const away = match ? TEAMS[match.awayTeam] : null
-  return render(<MatchPredictionsPage match={match ?? null} home={home} away={away} users={users} />)
+  return render(<MatchPredictionsPage match={match ?? null} home={home} away={away} users={users} now={now} />)
 }
 
 function getCounts() {
   return screen.getAllByTestId('pred-count').map(el => el.textContent)
 }
+
+// A1 kicks off '11 ביוני' 22:00 Israel time = 2026-06-11T19:00Z
+test('shows live indicator while the match is being played', () => {
+  renderPage('A1', [], new Date('2026-06-11T19:30:00Z'))
+  expect(screen.getByTestId('live-indicator')).toBeInTheDocument()
+})
+
+test('shows no live indicator before kickoff', () => {
+  renderPage('A1', [], new Date('2026-06-11T18:00:00Z'))
+  expect(screen.queryByTestId('live-indicator')).not.toBeInTheDocument()
+})
 
 test('shows not found message for unknown matchId', () => {
   render(<MatchPredictionsPage match={null} home={null} away={null} users={[]} />)

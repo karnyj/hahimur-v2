@@ -1,11 +1,7 @@
 import type { GroupMatch } from '../../shared/types'
 import type { User } from '../../users/index'
-import { kickoffDate } from '../../shared/matchOrder'
+import { kickoffDate, MATCH_WINDOW_MS } from '../../shared/matchOrder'
 import { scoreFrequencies } from '../match/matchUtils'
-
-// Safety net: if the score fetcher never records a result, stop showing a
-// started match this long after kickoff instead of sticking to it forever.
-const MATCH_WINDOW_MS = 3 * 60 * 60 * 1000
 
 // Group-stage matches only for now: knockout fixtures have a different shape
 // (matchNum, unresolved team slots) and their own resolution logic.
