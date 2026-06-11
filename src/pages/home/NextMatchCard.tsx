@@ -2,17 +2,14 @@ import { GROUPS, TEAMS } from '../../shared/groups'
 import type { GroupMatch } from '../../shared/types'
 import type { User } from '../../users/index'
 import { tournamentResults } from '../../tournament-results'
-import { nextMatch, topPrediction } from './nextMatch'
+import { nextMatches, topPrediction } from './nextMatch'
 import './NextMatchCard.css'
 
 const SCORED_MATCHES = Object.values(tournamentResults.groupMatches).flat()
 
 type Props = { users: User[]; now?: Date; matches?: GroupMatch[] }
 
-export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES }: Props) {
-  const match = nextMatch(matches, now)
-  if (!match) return null
-
+function SingleMatchCard({ users, match }: { users: User[]; match: GroupMatch }) {
   const home = TEAMS[match.homeTeam]
   const away = TEAMS[match.awayTeam]
   const consensus = topPrediction(users, match.id)
@@ -45,5 +42,15 @@ export default function NextMatchCard({ users, now = new Date(), matches = SCORE
 
       <a className="next-match__link" href={`/matches/${match.id}`}>לעמוד המשחק ›</a>
     </div>
+  )
+}
+
+export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES }: Props) {
+  return (
+    <>
+      {nextMatches(matches, now).map(match => (
+        <SingleMatchCard key={match.id} users={users} match={match} />
+      ))}
+    </>
   )
 }

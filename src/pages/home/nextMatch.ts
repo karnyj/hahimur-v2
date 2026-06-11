@@ -6,16 +6,21 @@ import { scoreFrequencies } from '../match/matchUtils'
 // Group-stage matches only for now: knockout fixtures have a different shape
 // (matchNum, unresolved team slots) and their own resolution logic.
 // A started match still counts as "next" until its final score is recorded.
-export function nextMatch(matches: GroupMatch[], now: Date): GroupMatch | null {
-  let next: GroupMatch | null = null
+// Returns every match sharing the earliest kickoff: round 3 of each group
+// plays both matches simultaneously.
+export function nextMatches(matches: GroupMatch[], now: Date): GroupMatch[] {
+  let next: GroupMatch[] = []
   let nextTime = Infinity
   for (const m of matches) {
     const kickoff = kickoffDate(m.matchDate, m.kickoffIST)?.getTime()
-    if (kickoff === undefined || kickoff >= nextTime) continue
+    if (kickoff === undefined || kickoff > nextTime) continue
     const ended = m.scores?.home != null && m.scores?.away != null
-    if (!ended && now.getTime() < kickoff + MATCH_WINDOW_MS) {
-      next = m
+    if (ended || now.getTime() >= kickoff + MATCH_WINDOW_MS) continue
+    if (kickoff < nextTime) {
+      next = [m]
       nextTime = kickoff
+    } else {
+      next.push(m)
     }
   }
   return next

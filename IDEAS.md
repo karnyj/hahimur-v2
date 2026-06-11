@@ -14,6 +14,10 @@ in PROGRESS.md but never built.
    ranks barely move.
 3. ~~**Today's matches on the home page**~~ ✅ Done — home page shows the next
    match with the crowd's favorite score, and keeps showing it until it ends.
+   **Follow-up needed before June 24:** round 3 of every group has both matches
+   kicking off simultaneously (12 pairs, June 24–28), but `nextMatch()` returns
+   a single match — the tied one is silently hidden for up to 3 hours. Show all
+   matches sharing the earliest kickoff, not just the first.
 4. **Upset highlight** — when a finished match was predicted by ≤3 people, badge
    it and name who called it ("רק עידן ניחש 0-2"). Match drill-down already sorts
    by accuracy; this is mostly surfacing.
@@ -37,6 +41,17 @@ in PROGRESS.md but never built.
     and you picked something else counts as "against the stream". A simple table:
     times with the flow / times against. Consensus-per-match already exists in
     the aggregation logic, so this is mostly counting.
+
+## Data sources
+
+12. **ESPN hidden API as a live-score source** — football-data.org's free tier
+    has no in-play updates (opening match was still `TIMED` at the 74th minute),
+    but ESPN's unofficial JSON API has live scores, clock, and status with no
+    API key: `site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`
+    (per-match detail incl. scorers: `.../summary?event={id}`). Could power a
+    live score on the home page, or back up / replace football-data.org in the
+    cron. Unofficial — could break without notice, so keep football-data.org as
+    the finished-score fallback.
 
 ## Glue with the group chat
 

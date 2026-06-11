@@ -38,6 +38,17 @@ test('shows the most common prediction', () => {
   expect(screen.getByTestId('consensus')).toHaveTextContent('2 מתוך 3')
 })
 
+test('shows a card per match when two matches kick off simultaneously', () => {
+  const round3: GroupMatch[] = [
+    { id: 'A3', homeTeam: 'Czech Republic', awayTeam: 'South Africa', matchDate: '24 ביוני', kickoffIST: '22:00' },
+    { id: 'A4', homeTeam: 'Mexico', awayTeam: 'South Korea', matchDate: '24 ביוני', kickoffIST: '22:00' },
+  ]
+  render(<NextMatchCard users={users} now={new Date('2026-06-24T12:00:00Z')} matches={round3} />)
+  expect(screen.getAllByTestId('next-match')).toHaveLength(2)
+  const links = screen.getAllByRole('link', { name: /לעמוד המשחק/ })
+  expect(links.map(l => l.getAttribute('href'))).toEqual(['/matches/A3', '/matches/A4'])
+})
+
 test('renders nothing when the group stage is over', () => {
   const { container } = render(<NextMatchCard users={users} now={new Date('2026-07-20T00:00:00Z')} matches={MATCHES} />)
   expect(container).toBeEmptyDOMElement()
