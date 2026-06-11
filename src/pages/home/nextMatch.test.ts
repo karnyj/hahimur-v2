@@ -1,15 +1,29 @@
 import { nextMatch, topPrediction } from './nextMatch'
 import { makeUser } from '../../leaderboard/testFixtures'
-import type { Match } from '../../shared/types'
+import type { GroupMatch } from '../../shared/types'
 
-const MATCHES: Match[] = [
+const MATCHES: GroupMatch[] = [
   { id: 'A1', homeTeam: 'Mexico', awayTeam: 'South Africa', matchDate: '11 ביוני', kickoffIST: '22:00' },
   { id: 'A2', homeTeam: 'South Korea', awayTeam: 'Czech Republic', matchDate: '12 ביוני', kickoffIST: '05:00' },
   { id: 'B1', homeTeam: 'Canada', awayTeam: 'Bosnia and Herzegovina', matchDate: '12 ביוני', kickoffIST: '22:00' },
 ]
 
-test('nextMatch returns the earliest match that has not kicked off yet', () => {
-  const now = new Date('2026-06-11T20:00:00Z') // A1 already started
+test('nextMatch keeps returning a match in progress until its score is recorded', () => {
+  const now = new Date('2026-06-11T20:00:00Z') // A1 kicked off at 19:00Z, no score yet
+  expect(nextMatch(MATCHES, now)?.id).toBe('A1')
+})
+
+test('nextMatch moves on once a started match has a final score', () => {
+  const matches: GroupMatch[] = [
+    { ...MATCHES[0], scores: { home: 2, away: 1 } },
+    ...MATCHES.slice(1),
+  ]
+  const now = new Date('2026-06-11T20:00:00Z')
+  expect(nextMatch(matches, now)?.id).toBe('A2')
+})
+
+test('nextMatch gives up on a scoreless match three hours after kickoff', () => {
+  const now = new Date('2026-06-11T22:30:00Z') // A1 kicked off at 19:00Z, fetcher never delivered
   expect(nextMatch(MATCHES, now)?.id).toBe('A2')
 })
 

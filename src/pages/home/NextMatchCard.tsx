@@ -1,13 +1,16 @@
 import { GROUPS, TEAMS } from '../../shared/groups'
+import type { GroupMatch } from '../../shared/types'
 import type { User } from '../../users/index'
-import { ALL_MATCHES } from '../match/matchUtils'
+import { tournamentResults } from '../../tournament-results'
 import { nextMatch, topPrediction } from './nextMatch'
 import './NextMatchCard.css'
 
-type Props = { users: User[]; now?: Date }
+const SCORED_MATCHES = Object.values(tournamentResults.groupMatches).flat()
 
-export default function NextMatchCard({ users, now = new Date() }: Props) {
-  const match = nextMatch(ALL_MATCHES, now)
+type Props = { users: User[]; now?: Date; matches?: GroupMatch[] }
+
+export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES }: Props) {
+  const match = nextMatch(matches, now)
   if (!match) return null
 
   const home = TEAMS[match.homeTeam]

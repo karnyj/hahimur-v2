@@ -1,16 +1,23 @@
-import type { Match } from '../../shared/types'
+import type { GroupMatch } from '../../shared/types'
 import type { User } from '../../users/index'
 import { kickoffDate } from '../../shared/matchOrder'
 import { scoreFrequencies } from '../match/matchUtils'
 
+// Safety net: if the score fetcher never records a result, stop showing a
+// started match this long after kickoff instead of sticking to it forever.
+const MATCH_WINDOW_MS = 3 * 60 * 60 * 1000
+
 // Group-stage matches only for now: knockout fixtures have a different shape
 // (matchNum, unresolved team slots) and their own resolution logic.
-export function nextMatch(matches: Match[], now: Date): Match | null {
-  let next: Match | null = null
+// A started match still counts as "next" until its final score is recorded.
+export function nextMatch(matches: GroupMatch[], now: Date): GroupMatch | null {
+  let next: GroupMatch | null = null
   let nextTime = Infinity
   for (const m of matches) {
     const kickoff = kickoffDate(m.matchDate, m.kickoffIST)?.getTime()
-    if (kickoff !== undefined && kickoff > now.getTime() && kickoff < nextTime) {
+    if (kickoff === undefined || kickoff >= nextTime) continue
+    const ended = m.scores?.home != null && m.scores?.away != null
+    if (!ended && now.getTime() < kickoff + MATCH_WINDOW_MS) {
       next = m
       nextTime = kickoff
     }
