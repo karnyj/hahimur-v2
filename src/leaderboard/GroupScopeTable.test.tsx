@@ -5,8 +5,8 @@ import GroupScopeTable from './GroupScopeTable'
 
 // Yossi leads total points; Dana leads combined hits and pgiyot; Yossi leads tzelifot
 const ROWS = [
-  { label: 'Dana', tzelifaCount: 1, pgiyaCount: 5, matchPoints: 14, advancementPoints: 0, total: 14 },
-  { label: 'Yossi', tzelifaCount: 3, pgiyaCount: 0, matchPoints: 12, advancementPoints: 10, total: 22 },
+  { label: 'Dana', tzelifaCount: 1, pgiyaCount: 5, matchPoints: 14, advancementPoints: 0, goalsPoints: 0, total: 14 },
+  { label: 'Yossi', tzelifaCount: 3, pgiyaCount: 0, matchPoints: 12, advancementPoints: 10, goalsPoints: 0, total: 22 },
 ]
 
 function desktopTable() {
@@ -39,6 +39,21 @@ test('clicking through hit and point columns reorders accordingly', async () => 
   expect(rowNames()).toEqual(['Dana', 'Yossi'])
   await userEvent.click(within(desktopTable()).getByRole('button', { name: 'סה"כ' }))
   expect(rowNames()).toEqual(['Yossi', 'Dana'])
+})
+
+// Dana leads on goals and total; Yossi leads on match points
+const LASTX_ROWS = [
+  { label: 'Dana', tzelifaCount: 1, pgiyaCount: 0, matchPoints: 4, advancementPoints: 0, goalsPoints: 12, total: 16 },
+  { label: 'Yossi', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, goalsPoints: 0, total: 6 },
+]
+
+test('lastX variant breaks points into משחקים, שערים and סה"כ, sortable by each', async () => {
+  render(<GroupScopeTable variant="lastX" rows={LASTX_ROWS} />)
+  expect(rowNames()).toEqual(['Dana', 'Yossi']) // default sort: total
+  await userEvent.click(within(desktopTable()).getByRole('button', { name: 'משחקים' }))
+  expect(rowNames()).toEqual(['Yossi', 'Dana'])
+  await userEvent.click(within(desktopTable()).getByRole('button', { name: 'שערים' }))
+  expect(rowNames()).toEqual(['Dana', 'Yossi'])
 })
 
 test('active sort column is marked with aria-sort', async () => {

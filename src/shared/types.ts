@@ -67,6 +67,8 @@ export interface TournamentResults {
   thirdPlaceWinner?: string
   goldenBootWinner?: string | string[]
   playerGoals?: Record<string, number>
+  // real goals by picked players: player → match ID → goals in that match
+  playerMatchGoals?: Record<string, Record<string, number>>
 }
 
 export function isUnpredicted(scores: MatchScores): boolean {

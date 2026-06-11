@@ -5,6 +5,18 @@ import type { TournamentResults, MatchScores } from './shared/types'
 const groupScores: Record<string, MatchScores> = {
 }
 
+// Real goals by picked players: player → match ID → goals in that match.
+// Names must match users' topGoalscorer strings exactly.
+const realGoals: Record<string, Record<string, number>> = {
+}
+
+export function derivePlayerGoals(perMatch: Record<string, Record<string, number>>): Record<string, number> {
+  return Object.fromEntries(
+    Object.entries(perMatch).map(([player, byMatch]) =>
+      [player, Object.values(byMatch).reduce((sum, goals) => sum + goals, 0)])
+  )
+}
+
 export const tournamentResults: TournamentResults = {
   groupMatches: Object.fromEntries(
     Object.entries(GROUPS).map(([letter, group]) => [
@@ -13,6 +25,8 @@ export const tournamentResults: TournamentResults = {
     ])
   ),
   groupTables: {},
+  playerMatchGoals: realGoals,
+  playerGoals: derivePlayerGoals(realGoals),
   thirdPlaceQualification: { resolved: false, all: [], tied: [] },
   knockoutStages: {
     r32: [],

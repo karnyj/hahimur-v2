@@ -227,6 +227,8 @@ export default function ResultsPage({ users }: { users: User[] }) {
     thirdPlaceWinner,
     goldenBootWinner: goalScorerState.goldenBootWinner.length > 0 ? goalScorerState.goldenBootWinner : undefined,
     playerGoals: goalScorerState.playerGoals,
+    // real per-match goals only — simulated tally bumps have no match to belong to
+    playerMatchGoals: realTournamentResults.playerMatchGoals,
   }
 
 

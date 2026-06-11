@@ -97,13 +97,13 @@ test('buildGroupScopeRows merges hit counts with match points for the scoped gro
 
   const rows = buildGroupScopeRows([yossi, dana], results, 'A')
   expect(rows).toEqual([
-    { label: 'Yossi', tzelifaCount: 2, pgiyaCount: 0, matchPoints: 8, advancementPoints: 0, total: 8 },
-    { label: 'Dana', tzelifaCount: 1, pgiyaCount: 2, matchPoints: 8, advancementPoints: 0, total: 8 },
+    { label: 'Yossi', tzelifaCount: 2, pgiyaCount: 0, matchPoints: 8, advancementPoints: 0, goalsPoints: 0, total: 8 },
+    { label: 'Dana', tzelifaCount: 1, pgiyaCount: 2, matchPoints: 8, advancementPoints: 0, goalsPoints: 0, total: 8 },
   ])
 })
 
 const mkRow = (label: string, over: Partial<GroupScopeRow>): GroupScopeRow =>
-  ({ label, tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, total: 0, ...over })
+  ({ label, tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, goalsPoints: 0, total: 0, ...over })
 
 test('combined sorter ranks by tzelifot + pgiyot sum, not by either alone', () => {
   const rows = [
@@ -170,8 +170,31 @@ test('buildLastXRows scores only matches inside the window', () => {
 
   const rows = buildLastXRows([dana, yossi], results, 2)
   expect(rows).toEqual([
-    { label: 'Dana', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 0, total: 2 },
-    { label: 'Yossi', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, total: 6 },
+    { label: 'Dana', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 0, goalsPoints: 0, total: 2 },
+    { label: 'Yossi', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, goalsPoints: 0, total: 6 },
+  ])
+})
+
+test('buildLastXRows adds 3 points per goal the pick scored inside the window only', () => {
+  const results: TournamentResults = {
+    ...EMPTY_RESULTS,
+    groupMatches: {
+      A: [
+        datedMatch('a1', '11 ביוני', '22:00', { home: 2, away: 1 }),
+        datedMatch('a2', '12 ביוני', '19:00', { home: 2, away: 0 }),
+        datedMatch('a3', '13 ביוני', '19:00', { home: 0, away: 0 }),
+      ],
+    },
+    // מבאפה: 1 goal in a1 (outside the window of 2), 2 goals in a2 (inside)
+    playerMatchGoals: { 'קיליאן אמבפה': { a1: 1, a2: 2 } },
+  }
+  const dana = makeUser({ label: 'Dana', topGoalscorer: 'קיליאן אמבפה' })
+  const yossi = makeUser({ label: 'Yossi', topGoalscorer: 'הארי קיין' })
+
+  const rows = buildLastXRows([dana, yossi], results, 2)
+  expect(rows).toEqual([
+    { label: 'Dana', tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, goalsPoints: 6, total: 6 },
+    { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, goalsPoints: 0, total: 0 },
   ])
 })
 
