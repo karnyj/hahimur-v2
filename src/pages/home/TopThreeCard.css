@@ -44,6 +44,16 @@
   color: var(--ink);
 }
 
+/* Podium rows: name and points take their medal's tone */
+.top-three__row--rank-1 .top-three__name,
+.top-three__row--rank-1 .top-three__points { color: var(--medal-gold); }
+
+.top-three__row--rank-2 .top-three__name,
+.top-three__row--rank-2 .top-three__points { color: var(--medal-silver); }
+
+.top-three__row--rank-3 .top-three__name,
+.top-three__row--rank-3 .top-three__points { color: var(--medal-bronze); }
+
 .top-three__link {
   display: inline-block;
   margin-top: 0.6rem;

@@ -18,7 +18,11 @@ export default function TopThreeCard({ users, results }: Props) {
     <div dir="rtl" className="top-three" data-testid="top-three">
       <div className="top-three__heading">הצמרת</div>
       {topThree.map(row => (
-        <div key={row.label} className="top-three__row" data-testid="top-three-row">
+        <div
+          key={row.label}
+          className={`top-three__row top-three__row--rank-${row.rank}`}
+          data-testid="top-three-row"
+        >
           <span className="top-three__medal">{MEDALS[row.rank]}</span>
           <span className="top-three__name">{row.label}</span>
           <span className="top-three__points" dir="ltr">{row.total}</span>

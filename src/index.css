@@ -8,6 +8,10 @@
   --ink: #180F07;
   --muted: #7A6845;
   --border: #C8B87A;
+  /* Medal text tones — deepened for legibility on the cream background */
+  --medal-gold: #A8790A;
+  --medal-silver: #5E6E83;
+  --medal-bronze: #91531F;
 }
 
 *, *::before, *::after {

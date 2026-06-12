@@ -266,24 +266,6 @@
   text-transform: uppercase;
 }
 
-.lb-th--phase-group {
-  background: rgba(212, 160, 22, 0.12);
-  color: var(--gold);
-  border-left: 1px solid rgba(212, 160, 22, 0.2);
-}
-
-.lb-th--phase-ko {
-  background: rgba(30, 50, 90, 0.95);
-  color: rgba(200, 210, 230, 0.85);
-  border-left: 1px solid rgba(100, 130, 180, 0.2);
-}
-
-.lb-th--phase-golden {
-  background: rgba(180, 100, 20, 0.12);
-  color: rgba(210, 140, 50, 0.9);
-  border-left: 1px solid rgba(200, 130, 40, 0.2);
-}
-
 .lb-th--round {
   font-size: 10px;
   letter-spacing: 0.18em;
@@ -404,7 +386,7 @@
 /* ── Rank-specific overrides ── */
 
 .lb-row--rank-1 .lb-td--rank   { font-size: 20px; }
-.lb-row--rank-1 .lb-td--name   { font-weight: 900; color: var(--ink); }
+.lb-row--rank-1 .lb-td--name   { font-weight: 900; color: var(--medal-gold); }
 .lb-row--rank-1 .lb-td--total  { color: var(--gold); font-size: 21px; }
 
 /* Actual point values in rank-1 row: slightly warmer */
@@ -413,8 +395,10 @@
   font-size: 14px;
 }
 
-.lb-row--rank-2 .lb-td--total  { color: var(--ink); font-size: 18px; }
-.lb-row--rank-3 .lb-td--total  { color: var(--muted); }
+.lb-row--rank-2 .lb-td--name   { font-weight: 800; color: var(--medal-silver); }
+.lb-row--rank-2 .lb-td--total  { color: var(--medal-silver); font-size: 18px; }
+.lb-row--rank-3 .lb-td--name   { font-weight: 800; color: var(--medal-bronze); }
+.lb-row--rank-3 .lb-td--total  { color: var(--medal-bronze); }
 
 /* ── Always-visible stacked sub-fields (desktop) ── */
 
@@ -756,8 +740,8 @@
 }
 
 .lb-row--rank-1 .lb-td--scope-col { color: var(--gold); font-size: 18px; }
-.lb-row--rank-2 .lb-td--scope-col { color: var(--ink); }
-.lb-row--rank-3 .lb-td--scope-col { color: var(--muted); }
+.lb-row--rank-2 .lb-td--scope-col { color: var(--medal-silver); }
+.lb-row--rank-3 .lb-td--scope-col { color: var(--medal-bronze); }
 
 /* ── Group scope table: counts zone vs points zone ─────────── */
 
