@@ -18,7 +18,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # On deploy runs the build happens inside `vercel build`, so this
+      # check is only needed when we're not deploying.
       - run: npm run build
+        if: github.event_name == 'pull_request' || github.ref != 'refs/heads/master'
       - name: Deploy to Vercel
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
         # Build locally and upload only the output, instead of letting
