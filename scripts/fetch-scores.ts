@@ -33,10 +33,13 @@ function canonical(name: string | null): string | null {
 }
 
 const pairIndex = new Map<string, { id: string; reversed: boolean }>()
+const knownTeams = new Set<string>()
 for (const group of Object.values(GROUPS)) {
   for (const m of group.matches) {
     pairIndex.set(`${m.homeTeam}|${m.awayTeam}`, { id: m.id, reversed: false })
     pairIndex.set(`${m.awayTeam}|${m.homeTeam}`, { id: m.id, reversed: true })
+    knownTeams.add(m.homeTeam)
+    knownTeams.add(m.awayTeam)
   }
 }
 
@@ -65,6 +68,65 @@ export function extractGroupScores(apiMatches: ApiMatch[]): {
   return { scores, unmapped }
 }
 
+export interface EspnEvent {
+  status: { type: { state: string; completed: boolean } }
+  competitions: {
+    competitors: { homeAway: string; score?: string; team: { displayName: string } }[]
+  }[]
+}
+
+export function extractEspnGroupScores(events: EspnEvent[]): {
+  scores: Record<string, { home: number; away: number }>
+  unmapped: string[]
+} {
+  const scores: Record<string, { home: number; away: number }> = {}
+  const unmapped: string[] = []
+
+  for (const e of events) {
+    if (!e.status.type.completed) continue
+    const competitors = e.competitions[0]?.competitors ?? []
+    const homeSide = competitors.find(c => c.homeAway === 'home')
+    const awaySide = competitors.find(c => c.homeAway === 'away')
+    if (!homeSide || !awaySide) continue
+    const home = canonical(homeSide.team.displayName)!
+    const away = canonical(awaySide.team.displayName)!
+    const homeScore = parseInt(homeSide.score ?? '')
+    const awayScore = parseInt(awaySide.score ?? '')
+    const hit = pairIndex.get(`${home}|${away}`)
+    if (!hit || isNaN(homeScore) || isNaN(awayScore)) {
+      // Two known teams that aren't a group pairing is a knockout match,
+      // not a mapping failure — the date window can't exclude those because
+      // the knockout stage starts on the last group matchday.
+      if (hit || !knownTeams.has(home) || !knownTeams.has(away)) {
+        unmapped.push(`${homeSide.team.displayName} vs ${awaySide.team.displayName}`)
+      }
+      continue
+    }
+    scores[hit.id] = hit.reversed
+      ? { home: awayScore, away: homeScore }
+      : { home: homeScore, away: awayScore }
+  }
+
+  return { scores, unmapped }
+}
+
+type ScoreMap = Record<string, { home: number; away: number }>
+
+export function mergeScores(primary: ScoreMap, backup: ScoreMap): {
+  scores: ScoreMap
+  conflicts: string[]
+} {
+  const scores: ScoreMap = { ...backup, ...primary }
+  const conflicts: string[] = []
+  for (const [id, p] of Object.entries(primary)) {
+    const b = backup[id]
+    if (b && (b.home !== p.home || b.away !== p.away)) {
+      conflicts.push(`${id}: primary says ${p.home}-${p.away}, backup says ${b.home}-${b.away}`)
+    }
+  }
+  return { scores, conflicts }
+}
+
 // Test hook: pretend a match finished, e.g. "A1=9-9" (used by the
 // workflow's fake_finished input to rehearse the update path).
 export function parseFakeFinished(spec: string): { id: string; home: number; away: number } | null {
@@ -85,24 +147,49 @@ function loadToken(): string | undefined {
   return undefined
 }
 
-async function main(): Promise<void> {
+// The knockout stage starts on the last group matchday (June 28), so this
+// window admits one round-of-32 match; extractEspnGroupScores skips it.
+const GROUP_STAGE_DATES = '20260611-20260628'
+
+async function fetchEspnScores(): Promise<{ scores: ScoreMap; unmapped: string[] }> {
+  const res = await fetch(
+    `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${GROUP_STAGE_DATES}&limit=200`,
+  )
+  if (!res.ok) throw new Error(`ESPN returned ${res.status}: ${await res.text()}`)
+  const { events } = await res.json() as { events: EspnEvent[] }
+  console.log(`Fetched ${events.length} matches from ESPN`)
+  return extractEspnGroupScores(events)
+}
+
+async function fetchFootballDataScores(): Promise<{ scores: ScoreMap; unmapped: string[] }> {
   const token = loadToken()
-  if (!token) {
-    console.error('Missing FOOTBALL_DATA_TOKEN (env var or .env.local)')
-    process.exit(1)
-  }
+  if (!token) throw new Error('Missing FOOTBALL_DATA_TOKEN (env var or .env.local)')
 
   const res = await fetch('https://api.football-data.org/v4/competitions/WC/matches', {
     headers: { 'X-Auth-Token': token },
   })
-  if (!res.ok) {
-    console.error(`football-data.org returned ${res.status}: ${await res.text()}`)
-    process.exit(1)
-  }
+  if (!res.ok) throw new Error(`football-data.org returned ${res.status}: ${await res.text()}`)
   const { matches } = await res.json() as { matches: ApiMatch[] }
   console.log(`Fetched ${matches.length} matches from football-data.org`)
+  return extractGroupScores(matches)
+}
 
-  const { scores: fetched, unmapped } = extractGroupScores(matches)
+function warnUnmapped(source: string, unmapped: string[]): void {
+  if (unmapped.length === 0) return
+  console.warn(`${source}: could not map ${unmapped.length} finished group matches:`)
+  for (const u of unmapped) console.warn(`  ${u}`)
+}
+
+async function main(): Promise<void> {
+  const espn = await fetchEspnScores()
+  const footballData = await fetchFootballDataScores()
+  warnUnmapped('ESPN', espn.unmapped)
+  warnUnmapped('football-data.org', footballData.unmapped)
+
+  const { scores: fetched, conflicts } = mergeScores(espn.scores, footballData.scores)
+  for (const c of conflicts) {
+    console.warn(`Sources disagree (using ESPN): ${c}`)
+  }
 
   if (process.env.FAKE_FINISHED) {
     const fake = parseFakeFinished(process.env.FAKE_FINISHED)
@@ -123,11 +210,6 @@ async function main(): Promise<void> {
       changed.push(`${id}: ${existing ? `${existing.home}-${existing.away} → ` : ''}${score.home}-${score.away}`)
     }
     merged[id] = score
-  }
-
-  if (unmapped.length > 0) {
-    console.warn(`Could not map ${unmapped.length} finished group matches:`)
-    for (const u of unmapped) console.warn(`  ${u}`)
   }
 
   if (changed.length === 0) {

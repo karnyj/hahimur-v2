@@ -48,7 +48,7 @@ jobs:
             git push -f origin HEAD:score-update-test
             gh workflow run ci.yml --ref score-update-test
           else
-            git commit -m "auto: update match scores from football-data.org"
+            git commit -m "auto: update match scores"
             git pull --rebase origin master
             git push
             # Pushes made with GITHUB_TOKEN don't trigger the CI workflow,
