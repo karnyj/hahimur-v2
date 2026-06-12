@@ -41,14 +41,12 @@ in PROGRESS.md but never built.
 
 ## Data sources
 
-12. **ESPN hidden API as a live-score source** — football-data.org's free tier
-    has no in-play updates (opening match was still `TIMED` at the 74th minute),
-    but ESPN's unofficial JSON API has live scores, clock, and status with no
-    API key: `site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard`
-    (per-match detail incl. scorers: `.../summary?event={id}`). Could power a
-    live score on the home page, or back up / replace football-data.org in the
-    cron. Unofficial — could break without notice, so keep football-data.org as
-    the finished-score fallback.
+12. ~~**ESPN hidden API as a live-score source**~~ ✅ Done (cron part) — ESPN
+    is now the cron's primary finished-score source, football-data.org the
+    backup; either source can fail and the run survives on the other. Live
+    scores on the home page were deliberately skipped — the per-match detail
+    endpoint (`.../summary?event={id}`, incl. scorers) is still unused if we
+    ever want them.
 
 ## Glue with the group chat
 
@@ -58,11 +56,9 @@ in PROGRESS.md but never built.
 
 ## Ops (observability from the start)
 
-10. **Cron failure alert** — dead-man's-switch for `fetch-scores`: ping
-    healthchecks.io from the workflow, or show "last successful fetch: X" on the
-    admin page. ~30-minute slice that protects everything else mid-tournament.
+10. ~~**Cron failure alert**~~ ✅ Done — covered via cron-job.org, which
+    monitors the `fetch-scores` cron and alerts on failure.
 
 ## Recommended next
 
 - **#1 movement arrows** — already wishlisted, thin, makes every matchday more fun.
-- **#10 cron alert** — do this week regardless; the whole site depends on the cron.
