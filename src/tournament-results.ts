@@ -4,6 +4,7 @@ import type { TournamentResults, MatchScores } from './shared/types'
 // Fill in real scores here as matches are played, keyed by match ID
 const groupScores: Record<string, MatchScores> = {
   A1: { home: 2, away: 0 },
+  A2: { home: 2, away: 1 },
 }
 
 // Real goals by picked players: player → match ID → goals in that match.
