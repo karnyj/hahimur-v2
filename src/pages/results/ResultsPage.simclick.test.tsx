@@ -7,7 +7,12 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
+declare global {
+  interface Window { happyDOM: { setURL(url: string): void } }
+}
+
 test('clicking סימלוץ reports the click to /api/sim-click', async () => {
+  window.happyDOM.setURL('https://hahimur.vercel.app/')
   const fetchMock = vi.fn().mockResolvedValue(new Response('{"ok":true}'))
   vi.stubGlobal('fetch', fetchMock)
   render(<ResultsPage users={[]} />)
@@ -15,6 +20,17 @@ test('clicking סימלוץ reports the click to /api/sim-click', async () => {
   await userEvent.click(screen.getByRole('button', { name: 'סימלוץ' }))
 
   expect(fetchMock).toHaveBeenCalledWith('/api/sim-click', { method: 'POST' })
+})
+
+test('clicks from localhost are not counted', async () => {
+  window.happyDOM.setURL('http://localhost:5173/')
+  const fetchMock = vi.fn().mockResolvedValue(new Response('{"ok":true}'))
+  vi.stubGlobal('fetch', fetchMock)
+  render(<ResultsPage users={[]} />)
+
+  await userEvent.click(screen.getByRole('button', { name: 'סימלוץ' }))
+
+  expect(fetchMock).not.toHaveBeenCalled()
 })
 
 test('the simulator still works when the click report fails', async () => {

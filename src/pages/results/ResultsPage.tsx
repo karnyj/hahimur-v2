@@ -109,8 +109,11 @@ export default function ResultsPage({ users }: { users: User[] }) {
   }
 
   const randomize = () => {
-    // fire-and-forget click counter — must never affect the simulation itself
-    fetch('/api/sim-click', { method: 'POST' }).catch(() => {})
+    // fire-and-forget click counter — must never affect the simulation itself;
+    // localhost clicks are dev noise and stay out of the tournament total
+    if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+      fetch('/api/sim-click', { method: 'POST' }).catch(() => {})
+    }
     const poisson = (lambda: number) => {
       const L = Math.exp(-lambda)
       let k = 0, p = 1
