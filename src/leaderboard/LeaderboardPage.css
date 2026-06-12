@@ -347,20 +347,20 @@
   font-family: 'Bebas Neue', sans-serif;
   font-size: 15px;
   letter-spacing: 0.03em;
-  color: var(--navy);
+  color: var(--row-accent, var(--navy));
   font-variant-numeric: tabular-nums;
 }
 
 /* Zero/dash cells are muted */
 .lb-td:not(.lb-td--rank):not(.lb-td--name):not(.lb-td--total) {
-  color: var(--muted);
+  color: var(--row-accent, var(--muted));
   font-size: 14px;
 }
 
 .lb-td--rank {
   padding-right: 14px;
   font-size: 17px;
-  color: var(--muted);
+  color: var(--row-accent, var(--muted));
   width: 44px;
 }
 
@@ -369,7 +369,7 @@
   font-family: 'Heebo', sans-serif;
   font-weight: 700;
   font-size: 14px;
-  color: var(--ink);
+  color: var(--row-accent, var(--ink));
   letter-spacing: 0.01em;
   padding-right: 14px;
   white-space: nowrap;
@@ -378,27 +378,26 @@
 .lb-td--total {
   font-size: 18px;
   font-weight: 700;
-  color: var(--navy);
+  color: var(--row-accent, var(--navy));
   letter-spacing: 0.04em;
   border-right: 1px solid rgba(200, 184, 122, 0.22);
 }
 
-/* ── Rank-specific overrides ── */
+/* ── Rank-specific overrides ──
+   Podium rows tint every cell via --row-accent; the color rules above
+   fall back to their normal tones when it's unset. */
+
+.lb-row--rank-1 { --row-accent: var(--medal-gold); }
+.lb-row--rank-2 { --row-accent: var(--medal-silver); }
+.lb-row--rank-3 { --row-accent: var(--medal-bronze); }
 
 .lb-row--rank-1 .lb-td--rank   { font-size: 20px; }
-.lb-row--rank-1 .lb-td--name   { font-weight: 900; color: var(--medal-gold); }
-.lb-row--rank-1 .lb-td--total  { color: var(--gold); font-size: 21px; }
+.lb-row--rank-1 .lb-td--name   { font-weight: 900; }
+.lb-row--rank-1 .lb-td--total  { font-size: 21px; }
 
-/* Actual point values in rank-1 row: slightly warmer */
-.lb-row--rank-1 .lb-td:not(.lb-td--rank):not(.lb-td--name):not(.lb-td--total) {
-  color: var(--navy);
-  font-size: 14px;
-}
-
-.lb-row--rank-2 .lb-td--name   { font-weight: 800; color: var(--medal-silver); }
-.lb-row--rank-2 .lb-td--total  { color: var(--medal-silver); font-size: 18px; }
-.lb-row--rank-3 .lb-td--name   { font-weight: 800; color: var(--medal-bronze); }
-.lb-row--rank-3 .lb-td--total  { color: var(--medal-bronze); }
+.lb-row--rank-2 .lb-td--name   { font-weight: 800; }
+.lb-row--rank-2 .lb-td--total  { font-size: 18px; }
+.lb-row--rank-3 .lb-td--name   { font-weight: 800; }
 
 /* ── Always-visible stacked sub-fields (desktop) ── */
 
@@ -436,19 +435,17 @@
   font-family: 'Bebas Neue', sans-serif;
   font-size: 7.5px;
   letter-spacing: 0.06em;
-  color: var(--muted);
+  color: var(--row-accent, var(--muted));
   opacity: 0.5;
 }
 
 .lb-td-sub-value {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 10.5px;
-  color: var(--muted);
+  color: var(--row-accent, var(--muted));
   font-variant-numeric: tabular-nums;
   opacity: 0.75;
 }
-
-.lb-row--rank-1 .lb-td-sub-value { color: var(--navy); opacity: 0.7; }
 
 /* ── Mobile section breakdown ── */
 
@@ -733,15 +730,13 @@
   text-align: center;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 17px;
-  color: var(--navy);
+  color: var(--row-accent, var(--navy));
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em;
   padding: 12px 10px;
 }
 
-.lb-row--rank-1 .lb-td--scope-col { color: var(--gold); font-size: 18px; }
-.lb-row--rank-2 .lb-td--scope-col { color: var(--medal-silver); }
-.lb-row--rank-3 .lb-td--scope-col { color: var(--medal-bronze); }
+.lb-row--rank-1 .lb-td--scope-col { font-size: 18px; }
 
 /* ── Group scope table: counts zone vs points zone ─────────── */
 
@@ -783,7 +778,7 @@
   font-family: 'Heebo', sans-serif;
   font-size: 13px;
   font-weight: 600;
-  color: rgba(11, 34, 68, 0.55);
+  color: var(--row-accent, rgba(11, 34, 68, 0.55));
   text-align: center;
   padding: 12px 10px;
   font-variant-numeric: tabular-nums;
@@ -796,13 +791,12 @@
   border: 1px solid rgba(11, 34, 68, 0.22);
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.6);
-  color: rgba(11, 34, 68, 0.8);
+  color: var(--row-accent, rgba(11, 34, 68, 0.8));
   line-height: 1.35;
 }
 
 .lb-row--rank-1 .lb-hit-chip {
   border-color: rgba(212, 160, 22, 0.55);
-  color: var(--navy);
 }
 
 /* Zone washes on body cells. These intentionally come last so they win
