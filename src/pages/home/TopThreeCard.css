@@ -1,0 +1,58 @@
+.top-three {
+  max-width: 480px;
+  margin: 2rem auto 0;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  text-align: center;
+}
+
+.top-three__heading {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.top-three__row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.25rem;
+}
+
+.top-three__row + .top-three__row {
+  border-top: 1px solid var(--border);
+}
+
+.top-three__medal {
+  font-size: 1.2rem;
+}
+
+.top-three__name {
+  flex: 1;
+  text-align: right;
+  font-weight: 700;
+  color: var(--navy);
+}
+
+.top-three__points {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.top-three__link {
+  display: inline-block;
+  margin-top: 0.6rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--red);
+  text-decoration: none;
+}
+
+.top-three__link:hover {
+  text-decoration: underline;
+}

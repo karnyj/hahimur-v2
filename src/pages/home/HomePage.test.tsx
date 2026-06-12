@@ -13,6 +13,12 @@ test('home page shows the next match card during the group stage', () => {
   expect(screen.getByTestId('next-match')).toBeInTheDocument()
 })
 
+test('home page shows the top three card', () => {
+  render(<HomePage />)
+  expect(screen.getByTestId('top-three')).toBeInTheDocument()
+  expect(screen.getAllByTestId('top-three-row')).toHaveLength(3)
+})
+
 test('home page shows title', () => {
   render(<HomePage />)
   expect(screen.getByText('ההימור 2026')).toBeInTheDocument()

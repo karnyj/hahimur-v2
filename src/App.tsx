@@ -3,7 +3,6 @@ import AdminPage from './pages/admin/AdminPage'
 import UpdatesPage from './pages/updates/UpdatesPage'
 import FormsPage from './pages/forms/FormsPage'
 import HomePage from './pages/home/HomePage'
-import LeaderboardPage from './leaderboard/LeaderboardPage'
 import MatchPredictionsPage from './pages/match/MatchPredictionsPage'
 import ResultsPage from './pages/results/ResultsPage'
 import StatsPage from './pages/stats/StatsPage'
@@ -33,7 +32,6 @@ export default function App() {
       <UpdateBanner updateAvailable={updateAvailable} />
       {matchId                                            ? <MatchPredictionsPage {...resolveMatch(matchId)} users={USERS} /> :
        groupStatsLetter && ALL_GROUP_LETTERS.includes(groupStatsLetter) ? <GroupStatsPage groupLetter={groupStatsLetter} /> :
-       pathname === '/leaderboard'                         ? <LeaderboardPage /> :
        pathname === '/results'                            ? <ResultsPage users={USERS_SORTED} /> :
        pathname === '/stats'                             ? <StatsPage users={USERS} /> :
        pathname === '/forms'                              ? <FormsPage users={USERS} usersSorted={USERS_SORTED} /> :
