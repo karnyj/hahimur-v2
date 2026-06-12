@@ -28,11 +28,14 @@ function u(label: string, predictions: PredictionsState, topGoalscorer = ''): Us
   return { label, predictions, topGoalscorer, groupMatches: {}, groupTables: {}, thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] }, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] } }
 }
 
+// Fixed clock before any kickoff, so isLive never flips tests during real match windows
+const NOW = new Date('2026-06-01T12:00:00')
+
 function renderPage(matchId: string, users: User[]) {
   const match = findMatch(matchId)
   const home = match ? TEAMS[match.homeTeam] : null
   const away = match ? TEAMS[match.awayTeam] : null
-  return render(<MatchPredictionsPage match={match ?? null} home={home} away={away} users={users} />)
+  return render(<MatchPredictionsPage match={match ?? null} home={home} away={away} users={users} now={NOW} />)
 }
 
 test('played match shows the real score as fixed text with a final badge, no inputs', () => {
