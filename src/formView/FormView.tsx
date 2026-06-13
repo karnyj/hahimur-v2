@@ -22,6 +22,14 @@ interface Props {
 
 const noop = () => {}
 
+// fire-and-forget usage signal for the chronological view; localhost clicks are
+// dev noise and never reach the counter, and failures must never break the view
+function reportDateView() {
+  if (!['localhost', '127.0.0.1'].includes(window.location.hostname)) {
+    fetch('/api/date-view-click', { method: 'POST' }).catch(() => {})
+  }
+}
+
 export default function FormView({
   predictions,
   topGoalscorer,
@@ -63,7 +71,7 @@ export default function FormView({
         <button
           type="button"
           className={`pg-group-btn${groupStageView === 'by-date' ? ' pg-group-btn--active' : ''}`}
-          onClick={() => setGroupStageView('by-date')}
+          onClick={() => { reportDateView(); setGroupStageView('by-date') }}
         >לפי תאריך</button>
       </div>
 
