@@ -42,36 +42,33 @@ test('editable: card is not a link', () => {
   expect(document.querySelector('a.match-card')).toBeNull()
 })
 
-// --- Slice: outcome medal badge ---
+// --- Slice: outcome result strip ---
 
-test('readOnly with outcome=tzelifa: renders medal with ⭐, צליפה, and +4', () => {
+test('readOnly with outcome=tzelifa: renders strip with צליפה and +4', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="tzelifa" points={4} />)
-  const medal = screen.getByTestId('match-outcome')
-  expect(medal).toHaveClass('match-medal--tzelifa')
-  expect(medal).toHaveTextContent('⭐')
-  expect(medal).toHaveTextContent('צליפה')
-  expect(medal).toHaveTextContent('+4')
+  const strip = screen.getByTestId('match-outcome')
+  expect(strip).toHaveClass('match-result--tzelifa')
+  expect(strip).toHaveTextContent('צליפה')
+  expect(strip).toHaveTextContent('+4')
 })
 
-test('readOnly with outcome=pgiya: renders medal with ✓, פגיעה, and +2', () => {
+test('readOnly with outcome=pgiya: renders strip with פגיעה and +2', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="pgiya" points={2} />)
-  const medal = screen.getByTestId('match-outcome')
-  expect(medal).toHaveClass('match-medal--pgiya')
-  expect(medal).toHaveTextContent('✓')
-  expect(medal).toHaveTextContent('פגיעה')
-  expect(medal).toHaveTextContent('+2')
+  const strip = screen.getByTestId('match-outcome')
+  expect(strip).toHaveClass('match-result--pgiya')
+  expect(strip).toHaveTextContent('פגיעה')
+  expect(strip).toHaveTextContent('+2')
 })
 
-test('readOnly with outcome=miss: renders medal with ✕, פספוס, and 0', () => {
+test('readOnly with outcome=miss: renders strip with פספוס and 0', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="miss" points={0} />)
-  const medal = screen.getByTestId('match-outcome')
-  expect(medal).toHaveClass('match-medal--miss')
-  expect(medal).toHaveTextContent('✕')
-  expect(medal).toHaveTextContent('פספוס')
-  expect(medal).toHaveTextContent('0')
+  const strip = screen.getByTestId('match-outcome')
+  expect(strip).toHaveClass('match-result--miss')
+  expect(strip).toHaveTextContent('פספוס')
+  expect(strip).toHaveTextContent('0')
 })
 
-test('readOnly without outcome: no medal is rendered', () => {
+test('readOnly without outcome: no result strip is rendered', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly />)
   expect(screen.queryByTestId('match-outcome')).toBeNull()
 })

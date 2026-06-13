@@ -11,12 +11,6 @@ const OUTCOME_LABEL: Record<MatchOutcome, string> = {
   miss: 'פספוס',
 }
 
-const OUTCOME_ICON: Record<MatchOutcome, string> = {
-  tzelifa: '⭐',
-  pgiya: '✓',
-  miss: '✕',
-}
-
 function dayOfWeek(matchDate: string): string {
   const day = parseInt(matchDate)
   const d = new Date(2026, 5, day) // June 2026
@@ -38,7 +32,10 @@ interface Props {
 export default function MatchRow({ match, scores, onChange, readOnly = false, href, hideDate = false, groupLabel, outcome, points }: Props) {
   const set = (home: Score, away: Score) => onChange({ home, away })
   const Card = href && readOnly ? 'a' : 'div'
-  const cardProps = href && readOnly ? { href, className: 'match-card' } : { className: 'match-card' }
+  const outcomeClass = outcome ? ` match-card--${outcome}` : ''
+  const cardProps = href && readOnly
+    ? { href, className: `match-card${outcomeClass}` }
+    : { className: `match-card${outcomeClass}` }
   return (
     <Card {...cardProps}>
       {hideDate ? (
@@ -90,14 +87,9 @@ export default function MatchRow({ match, scores, onChange, readOnly = false, hr
         <span className={`fi fi-${TEAMS[match.awayTeam].iso} match-team-flag`} />
       </div>
       {outcome && (
-        <div className={`match-medal match-medal--${outcome}`} data-testid="match-outcome">
-          <div className="match-medal__inner">
-            <span className="match-medal__icon">{OUTCOME_ICON[outcome]}</span>
-            <div className="match-medal__text">
-              <span className="match-medal__label">{OUTCOME_LABEL[outcome]}</span>
-              <span className="match-medal__points">{points! > 0 ? `+${points}` : `${points}`}</span>
-            </div>
-          </div>
+        <div className={`match-result match-result--${outcome}`} data-testid="match-outcome">
+          <span className="match-result__label">{OUTCOME_LABEL[outcome]}</span>
+          <span className="match-result__points">{points! > 0 ? `+${points}` : `${points}`}</span>
         </div>
       )}
       {href && readOnly ? (
