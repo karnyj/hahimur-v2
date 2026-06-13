@@ -64,7 +64,7 @@ function advPts(predicted: string[], actual: string[], pts: number): number {
 }
 
 export const OLEH_POINTS: Record<'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'thirdPlaceWinner' | 'champion', number> = {
-  group: 4, r32: 5, r16: 8, qf: 12, sf: 16, thirdPlaceWinner: 20, champion: 25,
+  group: 4, r32: 7, r16: 8, qf: 12, sf: 16, thirdPlaceWinner: 20, champion: 25,
 }
 
 export const POINTS_PER_GOAL = 3
