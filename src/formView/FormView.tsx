@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react'
+import '../pages/results/ResultsPage.css'
 import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutStages } from '../shared/types'
-import { GROUP_MATCHES, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../shared/groups'
+import { GROUP_MATCHES, GROUPS, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../shared/groups'
 import { calculateStandings } from '../shared/standings'
 import { useTournament } from '../shared/useTournament'
+import { GROUP_MATCHES_BY_DATE } from '../shared/matchesByDate'
 import MatchRow from './groupStage/MatchRow'
 import StandingsTable from './groupStage/StandingsTable'
 import ThirdPlaceTable from './thirdPlace/ThirdPlaceTable'
@@ -29,6 +31,7 @@ export default function FormView({
   predictedChampion,
 }: Props) {
   const [activeGroup, setActiveGroup] = useState<GroupLetter>('A')
+  const [groupStageView, setGroupStageView] = useState<'by-group' | 'by-date'>('by-group')
   const activeMatches = useMemo(() => GROUP_MATCHES[activeGroup] ?? [], [activeGroup])
 
   const { standings: computedStandings } = useMemo(
@@ -51,38 +54,83 @@ export default function FormView({
 
   return (
     <>
-      <div className="group-grid">
-        {ALL_GROUP_LETTERS.map(letter => {
-          const hasData = letter in GROUP_MATCHES
-          const cls = [
-            'group-cell',
-            activeGroup === letter && 'group-cell--active',
-            !hasData && 'group-cell--empty',
-          ].filter(Boolean).join(' ')
-          return (
-            <button
-              key={letter}
-              className={cls}
-              onClick={() => hasData && setActiveGroup(letter)}
-              disabled={!hasData}
-            >
-              {GROUP_HEBREW[letter]}
-            </button>
-          )
-        })}
+      <div className="pg-view-toggle">
+        <button
+          type="button"
+          className={`pg-group-btn${groupStageView === 'by-group' ? ' pg-group-btn--active' : ''}`}
+          onClick={() => setGroupStageView('by-group')}
+        >לפי בית</button>
+        <button
+          type="button"
+          className={`pg-group-btn${groupStageView === 'by-date' ? ' pg-group-btn--active' : ''}`}
+          onClick={() => setGroupStageView('by-date')}
+        >לפי תאריך</button>
       </div>
 
+      {groupStageView === 'by-group' && (
+        <div className="group-grid">
+          {ALL_GROUP_LETTERS.map(letter => {
+            const hasData = letter in GROUP_MATCHES
+            const cls = [
+              'group-cell',
+              activeGroup === letter && 'group-cell--active',
+              !hasData && 'group-cell--empty',
+            ].filter(Boolean).join(' ')
+            return (
+              <button
+                key={letter}
+                className={cls}
+                onClick={() => hasData && setActiveGroup(letter)}
+                disabled={!hasData}
+              >
+                {GROUP_HEBREW[letter]}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
       <section className="content-section">
-        {activeMatches.map(match => (
-          <MatchRow
-            key={match.id}
-            match={match}
-            scores={predictions[match.id] ?? { home: null, away: null }}
-            onChange={noop}
-            readOnly
-          />
-        ))}
-        <StandingsTable standings={activeStandings} />
+        {groupStageView === 'by-group' ? (
+          <>
+            {activeMatches.map(match => (
+              <MatchRow
+                key={match.id}
+                match={match}
+                scores={predictions[match.id] ?? { home: null, away: null }}
+                onChange={noop}
+                readOnly
+              />
+            ))}
+            <StandingsTable standings={activeStandings} />
+          </>
+        ) : (
+          <>
+            {GROUP_MATCHES_BY_DATE.map(({ date, dayLabel, matches }) => (
+              <div key={date}>
+                <div className="pg-date-band">
+                  <span className="pg-date-band__rule" />
+                  <div className="pg-date-band__label">
+                    <span className="pg-date-band__date">{date}</span>
+                    <span className="pg-date-band__day">{dayLabel}</span>
+                  </div>
+                  <span className="pg-date-band__rule" />
+                </div>
+                {matches.map(({ match, group }) => (
+                  <MatchRow
+                    key={match.id}
+                    match={match}
+                    scores={predictions[match.id] ?? { home: null, away: null }}
+                    onChange={noop}
+                    readOnly
+                    hideDate
+                    groupLabel={GROUPS[group].he}
+                  />
+                ))}
+              </div>
+            ))}
+          </>
+        )}
       </section>
 
       <section className="content-section">

@@ -52,3 +52,25 @@ test('אלרד גומא appears in dropdown and shows predictions section', () =
   selectUser('אלרד גומא')
   expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
 })
+
+describe('By-date toggle', () => {
+  test('toggle buttons are visible after selecting a user', () => {
+    selectUser('טל ליכטר')
+    expect(screen.getByRole('button', { name: 'לפי בית' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'לפי תאריך' })).toBeInTheDocument()
+  })
+
+  test('switching to by-date hides the group grid and shows date bands', () => {
+    selectUser('טל ליכטר')
+    fireEvent.click(screen.getByRole('button', { name: 'לפי תאריך' }))
+    expect(screen.queryByRole('button', { name: 'א' })).not.toBeInTheDocument()
+    expect(screen.getByText('11 ביוני')).toBeInTheDocument()
+  })
+
+  test('switching back to by-group restores the group grid', () => {
+    selectUser('טל ליכטר')
+    fireEvent.click(screen.getByRole('button', { name: 'לפי תאריך' }))
+    fireEvent.click(screen.getByRole('button', { name: 'לפי בית' }))
+    expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
+  })
+})

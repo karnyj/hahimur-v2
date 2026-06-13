@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import './FormPage.css'
-import type { Match, MatchScores, PredictionsState, KnockoutMatch } from '../../shared/types'
+import type { MatchScores, PredictionsState, KnockoutMatch } from '../../shared/types'
 import { GROUP_MATCHES, GROUP_HEBREW, TEAMS, ALL_GROUP_LETTERS, type GroupLetter } from '../../shared/groups'
 import { calculateStandings } from '../../shared/standings'
 import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'

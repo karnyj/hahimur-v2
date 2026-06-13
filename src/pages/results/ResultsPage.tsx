@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import GoalScorerSection from './GoalScorerSection'
 import PageLayout from '../../shared/PageLayout'
 import MatchRow from '../../formView/groupStage/MatchRow'
@@ -12,9 +12,9 @@ import LeaderboardScopeBar from '../../leaderboard/LeaderboardScopeBar'
 import { calculateStandings } from '../../shared/standings'
 import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'
 import { useTournament } from '../../shared/useTournament'
-import { matchSortKey } from '../../shared/matchOrder'
 import { GROUPS, ALL_GROUP_LETTERS, TEAMS, type GroupLetter } from '../../shared/groups'
-import type { PredictionsState, MatchScores, TournamentResults, Match } from '../../shared/types'
+import type { PredictionsState, MatchScores, TournamentResults } from '../../shared/types'
+import { GROUP_MATCHES_BY_DATE } from '../../shared/matchesByDate'
 import { tournamentResults as realTournamentResults } from '../../tournament-results'
 import { getLockedMatchIds } from './resultsUtils'
 import { TEAM_STRENGTH } from './teamStrength'
@@ -83,11 +83,6 @@ const pickersByPlayer = (users: User[]): Record<string, string[]> => {
   return map
 }
 
-const HE_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת']
-
-type MatchEntry = { match: Match; group: GroupLetter }
-type DateGroup  = { date: string; dayLabel: string; matches: MatchEntry[] }
-
 export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
   const [lbScope, setLbScope] = useState<Scope>('all')
@@ -151,28 +146,6 @@ export default function ResultsPage({ users }: { users: User[] }) {
   }
 
   const { thirdPlaceQual, allGroupsFilled, allGroupData, groupsWithTies, round32Matches, knockout, finalWinner } = useTournament(editedResults)
-
-  const allMatchesByDate = useMemo((): DateGroup[] => {
-    const all: MatchEntry[] = ALL_GROUP_LETTERS.flatMap(l =>
-      GROUPS[l].matches.map(m => ({ match: m, group: l }))
-    ).sort((a, b) =>
-      matchSortKey(a.match.matchDate, a.match.kickoffIST) -
-      matchSortKey(b.match.matchDate, b.match.kickoffIST)
-    )
-    const grouped: DateGroup[] = []
-    for (const entry of all) {
-      const date = entry.match.matchDate ?? ''
-      const last = grouped[grouped.length - 1]
-      if (last?.date === date) {
-        last.matches.push(entry)
-      } else {
-        const day = parseInt(date, 10)
-        const d = new Date(2026, 5, day)
-        grouped.push({ date, dayLabel: `יום ${HE_DAYS[d.getDay()]}`, matches: [entry] })
-      }
-    }
-    return grouped
-  }, [])
 
   const activeTournamentData = allGroupData.find(d => d.group === activeGroup)
   const activeTiedTeams = activeTournamentData?.tiedTeams ?? new Set<string>()
@@ -311,7 +284,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
               </>
             ) : (
               <div className="pg-matches">
-                {allMatchesByDate.map(({ date, dayLabel, matches }) => (
+                {GROUP_MATCHES_BY_DATE.map(({ date, dayLabel, matches }) => (
                   <div key={date}>
                     <div className="pg-date-band">
                       <span className="pg-date-band__rule" />
