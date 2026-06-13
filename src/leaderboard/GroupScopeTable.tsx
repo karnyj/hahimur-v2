@@ -37,7 +37,11 @@ function makeVariant(pointCols: Col[], defaultSort: GroupSortBy) {
   const mobilePointCol = { ...pointCols[pointCols.length - 1], label: 'נקודות', zoneEdge: true }
   return {
     desktop: [...HIT_COLS, ...pointCols],
-    mobile: [{ ...HIT_COLS[2], label: 'ניחושים' }, mobilePointCol],
+    mobile: [
+      { ...HIT_COLS[0], label: 'פגיעה' },
+      { ...HIT_COLS[1], label: 'צליפה' },
+      mobilePointCol,
+    ],
     pointCols,
     defaultSort,
   }
