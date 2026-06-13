@@ -42,30 +42,36 @@ test('editable: card is not a link', () => {
   expect(document.querySelector('a.match-card')).toBeNull()
 })
 
-// --- Slice: outcome badge ---
+// --- Slice: outcome medal badge ---
 
-test('readOnly with outcome=tzelifa: renders badge with צליפה and +4', () => {
+test('readOnly with outcome=tzelifa: renders medal with ⭐, צליפה, and +4', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="tzelifa" points={4} />)
-  const badge = screen.getByTestId('match-outcome')
-  expect(badge).toHaveTextContent('צליפה')
-  expect(badge).toHaveTextContent('+4')
+  const medal = screen.getByTestId('match-outcome')
+  expect(medal).toHaveClass('match-medal--tzelifa')
+  expect(medal).toHaveTextContent('⭐')
+  expect(medal).toHaveTextContent('צליפה')
+  expect(medal).toHaveTextContent('+4')
 })
 
-test('readOnly with outcome=pgiya: renders badge with פגיעה and +2', () => {
+test('readOnly with outcome=pgiya: renders medal with ✓, פגיעה, and +2', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="pgiya" points={2} />)
-  const badge = screen.getByTestId('match-outcome')
-  expect(badge).toHaveTextContent('פגיעה')
-  expect(badge).toHaveTextContent('+2')
+  const medal = screen.getByTestId('match-outcome')
+  expect(medal).toHaveClass('match-medal--pgiya')
+  expect(medal).toHaveTextContent('✓')
+  expect(medal).toHaveTextContent('פגיעה')
+  expect(medal).toHaveTextContent('+2')
 })
 
-test('readOnly with outcome=miss: renders badge with פספוס and 0', () => {
+test('readOnly with outcome=miss: renders medal with ✕, פספוס, and 0', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly outcome="miss" points={0} />)
-  const badge = screen.getByTestId('match-outcome')
-  expect(badge).toHaveTextContent('פספוס')
-  expect(badge).toHaveTextContent('0')
+  const medal = screen.getByTestId('match-outcome')
+  expect(medal).toHaveClass('match-medal--miss')
+  expect(medal).toHaveTextContent('✕')
+  expect(medal).toHaveTextContent('פספוס')
+  expect(medal).toHaveTextContent('0')
 })
 
-test('readOnly without outcome: no badge is rendered', () => {
+test('readOnly without outcome: no medal is rendered', () => {
   render(<MatchRow match={match} scores={{ home: 2, away: 1 }} onChange={() => {}} readOnly />)
   expect(screen.queryByTestId('match-outcome')).toBeNull()
 })
