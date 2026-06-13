@@ -137,7 +137,7 @@ export default function FormView({
                   scores={predictions[match.id] ?? { home: null, away: null }}
                   onChange={noop}
                   readOnly
-                  href={isFinished ? `/matches/${match.id}` : undefined}
+                  href={`/matches/${match.id}`}
                   outcome={outcome}
                   points={points}
                   actualScore={isFinished ? actual : undefined}
@@ -171,7 +171,7 @@ export default function FormView({
                       readOnly
                       hideDate
                       groupLabel={GROUPS[group].he}
-                      href={isFinished ? `/matches/${match.id}` : undefined}
+                      href={`/matches/${match.id}`}
                       outcome={outcome}
                       points={points}
                       actualScore={isFinished ? actual : undefined}
