@@ -27,9 +27,10 @@ interface Props {
   groupLabel?: string
   outcome?: MatchOutcome
   points?: number
+  actualScore?: MatchScores
 }
 
-export default function MatchRow({ match, scores, onChange, readOnly = false, href, hideDate = false, groupLabel, outcome, points }: Props) {
+export default function MatchRow({ match, scores, onChange, readOnly = false, href, hideDate = false, groupLabel, outcome, points, actualScore }: Props) {
   const set = (home: Score, away: Score) => onChange({ home, away })
   const Card = href && readOnly ? 'a' : 'div'
   const outcomeClass = outcome ? ` match-card--${outcome}` : ''
@@ -89,6 +90,9 @@ export default function MatchRow({ match, scores, onChange, readOnly = false, hr
       {outcome && (
         <div className={`match-result match-result--${outcome}`} data-testid="match-outcome">
           <span className="match-result__label">{OUTCOME_LABEL[outcome]}</span>
+          {actualScore && (
+            <span className="match-result__actual-score" dir="ltr">{actualScore.away}:{actualScore.home}</span>
+          )}
           <span className="match-result__points">{points! > 0 ? `+${points}` : `${points}`}</span>
         </div>
       )}

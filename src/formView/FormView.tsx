@@ -128,6 +128,8 @@ export default function FormView({
           <>
             {activeMatches.map(match => {
               const { outcome, points } = getOutcomeAndPoints(match.id)
+              const actual = actualScores[match.id]
+              const isFinished = actual && actual.home !== null && actual.away !== null
               return (
                 <MatchRow
                   key={match.id}
@@ -135,8 +137,10 @@ export default function FormView({
                   scores={predictions[match.id] ?? { home: null, away: null }}
                   onChange={noop}
                   readOnly
+                  href={isFinished ? `/matches/${match.id}` : undefined}
                   outcome={outcome}
                   points={points}
+                  actualScore={isFinished ? actual : undefined}
                 />
               )
             })}
@@ -156,6 +160,8 @@ export default function FormView({
                 </div>
                 {matches.map(({ match, group }) => {
                   const { outcome, points } = getOutcomeAndPoints(match.id)
+                  const actual = actualScores[match.id]
+                  const isFinished = actual && actual.home !== null && actual.away !== null
                   return (
                     <MatchRow
                       key={match.id}
@@ -165,8 +171,10 @@ export default function FormView({
                       readOnly
                       hideDate
                       groupLabel={GROUPS[group].he}
+                      href={isFinished ? `/matches/${match.id}` : undefined}
                       outcome={outcome}
                       points={points}
+                      actualScore={isFinished ? actual : undefined}
                     />
                   )
                 })}
