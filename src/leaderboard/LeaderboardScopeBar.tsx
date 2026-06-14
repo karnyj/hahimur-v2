@@ -3,17 +3,22 @@ import { GROUPS, ALL_GROUP_LETTERS } from '../shared/groups'
 import type { GroupLetter } from '../shared/groups'
 import type { Scope } from './leaderboardRows'
 
-export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLastXChange }: {
+const isGroupScope = (s: Scope): s is GroupLetter => s !== 'all' && s !== 'lastX' && s !== 'asOf'
+
+export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLastXChange, asOfIndex, onAsOfChange, playedMatchIds }: {
   scope: Scope
   onScopeChange: (s: Scope) => void
   lastX: number
   onLastXChange: (n: number) => void
+  asOfIndex: number
+  onAsOfChange: (n: number) => void
+  playedMatchIds: string[]
 }) {
   // remembered so re-entering "לפי בית" lands on the group you were viewing
-  const [lastGroup, setLastGroup] = useState<GroupLetter>(
-    scope !== 'all' && scope !== 'lastX' ? scope : 'A'
-  )
-  const mode = scope === 'all' ? 'all' : scope === 'lastX' ? 'lastX' : 'group'
+  const [lastGroup, setLastGroup] = useState<GroupLetter>(isGroupScope(scope) ? scope : 'A')
+  const mode = scope === 'all' ? 'all' : scope === 'lastX' ? 'lastX' : scope === 'asOf' ? 'asOf' : 'group'
+  const playedCount = playedMatchIds.length
+  const currentMatchId = playedMatchIds[asOfIndex - 1]
 
   const modeBtn = (active: boolean) =>
     `lb-scope-mode${active ? ' lb-scope-mode--active' : ''}`
@@ -39,6 +44,12 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLas
           aria-pressed={mode === 'lastX'}
           onClick={() => onScopeChange('lastX')}
         >משחקים אחרונים</button>
+        <button
+          type="button"
+          className={modeBtn(mode === 'asOf')}
+          aria-pressed={mode === 'asOf'}
+          onClick={() => onScopeChange('asOf')}
+        >לפי משחק</button>
       </div>
 
       {mode === 'group' && (
@@ -81,6 +92,29 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLas
             >−</button>
           </div>
           <span className="lb-lastx-caption">משחקים אחרונים ששוחקו</span>
+        </div>
+      )}
+
+      {mode === 'asOf' && (
+        <div className="lb-scope-row">
+          {playedCount === 0 ? (
+            <span className="lb-lastx-caption">אין עדיין משחקים ששוחקו</span>
+          ) : (
+            <>
+              <input
+                type="range"
+                className="lb-asof-slider"
+                min={1}
+                max={playedCount}
+                value={asOfIndex}
+                onChange={e => onAsOfChange(Number(e.target.value))}
+                aria-label="מצב הטבלה אחרי משחק"
+              />
+              <span className="lb-lastx-caption">
+                אחרי משחק {asOfIndex}/{playedCount} · {currentMatchId}
+              </span>
+            </>
+          )}
         </div>
       )}
     </div>

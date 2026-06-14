@@ -8,6 +8,7 @@ import ThirdPlaceTable from '../../formView/thirdPlace/ThirdPlaceTable'
 import type { User } from '../../users/index'
 import ScopedLeaderboard from '../../leaderboard/ScopedLeaderboard'
 import type { Scope } from '../../leaderboard/leaderboardRows'
+import { playedGroupMatchesChrono } from '../../leaderboard/leaderboardRows'
 import LeaderboardScopeBar from '../../leaderboard/LeaderboardScopeBar'
 import { calculateStandings } from '../../shared/standings'
 import { clearUnresolvedKOScores } from '../../formView/knockout/knockout'
@@ -87,6 +88,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
   const [lbScope, setLbScope] = useState<Scope>('all')
   const [lbLastX, setLbLastX] = useState(5)
+  const [lbAsOf, setLbAsOf] = useState(() => playedGroupMatchesChrono(realTournamentResults).length)
   const [activeGroup, setActiveGroup] = useState('A')
   const [groupStageView, setGroupStageView] = useState<'by-group' | 'by-date'>('by-group')
   const [goalScorerState, setGoalScorerState] = useState(() => ({
@@ -194,6 +196,9 @@ export default function ResultsPage({ users }: { users: User[] }) {
     playerMatchGoals: realTournamentResults.playerMatchGoals,
   }
 
+  // chronological timeline the "לפי משחק" slider rewinds through (grows as you simulate)
+  const playedMatchIds = playedGroupMatchesChrono(tournamentResults).map(m => m.id)
+  const asOfIndex = Math.min(lbAsOf, playedMatchIds.length)
 
   return (
     <PageLayout title="תוצאות">
@@ -206,8 +211,12 @@ export default function ResultsPage({ users }: { users: User[] }) {
             <span className="pg-lb-live-dot" aria-hidden="true" />
             <span className="pg-lb-subtitle">מתעדכן בזמן אמת</span>
           </div>
-          <LeaderboardScopeBar scope={lbScope} onScopeChange={setLbScope} lastX={lbLastX} onLastXChange={setLbLastX} />
-          <ScopedLeaderboard users={users} results={tournamentResults} scope={lbScope} lastX={lbLastX} />
+          <LeaderboardScopeBar
+            scope={lbScope} onScopeChange={setLbScope}
+            lastX={lbLastX} onLastXChange={setLbLastX}
+            asOfIndex={asOfIndex} onAsOfChange={setLbAsOf} playedMatchIds={playedMatchIds}
+          />
+          <ScopedLeaderboard users={users} results={tournamentResults} scope={lbScope} lastX={lbLastX} asOfIndex={asOfIndex} />
         </section>
 
         {/* Simulation callout */}

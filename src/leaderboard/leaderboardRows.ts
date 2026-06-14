@@ -5,7 +5,7 @@ import type { GroupMatch, MatchScores, ThirdPlaceQualification, ThirdPlaceStandi
 import { matchSortKey } from '../shared/matchOrder'
 import type { User } from '../users'
 
-export type Scope = 'all' | GroupLetter | 'lastX'
+export type Scope = 'all' | GroupLetter | 'lastX' | 'asOf'
 
 function scopeThirdPlace(q: ThirdPlaceQualification, scope: GroupLetter): ThirdPlaceQualification {
   const inScope = (teams: ThirdPlaceStanding[]) => teams.filter(t => t.group === scope)
@@ -46,15 +46,17 @@ export const GROUP_SORTERS: Record<GroupSortBy, (a: GroupScopeRow, b: GroupScope
   total: (a, b) => b.total - a.total || combinedHits(b) - combinedHits(a),
 }
 
-export function lastPlayedGroupMatches(results: TournamentResults, count: number): GroupMatch[] {
+export function playedGroupMatchesChrono(results: TournamentResults): GroupMatch[] {
   return Object.values(results.groupMatches).flat()
     .filter(m => m.scores && !isUnpredicted(m.scores))
     .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
-    .slice(-count)
 }
 
-export function buildLastXRows(users: User[], results: TournamentResults, count: number): GroupScopeRow[] {
-  const matches = lastPlayedGroupMatches(results, count)
+export function lastPlayedGroupMatches(results: TournamentResults, count: number): GroupMatch[] {
+  return playedGroupMatchesChrono(results).slice(-count)
+}
+
+export function rowsForMatches(users: User[], results: TournamentResults, matches: GroupMatch[]): GroupScopeRow[] {
   return users.map(user => {
     const predictionById: Record<string, MatchScores> = {}
     for (const m of Object.values(user.groupMatches).flat()) {
@@ -74,6 +76,16 @@ export function buildLastXRows(users: User[], results: TournamentResults, count:
     const goalsPoints = matches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
     return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints: 0, placePoints: 0, goalsPoints, total: matchPoints + goalsPoints }
   })
+}
+
+export function buildLastXRows(users: User[], results: TournamentResults, count: number): GroupScopeRow[] {
+  return rowsForMatches(users, results, lastPlayedGroupMatches(results, count))
+}
+
+// Cumulative totals through the first `throughCount` played group matches in
+// chronological order — the mirror of buildLastXRows, for rewinding the table.
+export function buildAsOfRows(users: User[], results: TournamentResults, throughCount: number): GroupScopeRow[] {
+  return rowsForMatches(users, results, playedGroupMatchesChrono(results).slice(0, throughCount))
 }
 
 type MatchResult = TournamentResults['groupMatches'][string][number]

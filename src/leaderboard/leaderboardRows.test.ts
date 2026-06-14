@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { expect, test } from 'vitest'
 import type { GroupMatch, Standing, ThirdPlaceStanding, TournamentResults } from '../shared/types'
-import { buildGroupScopeRows, buildLastXRows, lastPlayedGroupMatches, GROUP_SORTERS } from './leaderboardRows'
+import { buildGroupScopeRows, buildLastXRows, buildAsOfRows, lastPlayedGroupMatches, GROUP_SORTERS } from './leaderboardRows'
 import { OLEH_POINTS } from './points'
 import type { GroupScopeRow } from './leaderboardRows'
 import { EMPTY_RESULTS, makeUser } from './testFixtures'
@@ -196,6 +196,41 @@ test('buildLastXRows adds 3 points per goal the pick scored inside the window on
   expect(rows).toEqual([
     { label: 'Dana', tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, placePoints: 0, goalsPoints: 6, total: 6 },
     { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 0 },
+  ])
+})
+
+test('buildAsOfRows accumulates from the first played game through game N', () => {
+  const results: TournamentResults = {
+    ...EMPTY_RESULTS,
+    groupMatches: {
+      A: [
+        datedMatch('a1', '11 ביוני', '22:00', { home: 2, away: 1 }),
+        datedMatch('a2', '12 ביוני', '19:00', { home: 1, away: 1 }),
+        datedMatch('a3', '13 ביוני', '19:00', { home: 3, away: 0 }),
+      ],
+    },
+  }
+  // Dana: tzelifa on a1, pgiya on a2 (predicted draw), miss on a3
+  const dana = makeUser({
+    label: 'Dana',
+    groupMatches: { A: [grpMatch('a1', 2, 1), grpMatch('a2', 0, 0), grpMatch('a3', 0, 1)] },
+  })
+  // Yossi: miss on a1, pgiya on a2 (predicted draw)
+  const yossi = makeUser({
+    label: 'Yossi',
+    groupMatches: { A: [grpMatch('a1', 0, 1), grpMatch('a2', 2, 2), grpMatch('a3', 0, 0)] },
+  })
+
+  // through game 1: only a1 counts
+  expect(buildAsOfRows([dana, yossi], results, 1)).toEqual([
+    { label: 'Dana', tzelifaCount: 1, pgiyaCount: 0, matchPoints: 4, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 4 },
+    { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 0, matchPoints: 0, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 0 },
+  ])
+
+  // through game 2: a1 + a2 accumulate
+  expect(buildAsOfRows([dana, yossi], results, 2)).toEqual([
+    { label: 'Dana', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 6 },
+    { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 2 },
   ])
 })
 

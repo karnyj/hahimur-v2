@@ -652,6 +652,14 @@
   margin-inline-start: 6px;
 }
 
+/* ── "לפי משחק" slider — rewind the table to any played game ── */
+.lb-asof-slider {
+  flex: 1 1 140px;
+  min-width: 120px;
+  accent-color: var(--navy);
+  cursor: pointer;
+}
+
 /* ── Last-X stepper — a scoreboard counter that unfolds from the active chip ── */
 
 @keyframes lb-lastx-unfold {
