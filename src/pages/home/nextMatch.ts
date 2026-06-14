@@ -10,10 +10,12 @@ import { scoreFrequencies } from '../match/matchUtils'
 // the home page shows what's coming up, not just one match.
 const MAX_MATCHES = 5
 
+type Timed = { m: GroupMatch; kickoff: number }
+
 export function nextMatches(matches: GroupMatch[], now: Date): GroupMatch[] {
   return matches
     .map(m => ({ m, kickoff: kickoffDate(m.matchDate, m.kickoffIST)?.getTime() }))
-    .filter((x): x is { m: GroupMatch; kickoff: number } => {
+    .filter((x): x is Timed => {
       if (x.kickoff === undefined) return false
       const ended = x.m.scores?.home != null && x.m.scores?.away != null
       if (ended) return false

@@ -2,7 +2,6 @@ import { GROUPS, TEAMS } from '../../shared/groups'
 import type { GroupMatch } from '../../shared/types'
 import type { User } from '../../users/index'
 import { tournamentResults } from '../../tournament-results'
-import { kickoffDate } from '../../shared/matchOrder'
 import { nextMatches, topPrediction } from './nextMatch'
 import './NextMatchCard.css'
 
@@ -55,9 +54,9 @@ function SingleMatchCard({ users, match, isNext, currentUser }: { users: User[];
 
 export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES, currentUser }: Props) {
   const upcoming = nextMatches(matches, now)
-  const earliest = upcoming.length
-    ? kickoffDate(upcoming[0].matchDate, upcoming[0].kickoffIST)?.getTime()
-    : undefined
+  // nextMatches is sorted by kickoff, so the earliest slot is upcoming[0]'s.
+  // Every match sharing that slot is "next" (round 3 plays two simultaneously).
+  const next = upcoming[0]
 
   return (
     <>
@@ -66,7 +65,7 @@ export default function NextMatchCard({ users, now = new Date(), matches = SCORE
           key={match.id}
           users={users}
           match={match}
-          isNext={kickoffDate(match.matchDate, match.kickoffIST)?.getTime() === earliest}
+          isNext={match.matchDate === next.matchDate && match.kickoffIST === next.kickoffIST}
           currentUser={currentUser}
         />
       ))}
