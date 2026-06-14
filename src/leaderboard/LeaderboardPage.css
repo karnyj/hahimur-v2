@@ -652,14 +652,6 @@
   margin-inline-start: 6px;
 }
 
-/* ── "לפי משחק" slider — rewind the table to any played game ── */
-.lb-asof-slider {
-  flex: 1 1 140px;
-  min-width: 120px;
-  accent-color: var(--navy);
-  cursor: pointer;
-}
-
 /* ── "טווח" — pick a stretch of games (from / to) for the form table ── */
 .lb-range-row {
   gap: 10px;
@@ -686,78 +678,6 @@
   border: 1.5px solid var(--navy);
   color: var(--navy);
   cursor: pointer;
-}
-
-/* ── Last-X stepper — a scoreboard counter that unfolds from the active chip ── */
-
-@keyframes lb-lastx-unfold {
-  from { opacity: 0; transform: scaleX(0.55); }
-  to   { opacity: 1; transform: scaleX(1); }
-}
-
-.lb-lastx-stepper {
-  display: inline-flex;
-  align-items: stretch;
-  border: 1.5px solid var(--navy);
-  background: var(--navy);
-  transform-origin: 100% 50%; /* unfold toward the chip that opened it (RTL) */
-  animation: lb-lastx-unfold 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
-}
-
-.lb-lastx-step {
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.05rem;
-  line-height: 1;
-  width: 32px;
-  padding: 5px 0 4px;
-  background: var(--navy);
-  color: var(--gold);
-  border: none;
-  cursor: pointer;
-  transition: background 0.12s, color 0.12s;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.lb-lastx-step:hover { background: #16335f; }
-
-.lb-lastx-step:active {
-  background: var(--gold);
-  color: var(--navy);
-}
-
-.lb-lastx-step:disabled {
-  opacity: 0.35;
-  cursor: default;
-  background: var(--navy);
-  color: var(--gold);
-}
-
-.lb-lastx-input {
-  width: 2.6em;
-  font-family: 'Bebas Neue', sans-serif;
-  font-size: 1.05rem;
-  letter-spacing: 0.05em;
-  font-variant-numeric: tabular-nums;
-  text-align: center;
-  padding: 4px 2px 3px;
-  background: var(--paper);
-  border: none;
-  border-inline: 1.5px solid var(--navy);
-  color: var(--navy);
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-/* the +/− keys replace the native spinners */
-.lb-lastx-input::-webkit-outer-spin-button,
-.lb-lastx-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-.lb-lastx-input:focus {
-  outline: 2px solid var(--gold);
-  outline-offset: -2px;
 }
 
 /* ── Scope primary columns (תוצאה / עולות in group scope view) ── */

@@ -88,8 +88,6 @@ const pickersByPlayer = (users: User[]): Record<string, string[]> => {
 export default function ResultsPage({ users }: { users: User[] }) {
   const [editedResults, setEditedResults] = useState<PredictionsState>(getInitialState)
   const [lbScope, setLbScope] = useState<Scope>('all')
-  const [lbLastX, setLbLastX] = useState(5)
-  const [lbAsOf, setLbAsOf] = useState(INITIAL_PLAYED_COUNT)
   const [lbRangeFrom, setLbRangeFrom] = useState(1)
   const [lbRangeTo, setLbRangeTo] = useState(INITIAL_PLAYED_COUNT)
   const [activeGroup, setActiveGroup] = useState('A')
@@ -199,10 +197,9 @@ export default function ResultsPage({ users }: { users: User[] }) {
     playerMatchGoals: realTournamentResults.playerMatchGoals,
   }
 
-  // chronological timeline the "לפי משחק" slider rewinds through (grows as you simulate)
+  // chronological timeline the "טווח" selectors choose from (grows as you simulate)
   const playedMatchLabels = playedGroupMatchesChrono(tournamentResults).map(m =>
     `${TEAMS[m.homeTeam].he} ${m.scores!.home}–${m.scores!.away} ${TEAMS[m.awayTeam].he}`)
-  const asOfIndex = Math.min(lbAsOf, playedMatchLabels.length)
   const rangeFrom = Math.min(lbRangeFrom, playedMatchLabels.length)
   const rangeTo = Math.min(lbRangeTo, playedMatchLabels.length)
   // keep the stretch valid (from ≤ to) as either end moves
@@ -222,12 +219,10 @@ export default function ResultsPage({ users }: { users: User[] }) {
           </div>
           <LeaderboardScopeBar
             scope={lbScope} onScopeChange={setLbScope}
-            lastX={lbLastX} onLastXChange={setLbLastX}
-            asOfIndex={asOfIndex} onAsOfChange={setLbAsOf}
             rangeFrom={rangeFrom} rangeTo={rangeTo} onRangeFromChange={setRangeFrom} onRangeToChange={setRangeTo}
             playedMatchLabels={playedMatchLabels}
           />
-          <ScopedLeaderboard users={users} results={tournamentResults} scope={lbScope} lastX={lbLastX} asOfIndex={asOfIndex} rangeFrom={rangeFrom} rangeTo={rangeTo} />
+          <ScopedLeaderboard users={users} results={tournamentResults} scope={lbScope} rangeFrom={rangeFrom} rangeTo={rangeTo} />
         </section>
 
         {/* Simulation callout */}

@@ -5,7 +5,7 @@ import type { GroupMatch, MatchScores, ThirdPlaceQualification, ThirdPlaceStandi
 import { matchSortKey } from '../shared/matchOrder'
 import type { User } from '../users'
 
-export type Scope = 'all' | GroupLetter | 'lastX' | 'asOf' | 'range'
+export type Scope = 'all' | GroupLetter | 'range'
 
 function scopeThirdPlace(q: ThirdPlaceQualification, scope: GroupLetter): ThirdPlaceQualification {
   const inScope = (teams: ThirdPlaceStanding[]) => teams.filter(t => t.group === scope)
@@ -52,10 +52,6 @@ export function playedGroupMatchesChrono(results: TournamentResults): GroupMatch
     .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
 }
 
-export function lastPlayedGroupMatches(results: TournamentResults, count: number): GroupMatch[] {
-  return playedGroupMatchesChrono(results).slice(-count)
-}
-
 export function rowsForMatches(users: User[], results: TournamentResults, matches: GroupMatch[]): GroupScopeRow[] {
   return users.map(user => {
     const predictionById: Record<string, MatchScores> = {}
@@ -76,16 +72,6 @@ export function rowsForMatches(users: User[], results: TournamentResults, matche
     const goalsPoints = matches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
     return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints: 0, placePoints: 0, goalsPoints, total: matchPoints + goalsPoints }
   })
-}
-
-export function buildLastXRows(users: User[], results: TournamentResults, count: number): GroupScopeRow[] {
-  return rowsForMatches(users, results, lastPlayedGroupMatches(results, count))
-}
-
-// Cumulative totals through the first `throughCount` played group matches in
-// chronological order — the mirror of buildLastXRows, for rewinding the table.
-export function buildAsOfRows(users: User[], results: TournamentResults, throughCount: number): GroupScopeRow[] {
-  return rowsForMatches(users, results, playedGroupMatchesChrono(results).slice(0, throughCount))
 }
 
 // Points gained over a chosen stretch — played group matches from `fromIndex`
