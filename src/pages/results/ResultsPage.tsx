@@ -197,8 +197,9 @@ export default function ResultsPage({ users }: { users: User[] }) {
   }
 
   // chronological timeline the "לפי משחק" slider rewinds through (grows as you simulate)
-  const playedMatchIds = playedGroupMatchesChrono(tournamentResults).map(m => m.id)
-  const asOfIndex = Math.min(lbAsOf, playedMatchIds.length)
+  const playedMatchLabels = playedGroupMatchesChrono(tournamentResults).map(m =>
+    `${TEAMS[m.homeTeam].he} ${m.scores!.home}–${m.scores!.away} ${TEAMS[m.awayTeam].he}`)
+  const asOfIndex = Math.min(lbAsOf, playedMatchLabels.length)
 
   return (
     <PageLayout title="תוצאות">
@@ -214,7 +215,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
           <LeaderboardScopeBar
             scope={lbScope} onScopeChange={setLbScope}
             lastX={lbLastX} onLastXChange={setLbLastX}
-            asOfIndex={asOfIndex} onAsOfChange={setLbAsOf} playedMatchIds={playedMatchIds}
+            asOfIndex={asOfIndex} onAsOfChange={setLbAsOf} playedMatchLabels={playedMatchLabels}
           />
           <ScopedLeaderboard users={users} results={tournamentResults} scope={lbScope} lastX={lbLastX} asOfIndex={asOfIndex} />
         </section>

@@ -5,20 +5,20 @@ import type { Scope } from './leaderboardRows'
 
 const isGroupScope = (s: Scope): s is GroupLetter => s !== 'all' && s !== 'lastX' && s !== 'asOf'
 
-export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLastXChange, asOfIndex, onAsOfChange, playedMatchIds }: {
+export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLastXChange, asOfIndex, onAsOfChange, playedMatchLabels }: {
   scope: Scope
   onScopeChange: (s: Scope) => void
   lastX: number
   onLastXChange: (n: number) => void
   asOfIndex: number
   onAsOfChange: (n: number) => void
-  playedMatchIds: string[]
+  playedMatchLabels: string[]
 }) {
   // remembered so re-entering "לפי בית" lands on the group you were viewing
   const [lastGroup, setLastGroup] = useState<GroupLetter>(isGroupScope(scope) ? scope : 'A')
   const mode = scope === 'all' ? 'all' : scope === 'lastX' ? 'lastX' : scope === 'asOf' ? 'asOf' : 'group'
-  const playedCount = playedMatchIds.length
-  const currentMatchId = playedMatchIds[asOfIndex - 1]
+  const playedCount = playedMatchLabels.length
+  const currentMatchLabel = playedMatchLabels[asOfIndex - 1]
 
   const modeBtn = (active: boolean) =>
     `lb-scope-mode${active ? ' lb-scope-mode--active' : ''}`
@@ -111,7 +111,7 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, lastX, onLas
                 aria-label="מצב הטבלה אחרי משחק"
               />
               <span className="lb-lastx-caption">
-                אחרי משחק {asOfIndex}/{playedCount} · {currentMatchId}
+                אחרי משחק {asOfIndex}/{playedCount} · {currentMatchLabel}
               </span>
             </>
           )}
