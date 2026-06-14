@@ -3,6 +3,8 @@ import GroupStatsPage from './GroupStatsPage'
 import { vi } from 'vitest'
 
 vi.mock('../../../users/index', () => ({ get USERS() { return [] } }))
+// Global chrome is covered by Nav.test; stub it out of page-level assertions.
+vi.mock('../../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
 
 test('renders group A heading', () => {
   render(<GroupStatsPage groupLetter="A" />)

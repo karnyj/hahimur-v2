@@ -1,0 +1,111 @@
+/* ── Tournament Credential ─────────────────────────────────────
+   A press-box credential stub that lives under the nav on every page.
+   Speaks the poster's language: Bebas Neue caps, cream paper, a gold
+   ticket-stub spine that punches in once you've stamped your name. */
+
+.credential {
+  background: var(--cream);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 7px 16px 8px;
+}
+
+.credential__eyebrow {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  transition: color 0.2s ease;
+}
+
+.credential--stamped .credential__eyebrow {
+  color: var(--red);
+}
+
+.credential__field {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.credential__select {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 16px;
+  letter-spacing: 0.12em;
+  color: rgba(11, 34, 68, 0.55);
+  background: var(--paper);
+  border: 1.5px solid var(--border);
+  border-radius: 2px;
+  padding: 4px 14px 4px 30px; /* leave the inline-end (left, RTL) for the chevron */
+  margin: 0;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  transition: color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.credential__select:hover {
+  border-color: var(--gold);
+}
+
+.credential__select:focus-visible {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 2px rgba(11, 34, 68, 0.18);
+}
+
+/* The stamped state: navy ink, a gold spine punched down the leading edge. */
+.credential--stamped .credential__select {
+  color: var(--navy);
+  border-color: var(--gold);
+  box-shadow: inset 4px 0 0 var(--gold); /* +x = right edge = leading edge in RTL */
+}
+
+.credential__chevron {
+  position: absolute;
+  left: 10px; /* inline-end in RTL */
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  line-height: 1;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* Rubber-stamp settle when a name lands (the field is keyed on the name). */
+.credential--stamped .credential__field {
+  animation: credential-stamp 0.32s cubic-bezier(0.2, 0.9, 0.2, 1.4);
+}
+
+@keyframes credential-stamp {
+  0%   { transform: scale(1.12) rotate(-1.5deg); opacity: 0.4; }
+  60%  { transform: scale(0.98) rotate(0.4deg); opacity: 1; }
+  100% { transform: scale(1) rotate(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .credential--stamped .credential__field {
+    animation: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .credential {
+    gap: 9px;
+    padding: 6px 12px;
+  }
+
+  .credential__eyebrow {
+    letter-spacing: 0.22em;
+  }
+
+  .credential__select {
+    font-size: 14px;
+    padding: 3px 11px 3px 26px;
+  }
+}

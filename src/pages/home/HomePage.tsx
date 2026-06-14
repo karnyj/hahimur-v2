@@ -1,5 +1,6 @@
 import PageLayout from '../../shared/PageLayout'
 import Countdown from '../../shared/Countdown'
+import { useCurrentUser } from '../../shared/useCurrentUser'
 import NextMatchCard from './NextMatchCard'
 import TopThreeCard from './TopThreeCard'
 import { USERS } from '../../users/index'
@@ -9,11 +10,13 @@ import { OLEH_POINTS, PLACE_POINT } from '../../leaderboard/points'
 const FIRST_MATCH = new Date('2026-06-11T19:00:00Z')
 
 export default function HomePage() {
+  const { currentUser } = useCurrentUser()
+
   return (
     <PageLayout title="ההימור 2026">
       <Countdown targetDate={FIRST_MATCH} label="לשריקת הפתיחה" />
       <TopThreeCard users={USERS} results={tournamentResults} />
-      <NextMatchCard users={USERS} />
+      <NextMatchCard users={USERS} currentUser={currentUser} />
 
       <main dir="rtl" style={{ maxWidth: '700px', margin: '0 auto', padding: '3rem 1.5rem', fontSize: '1.1rem', lineHeight: '1.9' }}>
         <p>ברוכים הבאים להימור המסורתי שלנו!</p>

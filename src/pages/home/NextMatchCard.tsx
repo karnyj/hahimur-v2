@@ -8,12 +8,13 @@ import './NextMatchCard.css'
 
 const SCORED_MATCHES = Object.values(tournamentResults.groupMatches).flat()
 
-type Props = { users: User[]; now?: Date; matches?: GroupMatch[] }
+type Props = { users: User[]; now?: Date; matches?: GroupMatch[]; currentUser?: User }
 
-function SingleMatchCard({ users, match, isNext }: { users: User[]; match: GroupMatch; isNext: boolean }) {
+function SingleMatchCard({ users, match, isNext, currentUser }: { users: User[]; match: GroupMatch; isNext: boolean; currentUser?: User }) {
   const home = TEAMS[match.homeTeam]
   const away = TEAMS[match.awayTeam]
   const consensus = topPrediction(users, match.id)
+  const mine = currentUser?.predictions[match.id]
 
   return (
     <div dir="rtl" className="next-match" data-testid="next-match">
@@ -41,12 +42,18 @@ function SingleMatchCard({ users, match, isNext }: { users: User[]; match: Group
         </div>
       )}
 
+      {mine && (
+        <div className="next-match__mine" data-testid="your-prediction">
+          הניחוש שלך: <strong dir="ltr">{mine.away}–{mine.home}</strong>
+        </div>
+      )}
+
       <a className="next-match__link" href={`/matches/${match.id}`}>לעמוד המשחק ›</a>
     </div>
   )
 }
 
-export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES }: Props) {
+export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES, currentUser }: Props) {
   const upcoming = nextMatches(matches, now)
   const earliest = upcoming.length
     ? kickoffDate(upcoming[0].matchDate, upcoming[0].kickoffIST)?.getTime()
@@ -60,6 +67,7 @@ export default function NextMatchCard({ users, now = new Date(), matches = SCORE
           users={users}
           match={match}
           isNext={kickoffDate(match.matchDate, match.kickoffIST)?.getTime() === earliest}
+          currentUser={currentUser}
         />
       ))}
     </>

@@ -38,6 +38,23 @@ test('shows the most common prediction', () => {
   expect(screen.getByTestId('consensus')).toHaveTextContent('2 מתוך 3')
 })
 
+test('shows no personal prediction when no user is selected', () => {
+  render(<NextMatchCard users={users} now={NOW} matches={MATCHES} />)
+  expect(screen.queryByTestId('your-prediction')).not.toBeInTheDocument()
+})
+
+test('shows the selected user\'s own prediction for the match', () => {
+  const me = makeUser({ label: 'עידן מלמד', predictions: { A2: { home: 3, away: 1 } } })
+  render(<NextMatchCard users={users} now={NOW} matches={MATCHES} currentUser={me} />)
+  expect(screen.getByTestId('your-prediction')).toHaveTextContent('1–3') // away–home, matching consensus order
+})
+
+test('shows no personal prediction when the selected user has none for that match', () => {
+  const me = makeUser({ label: 'עידן מלמד', predictions: {} })
+  render(<NextMatchCard users={users} now={NOW} matches={MATCHES} currentUser={me} />)
+  expect(screen.queryByTestId('your-prediction')).not.toBeInTheDocument()
+})
+
 test('shows a card per match when two matches kick off simultaneously', () => {
   const round3: GroupMatch[] = [
     { id: 'A3', homeTeam: 'Czech Republic', awayTeam: 'South Africa', matchDate: '24 ביוני', kickoffIST: '22:00' },

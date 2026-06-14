@@ -7,6 +7,9 @@ import MatchPredictionsPage from './MatchPredictionsPage'
 vi.mock('../../tournament-results', () => ({
   tournamentResults: { groupMatches: {}, playerMatchGoals: {} },
 }))
+// Global chrome is covered by Nav.test; stub it so the nav's participant
+// picker doesn't pollute the page's name/prediction assertions.
+vi.mock('../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
 import { findMatch } from './matchUtils'
 import { TEAMS } from '../../shared/groups'
 import type { User } from '../../users/index'

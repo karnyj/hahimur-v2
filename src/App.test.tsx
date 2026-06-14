@@ -6,6 +6,10 @@ vi.mock('./users/index', () => ({
   get USERS() { return [] },
 }))
 
+// Global chrome is covered by Nav.test; stub it so page assertions aren't
+// polluted by the nav's participant picker.
+vi.mock('./Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
+
 test('renders MatchPredictionsPage at /matches/A1', () => {
   vi.stubGlobal('location', { pathname: '/matches/a1' })
   render(<App />)
