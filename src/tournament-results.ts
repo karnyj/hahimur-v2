@@ -18,6 +18,7 @@ const groupScores: Record<string, MatchScores> = {
 // Names must match users' topGoalscorer strings exactly.
 const realGoals: Record<string, Record<string, number>> = {
   'ויניסיוס ג׳וניור': { C1: 1 },
+  'קאי האברץ': { E1: 2 },
 }
 
 export function derivePlayerGoals(perMatch: Record<string, Record<string, number>>): Record<string, number> {
