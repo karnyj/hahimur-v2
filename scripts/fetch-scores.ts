@@ -7,21 +7,17 @@ import { readGroupScores, writeGroupScores, readRealGoals, writeRealGoals } from
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-export interface ApiGoal {
-  scorer: { name: string }
-  type: string
-}
-
 export interface ApiMatch {
   status: string
   stage: string
   homeTeam: { name: string | null }
   awayTeam: { name: string | null }
   score: { fullTime: { home: number | null; away: number | null } }
-  goals?: ApiGoal[]
 }
 
-// football-data.org scorer names → Hebrew topGoalscorer strings (must match users/*.ts exactly)
+// Allowlist of picked players: source scorer names (ESPN athlete.displayName)
+// → Hebrew topGoalscorer strings (must match users/*.ts exactly). Only players
+// users picked appear here; every other scorer is intentionally ignored.
 export const SCORER_ALIASES: Record<string, string> = {
   'Kylian Mbappé': 'קיליאן אמבפה',
   'Harry Kane': 'הארי קיין',
@@ -85,30 +81,33 @@ export function extractGroupScores(apiMatches: ApiMatch[]): {
   return { scores, unmapped }
 }
 
-export function extractGroupScorers(apiMatches: ApiMatch[]): Record<string, Record<string, number>> {
-  const result: Record<string, Record<string, number>> = {}
-  for (const m of apiMatches) {
-    if (m.status !== 'FINISHED' || m.stage !== 'GROUP_STAGE' || !m.goals?.length) continue
-    const home = canonical(m.homeTeam.name)
-    const away = canonical(m.awayTeam.name)
-    const hit = home && away ? pairIndex.get(`${home}|${away}`) : undefined
-    if (!hit) continue
-    for (const goal of m.goals) {
-      if (goal.type === 'OWN_GOAL') continue
-      const hePlayer = SCORER_ALIASES[goal.scorer.name]
-      if (!hePlayer) continue
-      if (!result[hePlayer]) result[hePlayer] = {}
-      result[hePlayer][hit.id] = (result[hePlayer][hit.id] ?? 0) + 1
-    }
-  }
-  return result
+export interface EspnScoringPlay {
+  scoringPlay: boolean
+  ownGoal: boolean
+  athletesInvolved?: { displayName: string }[]
 }
 
 export interface EspnEvent {
   status: { type: { state: string; completed: boolean } }
   competitions: {
     competitors: { homeAway: string; score?: string; team: { displayName: string } }[]
+    details?: EspnScoringPlay[]
   }[]
+}
+
+// Resolve a finished ESPN event to its home/away sides plus the group pairing
+// it maps to (`hit` is undefined for knockout or unrecognized matchups).
+// Shared by the score and scorer extractors below.
+function resolveEspnEvent(e: EspnEvent) {
+  if (!e.status.type.completed) return null
+  const comp = e.competitions[0]
+  const competitors = comp?.competitors ?? []
+  const homeSide = competitors.find(c => c.homeAway === 'home')
+  const awaySide = competitors.find(c => c.homeAway === 'away')
+  if (!homeSide || !awaySide) return null
+  const home = canonical(homeSide.team.displayName)!
+  const away = canonical(awaySide.team.displayName)!
+  return { comp, homeSide, awaySide, home, away, hit: pairIndex.get(`${home}|${away}`) }
 }
 
 export function extractEspnGroupScores(events: EspnEvent[]): {
@@ -119,16 +118,11 @@ export function extractEspnGroupScores(events: EspnEvent[]): {
   const unmapped: string[] = []
 
   for (const e of events) {
-    if (!e.status.type.completed) continue
-    const competitors = e.competitions[0]?.competitors ?? []
-    const homeSide = competitors.find(c => c.homeAway === 'home')
-    const awaySide = competitors.find(c => c.homeAway === 'away')
-    if (!homeSide || !awaySide) continue
-    const home = canonical(homeSide.team.displayName)!
-    const away = canonical(awaySide.team.displayName)!
+    const resolved = resolveEspnEvent(e)
+    if (!resolved) continue
+    const { homeSide, awaySide, home, away, hit } = resolved
     const homeScore = parseInt(homeSide.score ?? '')
     const awayScore = parseInt(awaySide.score ?? '')
-    const hit = pairIndex.get(`${home}|${away}`)
     if (!hit || isNaN(homeScore) || isNaN(awayScore)) {
       // Two known teams that aren't a group pairing is a knockout match,
       // not a mapping failure — the date window can't exclude those because
@@ -144,6 +138,30 @@ export function extractEspnGroupScores(events: EspnEvent[]): {
   }
 
   return { scores, unmapped }
+}
+
+// ESPN carries goalscorers in each competition's `details`, where every
+// scoring play (goal, header, penalty, own goal) is flagged. Unlike
+// football-data.org's free tier, these are present, so ESPN is our scorer
+// source. We only count goals in matches that map to a group pairing;
+// knockout matches between known teams aren't group pairings and are skipped.
+export function extractEspnGroupScorers(events: EspnEvent[]): Record<string, Record<string, number>> {
+  const result: Record<string, Record<string, number>> = {}
+  for (const e of events) {
+    const resolved = resolveEspnEvent(e)
+    if (!resolved?.hit) continue
+    const { comp, hit } = resolved
+    for (const play of comp.details ?? []) {
+      if (!play.scoringPlay || play.ownGoal) continue
+      for (const athlete of play.athletesInvolved ?? []) {
+        const hePlayer = SCORER_ALIASES[athlete.displayName]
+        if (!hePlayer) continue
+        if (!result[hePlayer]) result[hePlayer] = {}
+        result[hePlayer][hit.id] = (result[hePlayer][hit.id] ?? 0) + 1
+      }
+    }
+  }
+  return result
 }
 
 type ScoreMap = Record<string, { home: number; away: number }>
@@ -187,14 +205,13 @@ function loadToken(): string | undefined {
 // window admits one round-of-32 match; extractEspnGroupScores skips it.
 const GROUP_STAGE_DATES = '20260611-20260628'
 
-async function fetchEspnScores(): Promise<{ scores: ScoreMap; unmapped: string[] }> {
+async function fetchEspnRaw(): Promise<EspnEvent[]> {
   const res = await fetch(
     `https://site.api.espn.com/apis/site/v2/sports/soccer/fifa.world/scoreboard?dates=${GROUP_STAGE_DATES}&limit=200`,
   )
   if (!res.ok) throw new Error(`ESPN returned ${res.status}: ${await res.text()}`)
   const { events } = await res.json() as { events: EspnEvent[] }
-  console.log(`Fetched ${events.length} matches from ESPN`)
-  return extractEspnGroupScores(events)
+  return events
 }
 
 async function fetchFootballDataRaw(): Promise<ApiMatch[]> {
@@ -242,13 +259,13 @@ export async function gatherScores(
 }
 
 async function main(): Promise<void> {
-  let fdMatches: ApiMatch[] | null = null
+  let espnEvents: EspnEvent[] | null = null
 
-  const gathered = await gatherScores(fetchEspnScores, async () => {
-    fdMatches = await fetchFootballDataRaw()
-    console.log(`Fetched ${fdMatches.length} matches from football-data.org`)
-    return extractGroupScores(fdMatches)
-  })
+  const gathered = await gatherScores(async () => {
+    espnEvents = await fetchEspnRaw()
+    console.log(`Fetched ${espnEvents.length} matches from ESPN`)
+    return extractEspnGroupScores(espnEvents)
+  }, fetchFootballDataScores)
   if (!gathered) {
     console.error('Both score sources failed.')
     process.exit(1)
@@ -286,8 +303,8 @@ async function main(): Promise<void> {
     for (const c of changed) console.log(`  ${c}`)
   }
 
-  if (fdMatches) {
-    const freshScorers = extractGroupScorers(fdMatches)
+  if (espnEvents) {
+    const freshScorers = extractEspnGroupScorers(espnEvents)
     if (Object.keys(freshScorers).length > 0) {
       const existingGoals = readRealGoals()
       const mergedGoals: Record<string, Record<string, number>> = { ...existingGoals }

@@ -3,13 +3,14 @@ import { vi } from 'vitest'
 import {
   extractGroupScores,
   extractEspnGroupScores,
-  extractGroupScorers,
+  extractEspnGroupScorers,
   mergeScores,
   gatherScores,
   parseFakeFinished,
   SCORER_ALIASES,
   type ApiMatch,
   type EspnEvent,
+  type EspnScoringPlay,
 } from './fetch-scores'
 
 function apiMatch(over: Partial<ApiMatch> & { home: string; away: string }): ApiMatch {
@@ -23,51 +24,56 @@ function apiMatch(over: Partial<ApiMatch> & { home: string; away: string }): Api
   }
 }
 
-describe('extractGroupScorers', () => {
+function goal(scorer: string, over: Partial<EspnScoringPlay> = {}): EspnScoringPlay {
+  return { scoringPlay: true, ownGoal: false, athletesInvolved: [{ displayName: scorer }], ...over }
+}
+
+describe('extractEspnGroupScorers', () => {
   it('records goals by a tracked player', () => {
-    const result = extractGroupScorers([
-      { ...apiMatch({ home: 'France', away: 'Senegal' }), goals: [{ scorer: { name: 'Kylian Mbappé' }, type: 'REGULAR' }] },
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz')] }),
     ])
-    expect(result).toEqual({ 'קיליאן אמבפה': { I1: 1 } })
+    expect(result).toEqual({ 'קאי האברץ': { E1: 1 } })
   })
 
   it('counts multiple goals by the same player in the same match', () => {
-    const result = extractGroupScorers([
-      {
-        ...apiMatch({ home: 'France', away: 'Senegal' }),
-        goals: [
-          { scorer: { name: 'Kylian Mbappé' }, type: 'REGULAR' },
-          { scorer: { name: 'Kylian Mbappé' }, type: 'PENALTY' },
-        ],
-      },
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz'), goal('Kai Havertz')] }),
     ])
-    expect(result).toEqual({ 'קיליאן אמבפה': { I1: 2 } })
+    expect(result).toEqual({ 'קאי האברץ': { E1: 2 } })
   })
 
   it('skips own goals', () => {
-    const result = extractGroupScorers([
-      { ...apiMatch({ home: 'France', away: 'Senegal' }), goals: [{ scorer: { name: 'Kylian Mbappé' }, type: 'OWN_GOAL' }] },
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz', { ownGoal: true })] }),
+    ])
+    expect(result).toEqual({})
+  })
+
+  it('skips non-scoring plays such as cards', () => {
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz', { scoringPlay: false })] }),
     ])
     expect(result).toEqual({})
   })
 
   it('skips players not in SCORER_ALIASES', () => {
-    const result = extractGroupScorers([
-      { ...apiMatch({ home: 'France', away: 'Senegal' }), goals: [{ scorer: { name: 'Antoine Griezmann' }, type: 'REGULAR' }] },
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Jamal Musiala')] }),
     ])
     expect(result).toEqual({})
   })
 
-  it('ignores non-finished matches', () => {
-    const result = extractGroupScorers([
-      { ...apiMatch({ home: 'France', away: 'Senegal', status: 'IN_PLAY' }), goals: [{ scorer: { name: 'Kylian Mbappé' }, type: 'REGULAR' }] },
+  it('ignores matches that have not completed', () => {
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Curaçao', completed: false, state: 'in', details: [goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({})
   })
 
-  it('ignores knockout-stage matches', () => {
-    const result = extractGroupScorers([
-      { ...apiMatch({ home: 'France', away: 'Senegal', stage: 'LAST_32' }), goals: [{ scorer: { name: 'Kylian Mbappé' }, type: 'REGULAR' }] },
+  it('ignores knockout matches between known teams that are not a group pairing', () => {
+    const result = extractEspnGroupScorers([
+      espnEvent({ home: 'Germany', away: 'Mexico', details: [goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({})
   })
@@ -155,6 +161,7 @@ function espnEvent(over: {
   awayScore?: string
   state?: string
   completed?: boolean
+  details?: EspnScoringPlay[]
 }): EspnEvent {
   return {
     status: { type: { state: over.state ?? 'post', completed: over.completed ?? true } },
@@ -163,6 +170,7 @@ function espnEvent(over: {
         { homeAway: 'home', score: over.homeScore ?? '1', team: { displayName: over.home } },
         { homeAway: 'away', score: over.awayScore ?? '0', team: { displayName: over.away } },
       ],
+      details: over.details,
     }],
   }
 }
