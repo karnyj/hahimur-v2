@@ -19,20 +19,19 @@ concurrency:
 jobs:
   update-scores:
     runs-on: ubuntu-latest
+    env:
+      FAKE_FINISHED: ${{ inputs.fake_finished }}
+      FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
+          cache: npm
       - name: Fetch finished match scores
         run: node scripts/fetch-scores.ts
-        env:
-          FOOTBALL_DATA_TOKEN: ${{ secrets.FOOTBALL_DATA_TOKEN }}
-          FAKE_FINISHED: ${{ inputs.fake_finished }}
       - name: Commit, push, and trigger deploy
-        env:
-          GH_TOKEN: ${{ github.token }}
-          FAKE_FINISHED: ${{ inputs.fake_finished }}
         run: |
           if git diff --quiet src/tournament-results.ts; then
             echo "No score changes."
@@ -49,7 +48,6 @@ jobs:
             gh workflow run ci.yml --ref score-update-test
           else
             git commit -m "auto: update match scores"
-            git pull --rebase origin master
             git push
             # Pushes made with GITHUB_TOKEN don't trigger the CI workflow,
             # so dispatch it explicitly to test, build, and deploy.

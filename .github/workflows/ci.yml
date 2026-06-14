@@ -10,6 +10,9 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      VERCEL_ORG_ID: team_I3UXJkTvJoFEuYoGLTjtzIed
+      VERCEL_PROJECT_ID: prj_PGz0hI2855tVFPKGFOiqgf3Hwnh5
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,6 +33,3 @@ jobs:
           npx vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
           npx vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        env:
-          VERCEL_ORG_ID: team_I3UXJkTvJoFEuYoGLTjtzIed
-          VERCEL_PROJECT_ID: prj_PGz0hI2855tVFPKGFOiqgf3Hwnh5
