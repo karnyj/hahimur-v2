@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { expect, test } from 'vitest'
 import type { GroupMatch, Standing, ThirdPlaceStanding, TournamentResults } from '../shared/types'
-import { buildGroupScopeRows, buildRangeRows, GROUP_SORTERS } from './leaderboardRows'
+import { buildGroupScopeRows, buildRangeRows, rangePlaceMovement, GROUP_SORTERS } from './leaderboardRows'
 import { OLEH_POINTS } from './points'
 import type { GroupScopeRow } from './leaderboardRows'
 import { EMPTY_RESULTS, makeUser } from './testFixtures'
@@ -158,6 +158,35 @@ test('buildRangeRows scores only the chosen stretch of games', () => {
     { label: 'Dana', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 6 },
     { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 2 },
   ])
+})
+
+test('rangePlaceMovement reports how many places each bettor moved over the stretch', () => {
+  const results: TournamentResults = {
+    ...EMPTY_RESULTS,
+    groupMatches: {
+      A: [
+        datedMatch('a1', '11 ביוני', '22:00', { home: 1, away: 0 }),
+        datedMatch('a2', '12 ביוני', '19:00', { home: 2, away: 0 }),
+        datedMatch('a3', '13 ביוני', '19:00', { home: 0, away: 1 }),
+      ],
+    },
+  }
+  // Dana leads after a1 (exact), then stalls
+  const dana = makeUser({
+    label: 'Dana',
+    groupMatches: { A: [grpMatch('a1', 1, 0), grpMatch('a2', 0, 0), grpMatch('a3', 0, 0)] },
+  })
+  // Yossi misses a1, then nails a2 + a3 to overtake
+  const yossi = makeUser({
+    label: 'Yossi',
+    groupMatches: { A: [grpMatch('a1', 0, 1), grpMatch('a2', 2, 0), grpMatch('a3', 0, 1)] },
+  })
+
+  // Across a2..a3: before (as of a1) Dana 1st / Yossi 2nd; after (a1..a3) Yossi 1st / Dana 2nd
+  expect(rangePlaceMovement([dana, yossi], results, 2, 3)).toEqual({ Dana: -1, Yossi: 1 })
+
+  // A stretch starting at game 1 has no "before" snapshot to compare against
+  expect(rangePlaceMovement([dana, yossi], results, 1, 3)).toEqual({ Dana: null, Yossi: null })
 })
 
 test('points sorters break ties by combined hits', () => {

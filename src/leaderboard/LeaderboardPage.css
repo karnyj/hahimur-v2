@@ -838,6 +838,47 @@
   border-color: rgba(212, 160, 22, 0.55);
 }
 
+/* ── Place-movement column (טווח form table) ── */
+.lb-th--move {
+  text-align: center;
+  white-space: nowrap;
+}
+
+.lb-td--move {
+  text-align: center;
+}
+
+.lb-move {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  min-width: 34px;
+  justify-content: center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 14px;
+  letter-spacing: 0.04em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-move--up {
+  color: #1f7a4d;
+  background: rgba(31, 122, 77, 0.1);
+  border: 1px solid rgba(31, 122, 77, 0.3);
+}
+
+.lb-move--down {
+  color: #b23b3b;
+  background: rgba(178, 59, 59, 0.09);
+  border: 1px solid rgba(178, 59, 59, 0.28);
+}
+
+.lb-move--none {
+  color: var(--muted);
+  opacity: 0.7;
+}
+
 /* Zone washes on body cells. These intentionally come last so they win
    the specificity ties against row striping, hover, and rank-1 rules. */
 .lb-row td.lb-td--hits { background: rgba(11, 34, 68, 0.03); }

@@ -1,6 +1,6 @@
 import LeaderboardTable from './LeaderboardTable'
 import GroupScopeTable from './GroupScopeTable'
-import { buildLeaderboardRows, buildGroupScopeRows, buildRangeRows } from './leaderboardRows'
+import { buildLeaderboardRows, buildGroupScopeRows, buildRangeRows, rangePlaceMovement } from './leaderboardRows'
 import type { Scope } from './leaderboardRows'
 import type { TournamentResults } from '../shared/types'
 import type { User } from '../users'
@@ -14,6 +14,13 @@ export default function ScopedLeaderboard({ users, results, scope, rangeFrom, ra
   rangeTo: number
 }) {
   if (scope === 'all') return <LeaderboardTable rows={buildLeaderboardRows(users, results)} />
-  if (scope === 'range') return <GroupScopeTable key="range" variant="window" rows={buildRangeRows(users, results, rangeFrom, rangeTo)} />
+  if (scope === 'range') return (
+    <GroupScopeTable
+      key="range"
+      variant="window"
+      rows={buildRangeRows(users, results, rangeFrom, rangeTo)}
+      movements={rangePlaceMovement(users, results, rangeFrom, rangeTo)}
+    />
+  )
   return <GroupScopeTable key={scope} rows={buildGroupScopeRows(users, results, scope)} />
 }

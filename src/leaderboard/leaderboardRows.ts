@@ -3,6 +3,7 @@ import type { GroupLetter } from '../shared/groups'
 import { isUnpredicted } from '../shared/types'
 import type { GroupMatch, MatchScores, ThirdPlaceQualification, ThirdPlaceStanding, TournamentResults } from '../shared/types'
 import { matchSortKey } from '../shared/matchOrder'
+import { competitionRanks } from './rank'
 import type { User } from '../users'
 
 export type Scope = 'all' | GroupLetter | 'range'
@@ -79,6 +80,23 @@ export function rowsForMatches(users: User[], results: TournamentResults, matche
 // sort by total to see who gained the most across the stretch.
 export function buildRangeRows(users: User[], results: TournamentResults, fromIndex: number, toIndex: number): GroupScopeRow[] {
   return rowsForMatches(users, results, playedGroupMatchesChrono(results).slice(fromIndex - 1, toIndex))
+}
+
+// How many places each bettor moved in the cumulative standings across the
+// stretch: their rank just before it (as of match fromIndex-1) vs at its end
+// (as of match toIndex). Positive = climbed, negative = dropped, 0 = held.
+// Null when the stretch starts at game 1 — there's no "before" to compare to.
+export function rangePlaceMovement(users: User[], results: TournamentResults, fromIndex: number, toIndex: number): Record<string, number | null> {
+  if (fromIndex <= 1) return Object.fromEntries(users.map(u => [u.label, null]))
+  const chrono = playedGroupMatchesChrono(results)
+  const ranksAsOf = (count: number): Record<string, number> => {
+    const rows = rowsForMatches(users, results, chrono.slice(0, count)).sort(GROUP_SORTERS.total)
+    const ranks = competitionRanks(rows, r => r.total)
+    return Object.fromEntries(rows.map((r, i) => [r.label, ranks[i]]))
+  }
+  const before = ranksAsOf(fromIndex - 1)
+  const after = ranksAsOf(toIndex)
+  return Object.fromEntries(users.map(u => [u.label, before[u.label] - after[u.label]]))
 }
 
 type MatchResult = TournamentResults['groupMatches'][string][number]

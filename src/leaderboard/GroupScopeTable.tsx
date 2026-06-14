@@ -91,7 +91,19 @@ function SortableThs({ cols, sortCol, onSortCol }: {
   ))
 }
 
-function ScopeRows({ rows, ranks, cols, delayMs }: { rows: GroupScopeRow[]; ranks: number[]; cols: Col[]; delayMs: number }) {
+function MoveCell({ delta }: { delta: number | null | undefined }) {
+  if (delta == null || delta === 0) return <td className="lb-td lb-td--move"><span className="lb-move lb-move--none">–</span></td>
+  const up = delta > 0
+  return (
+    <td className="lb-td lb-td--move">
+      <span className={`lb-move ${up ? 'lb-move--up' : 'lb-move--down'}`}>
+        {up ? '▲' : '▼'} {Math.abs(delta)}
+      </span>
+    </td>
+  )
+}
+
+function ScopeRows({ rows, ranks, cols, delayMs, movements }: { rows: GroupScopeRow[]; ranks: number[]; cols: Col[]; delayMs: number; movements?: Record<string, number | null> }) {
   return rows.map((row, i) => {
     const rank = ranks[i]
     const rankClass = rank <= 3 ? `lb-row--rank-${rank}` : 'lb-row--other'
@@ -103,6 +115,7 @@ function ScopeRows({ rows, ranks, cols, delayMs }: { rows: GroupScopeRow[]; rank
       >
         <td className="lb-td lb-td--rank">{rank <= 3 ? MEDALS[rank] : rank}</td>
         <td className="lb-td lb-td--name">{row.label}</td>
+        {movements && <MoveCell delta={movements[row.label]} />}
         {cols.map(col => {
           const v = col.value(row)
           return (
@@ -116,7 +129,7 @@ function ScopeRows({ rows, ranks, cols, delayMs }: { rows: GroupScopeRow[]; rank
   })
 }
 
-export default function GroupScopeTable({ rows, variant = 'group' }: { rows: GroupScopeRow[]; variant?: keyof typeof COLS }) {
+export default function GroupScopeTable({ rows, variant = 'group', movements }: { rows: GroupScopeRow[]; variant?: keyof typeof COLS; movements?: Record<string, number | null> }) {
   const cols = COLS[variant]
   const [sortCol, setSortCol] = useState<GroupSortBy>(cols.defaultSort)
   const sortedRows = [...rows].sort(GROUP_SORTERS[sortCol])
@@ -131,6 +144,7 @@ export default function GroupScopeTable({ rows, variant = 'group' }: { rows: Gro
             <tr className="lb-th-phase-row">
               <th className="lb-th lb-th--rank" rowSpan={2}>#</th>
               <th className="lb-th lb-th--name" rowSpan={2}>מהמר</th>
+              {movements && <th className="lb-th lb-th--move" rowSpan={2}>תזוזה</th>}
               <th className="lb-th lb-th--phase lb-th--phase-hits" colSpan={HIT_COLS.length}>ניחושים נכונים</th>
               <th className="lb-th lb-th--phase lb-th--phase-points lb-zone-edge" colSpan={cols.pointCols.length}>נקודות</th>
             </tr>
@@ -139,7 +153,7 @@ export default function GroupScopeTable({ rows, variant = 'group' }: { rows: Gro
             </tr>
           </thead>
           <tbody>
-            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.desktop} delayMs={90} />
+            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.desktop} delayMs={90} movements={movements} />
           </tbody>
         </table>
         <p className="lb-zone-hint">
@@ -155,11 +169,12 @@ export default function GroupScopeTable({ rows, variant = 'group' }: { rows: Gro
             <tr>
               <th className="lb-th lb-th--rank">#</th>
               <th className="lb-th lb-th--name">מהמר</th>
+              {movements && <th className="lb-th lb-th--move">תזוזה</th>}
               <SortableThs cols={cols.mobile} sortCol={sortCol} onSortCol={setSortCol} />
             </tr>
           </thead>
           <tbody>
-            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.mobile} delayMs={60} />
+            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.mobile} delayMs={60} movements={movements} />
           </tbody>
         </table>
         <p className="lb-zone-hint">
