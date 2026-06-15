@@ -64,6 +64,40 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
       : []
   const ranks = competitionRanks(rows, row => row.total)
 
+  // Name cell that toggles a rank-trajectory panel, when trajectory data exists.
+  const renderName = (row: LeaderboardRow, isMe: boolean) => {
+    const trajectory = trajectories?.[row.label]
+    if (!trajectory) return <NameCell label={row.label} isMe={isMe} />
+    const open = openLabel === row.label
+    return (
+      <td className="lb-td lb-td--name">
+        <button
+          type="button"
+          className="lb-name-btn"
+          aria-expanded={open}
+          onClick={() => setOpenLabel(open ? null : row.label)}
+        >
+          {row.label}
+          {isMe && <span className="lb-me-badge">אני</span>}
+          <span className="lb-name-chevron" aria-hidden="true">{open ? '▾' : '‹'}</span>
+        </button>
+      </td>
+    )
+  }
+
+  // Expansion row holding the trajectory chart, spanning the whole table.
+  const renderTrajRow = (row: LeaderboardRow, colSpan: number) => {
+    const trajectory = trajectories?.[row.label]
+    if (!trajectory || openLabel !== row.label) return null
+    return (
+      <tr className="lb-traj-row">
+        <td className="lb-td lb-traj-cell" colSpan={colSpan} data-testid={`lb-traj-${row.label}`}>
+          <RankTrajectoryChart ranks={trajectory} />
+        </td>
+      </tr>
+    )
+  }
+
   return (
     <>
       {/* Desktop: each round cell stacks total + non-zero sub-fields below it */}
@@ -91,36 +125,38 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
                 const rankClass = rank <= 3 ? `lb-row--rank-${rank}` : 'lb-row--other'
                 const isMe = row.label === me
                 return (
-                  <tr
-                    key={row.label}
-                    className={`lb-row ${rankClass}${isMe ? ' lb-row--me' : ''}`}
-                    style={{ '--delay': `${i * 90}ms` } as React.CSSProperties}
-                  >
-                    <td className="lb-td lb-td--rank">
-                      {rank <= 3 ? MEDALS[rank] : rank}
-                    </td>
-                    <NameCell label={row.label} isMe={isMe} />
-                    {roundColumns.map(({ key }) => {
-                      const data = row[key] as unknown as Record<string, number>
-                      const activeSubs = SUB_FIELDS[key].filter(sf => (data[sf.key] ?? 0) > 0)
-                      return (
-                        <td key={key} className="lb-td lb-td--detail">
-                          <span className="lb-td-total">{data.total || '—'}</span>
-                          {activeSubs.length > 1 && (
-                            <div className="lb-td-subs">
-                              {activeSubs.map(sf => (
-                                <span key={sf.key} className="lb-td-sub">
-                                  <span className="lb-td-sub-label">{sf.label}</span>
-                                  <span className="lb-td-sub-value">{data[sf.key]}</span>
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                        </td>
-                      )
-                    })}
-                    <td className="lb-td lb-td--total">{row.total}</td>
-                  </tr>
+                  <React.Fragment key={row.label}>
+                    <tr
+                      className={`lb-row ${rankClass}${isMe ? ' lb-row--me' : ''}`}
+                      style={{ '--delay': `${i * 90}ms` } as React.CSSProperties}
+                    >
+                      <td className="lb-td lb-td--rank">
+                        {rank <= 3 ? MEDALS[rank] : rank}
+                      </td>
+                      {renderName(row, isMe)}
+                      {roundColumns.map(({ key }) => {
+                        const data = row[key] as unknown as Record<string, number>
+                        const activeSubs = SUB_FIELDS[key].filter(sf => (data[sf.key] ?? 0) > 0)
+                        return (
+                          <td key={key} className="lb-td lb-td--detail">
+                            <span className="lb-td-total">{data.total || '—'}</span>
+                            {activeSubs.length > 1 && (
+                              <div className="lb-td-subs">
+                                {activeSubs.map(sf => (
+                                  <span key={sf.key} className="lb-td-sub">
+                                    <span className="lb-td-sub-label">{sf.label}</span>
+                                    <span className="lb-td-sub-value">{data[sf.key]}</span>
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </td>
+                        )
+                      })}
+                      <td className="lb-td lb-td--total">{row.total}</td>
+                    </tr>
+                    {renderTrajRow(row, 3 + roundColumns.length)}
+                  </React.Fragment>
                 )
               })}
             </tbody>
@@ -143,8 +179,6 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
               const rank = ranks[i]
               const rankClass = rank <= 3 ? `lb-row--rank-${rank}` : 'lb-row--other'
               const isMe = row.label === me
-              const trajectory = trajectories?.[row.label]
-              const open = openLabel === row.label
               return (
                 <React.Fragment key={row.label}>
                   <tr
@@ -152,31 +186,10 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
                     style={{ '--delay': `${i * 60}ms` } as React.CSSProperties}
                   >
                     <td className="lb-td lb-td--rank">{rank <= 3 ? MEDALS[rank] : rank}</td>
-                    {trajectory ? (
-                      <td className="lb-td lb-td--name">
-                        <button
-                          type="button"
-                          className="lb-name-btn"
-                          aria-expanded={open}
-                          onClick={() => setOpenLabel(open ? null : row.label)}
-                        >
-                          {row.label}
-                          {isMe && <span className="lb-me-badge">אני</span>}
-                          <span className="lb-name-chevron" aria-hidden="true">{open ? '▾' : '‹'}</span>
-                        </button>
-                      </td>
-                    ) : (
-                      <NameCell label={row.label} isMe={isMe} />
-                    )}
+                    {renderName(row, isMe)}
                     <td className="lb-td lb-td--total">{row.total}</td>
                   </tr>
-                  {trajectory && open && (
-                    <tr className="lb-traj-row">
-                      <td className="lb-td lb-traj-cell" colSpan={3} data-testid={`lb-traj-${row.label}`}>
-                        <RankTrajectoryChart ranks={trajectory} />
-                      </td>
-                    </tr>
-                  )}
+                  {renderTrajRow(row, 3)}
                 </React.Fragment>
               )
             })}

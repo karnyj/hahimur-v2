@@ -92,15 +92,19 @@ test('flags the viewer\'s own row with an "אני" badge, leaving others unmarke
   })
 })
 
-test('tapping a bettor on mobile reveals their rank trajectory', () => {
+test.each([
+  ['mobile', '.lb-mobile'],
+  ['desktop', '.lb-desktop'],
+])('tapping a bettor on %s reveals their rank trajectory', (_name, selector) => {
   const row = makeRow({ matchPoints: 8, advancementPoints: 0 }) // label 'Dana'
-  render(<LeaderboardTable rows={[row]} trajectories={{ Dana: [1, 4, 1] }} />)
+  const { container } = render(<LeaderboardTable rows={[row]} trajectories={{ Dana: [1, 4, 1] }} />)
+  const table = within(container.querySelector(selector) as HTMLElement)
 
   // collapsed by default — no trajectory shown yet
-  expect(screen.queryByTestId('lb-traj-Dana')).not.toBeInTheDocument()
+  expect(table.queryByTestId('lb-traj-Dana')).not.toBeInTheDocument()
 
-  fireEvent.click(screen.getByRole('button', { name: /Dana/ }))
-  const panel = screen.getByTestId('lb-traj-Dana')
+  fireEvent.click(table.getByRole('button', { name: /Dana/ }))
+  const panel = table.getByTestId('lb-traj-Dana')
   // the panel now holds the rank line graph
   expect(within(panel).getByTestId('lb-traj-line')).toBeInTheDocument()
 })
