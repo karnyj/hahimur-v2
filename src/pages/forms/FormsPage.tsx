@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import type { User } from '../../users/index'
 import FormView from '../../formView/FormView'
 import PageLayout from '../../shared/PageLayout'
+import { useCurrentUser } from '../../shared/useCurrentUser'
 
 interface Props {
   users: User[]
@@ -9,7 +10,8 @@ interface Props {
 }
 
 export default function FormsPage({ users, usersSorted }: Props) {
-  const [selectedLabel, setSelectedLabel] = useState('')
+  const { me } = useCurrentUser()
+  const [selectedLabel, setSelectedLabel] = useState(me)
   const [isOpen, setIsOpen] = useState(false)
   const pickerRef = useRef<HTMLDivElement>(null)
   const selected = users.find(u => u.label === selectedLabel)

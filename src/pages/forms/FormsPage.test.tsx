@@ -12,6 +12,8 @@ const USERS: User[] = [
 ]
 const USERS_SORTED = [...USERS].sort((a, b) => a.label.localeCompare(b.label, 'he'))
 
+beforeEach(() => localStorage.clear())
+
 function selectUser(name: string) {
   render(<FormsPage users={USERS} usersSorted={USERS_SORTED} />)
   fireEvent.click(screen.getByRole('button', { name: /בחר שחקן/ }))
@@ -51,6 +53,20 @@ test('shows עידן מלמד predictions when selected', () => {
 test('אלרד גומא appears in dropdown and shows predictions section', () => {
   selectUser('אלרד גומא')
   expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
+})
+
+describe('Selected user shown first', () => {
+  test('shows the current user\'s form on load without opening the dropdown', () => {
+    localStorage.setItem('hahimur.me', 'עידן מלמד')
+    render(<FormsPage users={USERS} usersSorted={USERS_SORTED} />)
+    expect(screen.getByRole('button', { name: 'עידן מלמד' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'א' })).toBeInTheDocument()
+  })
+
+  test('falls back to the placeholder when no current user is set', () => {
+    render(<FormsPage users={USERS} usersSorted={USERS_SORTED} />)
+    expect(screen.getByText('בחר שחקן')).toBeInTheDocument()
+  })
 })
 
 describe('By-date toggle', () => {
