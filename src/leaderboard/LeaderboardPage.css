@@ -385,7 +385,7 @@
   border-right: 1px solid rgba(200, 184, 122, 0.22);
 }
 
-/* ── Tap-to-expand rank trajectory (mobile) ── */
+/* ── Tap-to-expand rank trajectory ── */
 .lb-name-btn {
   display: inline-flex;
   align-items: center;
@@ -402,6 +402,11 @@
   font-size: 11px;
   color: var(--navy);
   opacity: 0.55;
+  transition: transform 0.2s ease;
+}
+
+.lb-name-btn[aria-expanded="true"] .lb-name-chevron {
+  transform: rotate(-90deg);
 }
 
 .lb-traj-row .lb-traj-cell {

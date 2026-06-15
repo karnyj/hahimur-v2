@@ -57,7 +57,10 @@ export function playedGroupMatchesChrono(results: TournamentResults): GroupMatch
     .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
 }
 
-export function rowsForMatches(users: User[], results: TournamentResults, matches: GroupMatch[]): GroupScopeRow[] {
+// `withTournamentTotal` defaults on for display tables; ranking-only callers
+// (ranksAsOf) pass false to skip the full-tournament computeUserPoints, which
+// they never read — that recompute dominates the trajectory cost otherwise.
+export function rowsForMatches(users: User[], results: TournamentResults, matches: GroupMatch[], withTournamentTotal = true): GroupScopeRow[] {
   return users.map(user => {
     const predictionById: Record<string, MatchScores> = {}
     for (const m of Object.values(user.groupMatches).flat()) {
@@ -75,7 +78,7 @@ export function rowsForMatches(users: User[], results: TournamentResults, matche
     }
     const goalsByMatch = results.playerMatchGoals?.[user.topGoalscorer]
     const goalsPoints = matches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
-    return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints: 0, placePoints: 0, goalsPoints, total: matchPoints + goalsPoints, tournamentTotal: computeUserPoints(user, results).total }
+    return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints: 0, placePoints: 0, goalsPoints, total: matchPoints + goalsPoints, tournamentTotal: withTournamentTotal ? computeUserPoints(user, results).total : 0 }
   })
 }
 
@@ -86,17 +89,17 @@ export function buildRangeRows(users: User[], results: TournamentResults, fromIn
   return rowsForMatches(users, results, playedGroupMatchesChrono(results).slice(fromIndex - 1, toIndex))
 }
 
-// How many places each bettor moved in the cumulative standings across the
-// stretch: their rank just before it (as of match fromIndex-1) vs at its end
-// (as of match toIndex). Positive = climbed, negative = dropped, 0 = held.
-// Null when the stretch starts at game 1 — there's no "before" to compare to.
 // Each bettor's cumulative rank as of the first `count` played matches.
 function ranksAsOf(users: User[], results: TournamentResults, chrono: GroupMatch[], count: number): Record<string, number> {
-  const rows = rowsForMatches(users, results, chrono.slice(0, count)).sort(GROUP_SORTERS.total)
+  const rows = rowsForMatches(users, results, chrono.slice(0, count), false).sort(GROUP_SORTERS.total)
   const ranks = competitionRanks(rows, r => r.total)
   return Object.fromEntries(rows.map((r, i) => [r.label, ranks[i]]))
 }
 
+// How many places each bettor moved in the cumulative standings across the
+// stretch: their rank just before it (as of match fromIndex-1) vs at its end
+// (as of match toIndex). Positive = climbed, negative = dropped, 0 = held.
+// Null when the stretch starts at game 1 — there's no "before" to compare to.
 export function rangePlaceMovement(users: User[], results: TournamentResults, fromIndex: number, toIndex: number): Record<string, number | null> {
   if (fromIndex <= 1) return Object.fromEntries(users.map(u => [u.label, null]))
   const chrono = playedGroupMatchesChrono(results)

@@ -34,11 +34,19 @@ const SUB_FIELDS: Record<RoundKey, SubField[]> = {
   goldenBoot: [{ key: 'goalsPoints', label: 'שערים' }, { key: 'winnerBonus', label: 'מלך' }],
 }
 
+function NameLabel({ label, isMe }: { label: string; isMe: boolean }) {
+  return (
+    <>
+      {label}
+      {isMe && <span className="lb-me-badge">אני</span>}
+    </>
+  )
+}
+
 function NameCell({ label, isMe }: { label: string; isMe: boolean }) {
   return (
     <td className="lb-td lb-td--name">
-      {label}
-      {isMe && <span className="lb-me-badge">אני</span>}
+      <NameLabel label={label} isMe={isMe} />
     </td>
   )
 }
@@ -77,9 +85,8 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
           aria-expanded={open}
           onClick={() => setOpenLabel(open ? null : row.label)}
         >
-          {row.label}
-          {isMe && <span className="lb-me-badge">אני</span>}
-          <span className="lb-name-chevron" aria-hidden="true">{open ? '▾' : '‹'}</span>
+          <NameLabel label={row.label} isMe={isMe} />
+          <span className="lb-name-chevron" aria-hidden="true">‹</span>
         </button>
       </td>
     )

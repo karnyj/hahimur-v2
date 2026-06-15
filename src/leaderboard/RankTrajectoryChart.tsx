@@ -53,7 +53,6 @@ export default function RankTrajectoryChart({ ranks }: { ranks: number[] }) {
           data-testid="lb-traj-line"
           className="lb-traj-line"
           points={linePoints}
-          fill="none"
           pathLength={1}
         />
         {ranks.map((rank, i) => (
