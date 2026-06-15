@@ -109,7 +109,19 @@ function MoveCell({ delta }: { delta: number | null | undefined }) {
   )
 }
 
-function ScopeRows({ rows, ranks, cols, delayMs, movements }: { rows: GroupScopeRow[]; ranks: number[]; cols: Col[]; delayMs: number; movements?: Record<string, number | null> }) {
+// Compact movement indicator tucked under the rank number — used on mobile,
+// where a dedicated תזוזה column won't fit alongside the score columns.
+function InlineMove({ delta }: { delta: number | null | undefined }) {
+  if (delta == null || delta === 0) return null
+  const up = delta > 0
+  return (
+    <span className={`lb-move-inline ${up ? 'lb-move--up' : 'lb-move--down'}`}>
+      {up ? '▲' : '▼'}{Math.abs(delta)}
+    </span>
+  )
+}
+
+function ScopeRows({ rows, ranks, cols, delayMs, movements, inlineMovement }: { rows: GroupScopeRow[]; ranks: number[]; cols: Col[]; delayMs: number; movements?: Record<string, number | null>; inlineMovement?: boolean }) {
   return rows.map((row, i) => {
     const rank = ranks[i]
     const rankClass = rank <= 3 ? `lb-row--rank-${rank}` : 'lb-row--other'
@@ -119,9 +131,12 @@ function ScopeRows({ rows, ranks, cols, delayMs, movements }: { rows: GroupScope
         className={`lb-row ${rankClass}`}
         style={{ '--delay': `${i * delayMs}ms` } as React.CSSProperties}
       >
-        <td className="lb-td lb-td--rank">{rank <= 3 ? MEDALS[rank] : rank}</td>
+        <td className="lb-td lb-td--rank">
+          <span className="lb-rank-num">{rank <= 3 ? MEDALS[rank] : rank}</span>
+          {inlineMovement && movements && <InlineMove delta={movements[row.label]} />}
+        </td>
         <td className="lb-td lb-td--name">{row.label}</td>
-        {movements && <MoveCell delta={movements[row.label]} />}
+        {movements && !inlineMovement && <MoveCell delta={movements[row.label]} />}
         {cols.map(col => {
           const v = col.value(row)
           return (
@@ -175,12 +190,11 @@ export default function GroupScopeTable({ rows, variant = 'group', movements }: 
             <tr>
               <th className="lb-th lb-th--rank">#</th>
               <th className="lb-th lb-th--name">מהמר</th>
-              {movements && <th className="lb-th lb-th--move">תזוזה</th>}
               <SortableThs cols={cols.mobile} sortCol={sortCol} onSortCol={setSortCol} />
             </tr>
           </thead>
           <tbody>
-            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.mobile} delayMs={60} movements={movements} />
+            <ScopeRows rows={sortedRows} ranks={ranks} cols={cols.mobile} delayMs={60} movements={movements} inlineMovement />
           </tbody>
         </table>
         <p className="lb-zone-hint">

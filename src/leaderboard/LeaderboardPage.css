@@ -19,7 +19,9 @@
 
 @media (max-width: 639px) {
   .lb-desktop { display: none; }
-  .lb-mobile  { display: block; padding: 0; }
+  /* overflow-x is a backstop: the form table is tuned to fit ~360px, but on
+     ultra-narrow phones it scrolls horizontally instead of breaking layout. */
+  .lb-mobile  { display: block; padding: 0; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* ── Mobile Cards ── */
@@ -550,10 +552,58 @@
   padding-left: 16px;
 }
 
-.lb-table--mobile .lb-td--rank {
-  padding-right: 10px;
-  padding-left: 4px;
+.lb-table--mobile .lb-td--rank,
+.lb-table--mobile .lb-th--rank {
+  width: 34px;
+  padding-right: 8px;
+  padding-left: 3px;
 }
+
+/* Tighten data cells a touch so the score columns (and longest names) fit phones */
+.lb-table--mobile .lb-td:not(.lb-td--rank):not(.lb-td--name),
+.lb-table--mobile .lb-th--round {
+  padding-left: 6px;
+  padding-right: 6px;
+}
+
+/* The long Hebrew column headers — not the small numbers — drive width here,
+   so squeeze their letter-spacing/size on mobile to claw back room for all columns. */
+.lb-table--mobile .lb-th--round {
+  letter-spacing: 0.01em;
+  font-size: 8.5px;
+}
+
+.lb-table--mobile .lb-td--name,
+.lb-table--mobile .lb-th--name {
+  font-size: 12px;
+  min-width: 0;
+}
+
+.lb-table--mobile .lb-hit-chip {
+  min-width: 0;
+  padding: 2px 6px;
+}
+
+/* Rank cell stacks the number with the inline movement indicator on mobile */
+.lb-table--mobile .lb-td--rank {
+  line-height: 1.1;
+}
+
+.lb-rank-num {
+  display: block;
+}
+
+.lb-move-inline {
+  display: block;
+  margin-top: 1px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.lb-move-inline.lb-move--up   { color: #1f7a4d; }
+.lb-move-inline.lb-move--down { color: #b23b3b; }
 
 /* ── Scope selector ── */
 
