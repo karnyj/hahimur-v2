@@ -50,6 +50,35 @@ test('shows no outcome line when there is no selected user', () => {
   expect(screen.queryByTestId('your-outcome')).not.toBeInTheDocument()
 })
 
+test('shows goalscorer points when the selected user’s picked scorer netted in this match', () => {
+  const me = makeUser({ label: 'עידן', predictions: { A1: { home: 0, away: 3 } }, topGoalscorer: 'אמבפה' })
+  render(
+    <RecentMatchesCard
+      users={users}
+      now={NOW}
+      matches={[MATCHES[0]]}
+      currentUser={me}
+      playerMatchGoals={{ אמבפה: { A1: 2 } }}
+    />,
+  )
+  expect(screen.getByTestId('your-scorer')).toHaveTextContent('2 שערים')
+  expect(screen.getByTestId('your-scorer')).toHaveTextContent('6 נק׳')
+})
+
+test('shows no goalscorer line when the picked scorer did not score in this match', () => {
+  const me = makeUser({ label: 'עידן', predictions: { A1: { home: 2, away: 1 } }, topGoalscorer: 'אמבפה' })
+  render(
+    <RecentMatchesCard
+      users={users}
+      now={NOW}
+      matches={[MATCHES[0]]}
+      currentUser={me}
+      playerMatchGoals={{ אמבפה: { A2: 1 } }}
+    />,
+  )
+  expect(screen.queryByTestId('your-scorer')).not.toBeInTheDocument()
+})
+
 test('renders nothing before any match has been played', () => {
   const { container } = render(<RecentMatchesCard users={users} now={new Date('2026-06-10T00:00:00Z')} matches={MATCHES} />)
   expect(container).toBeEmptyDOMElement()

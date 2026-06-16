@@ -16,7 +16,7 @@ export default function HomePage() {
     <PageLayout title="ההימור 2026">
       <Countdown targetDate={FIRST_MATCH} label="לשריקת הפתיחה" />
       <LeaderboardGlance users={USERS} results={tournamentResults} currentUser={currentUser} />
-      <HomeFeed users={USERS} currentUser={currentUser} />
+      <HomeFeed users={USERS} currentUser={currentUser} playerMatchGoals={tournamentResults.playerMatchGoals} />
 
       <main dir="rtl" style={{ maxWidth: '700px', margin: '0 auto', padding: '3rem 1.5rem', fontSize: '1.1rem', lineHeight: '1.9' }}>
         <p>ברוכים הבאים להימור המסורתי שלנו!</p>

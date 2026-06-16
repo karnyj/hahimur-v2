@@ -7,12 +7,18 @@ import NextMatchCard from './NextMatchCard'
 import './HomeFeed.css'
 
 type View = 'results' | 'fixtures'
-type Props = { users: User[]; currentUser?: User; now?: Date; matches?: GroupMatch[] }
+type Props = {
+  users: User[]
+  currentUser?: User
+  now?: Date
+  matches?: GroupMatch[]
+  playerMatchGoals?: Record<string, Record<string, number>>
+}
 
 // The home page's match feed: one tap swaps between the last few results and the
 // next few fixtures, so the two never stack into a scroll wall. Opens on results
 // — the morning "how did I do" view.
-export default function HomeFeed({ users, currentUser, now = new Date(), matches = SCORED_MATCHES }: Props) {
+export default function HomeFeed({ users, currentUser, now = new Date(), matches = SCORED_MATCHES, playerMatchGoals }: Props) {
   const [view, setView] = useState<View>('results')
   const list = view === 'results' ? recentMatches(matches, now) : nextMatches(matches, now)
 
@@ -38,7 +44,7 @@ export default function HomeFeed({ users, currentUser, now = new Date(), matches
       {list.length === 0 ? (
         <p className="home-feed__empty">{view === 'results' ? 'עוד לא נגמרו משחקים' : 'אין משחקים קרובים'}</p>
       ) : view === 'results' ? (
-        <RecentMatchesCard users={users} currentUser={currentUser} now={now} matches={matches} />
+        <RecentMatchesCard users={users} currentUser={currentUser} now={now} matches={matches} playerMatchGoals={playerMatchGoals} />
       ) : (
         <NextMatchCard users={users} currentUser={currentUser} now={now} matches={matches} />
       )}

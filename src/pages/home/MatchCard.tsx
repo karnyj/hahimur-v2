@@ -1,7 +1,7 @@
 import { GROUPS, TEAMS } from '../../shared/groups'
 import type { GroupMatch, MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
-import { singleMatchOutcome, singleMatchPoints, OUTCOME_LABEL } from '../../leaderboard/points'
+import { singleMatchOutcome, singleMatchPoints, OUTCOME_LABEL, POINTS_PER_GOAL } from '../../leaderboard/points'
 import { topPrediction } from './nextMatch'
 import './MatchCard.css'
 
@@ -13,15 +13,19 @@ type Props = {
   // When set, the match has been played: show the real score and, if the user
   // predicted it, how they did. This is what turns a "next" card into a "result" card.
   result?: MatchScores
+  // player → match ID → goals, so we can credit the user's picked scorer for this match.
+  playerMatchGoals?: Record<string, Record<string, number>>
 }
 
-export default function MatchCard({ users, match, currentUser, isNext = false, result }: Props) {
+export default function MatchCard({ users, match, currentUser, isNext = false, result, playerMatchGoals = {} }: Props) {
   const home = TEAMS[match.homeTeam]
   const away = TEAMS[match.awayTeam]
   const consensus = topPrediction(users, match.id)
   const mine = currentUser?.predictions[match.id]
   const outcome = result && mine ? singleMatchOutcome(mine, result) : null
   const points = result && mine ? singleMatchPoints(match.id, mine, result) : 0
+  const scorerGoals = currentUser ? playerMatchGoals[currentUser.topGoalscorer]?.[match.id] ?? 0 : 0
+  const scorerPoints = scorerGoals * POINTS_PER_GOAL
 
   return (
     <div dir="rtl" className="next-match" data-testid="next-match">
@@ -73,6 +77,19 @@ export default function MatchCard({ users, match, currentUser, isNext = false, r
           הניחוש שלך: <strong dir="ltr">{mine.away}–{mine.home}</strong>
         </div>
       ) : null}
+
+      {scorerGoals > 0 && (
+        <div className="next-match__scorer" data-testid="your-scorer">
+          <span className="next-match__scorer-who">
+            <span className="next-match__scorer-crown" aria-hidden="true">👑</span>
+            המלך שלך · <strong>{currentUser!.topGoalscorer}</strong>
+          </span>
+          <span className="next-match__scorer-tally">
+            כבש {scorerGoals} {scorerGoals === 1 ? 'שער' : 'שערים'}
+            <strong className="next-match__scorer-pts">+{scorerPoints} נק׳</strong>
+          </span>
+        </div>
+      )}
 
       <a className="next-match__link" href={`/matches/${match.id}`}>לעמוד המשחק ›</a>
     </div>

@@ -143,6 +143,48 @@
   color: var(--ink);
 }
 
+/* The Golden Boot moment: your picked striker scored, so this match paid out.
+   Mirrors the verdict strip's shape, tinted gold to echo "המלך" and the boot. */
+.next-match__scorer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.5rem auto 0;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid var(--border);
+  border-inline-start: 4px solid var(--gold);
+  border-radius: 8px;
+  background: rgba(212, 160, 22, 0.12);
+  text-align: start;
+  animation: verdict-in 0.35s ease both;
+}
+
+.next-match__scorer-who {
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+.next-match__scorer-crown {
+  margin-inline-end: 0.35rem;
+  filter: saturate(1.1);
+}
+
+.next-match__scorer-tally {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted);
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.next-match__scorer-pts {
+  color: #9a7400;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
 .next-match__link {
   display: inline-block;
   margin-top: 0.6rem;
