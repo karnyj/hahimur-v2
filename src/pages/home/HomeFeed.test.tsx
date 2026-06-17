@@ -15,27 +15,27 @@ const users = [makeUser({ predictions: { A1: { home: 2, away: 1 } } })]
 
 const render_ = () => render(<HomeFeed users={users} now={NOW} matches={MATCHES} />)
 
-test('opens on the results tab', () => {
+test('opens on the upcoming fixtures tab', () => {
   render_()
-  expect(screen.getByRole('tab', { name: 'תוצאות אחרונות' })).toHaveAttribute('aria-selected', 'true')
-  expect(screen.getByTestId('match-result')).toBeInTheDocument()
-})
-
-test('does not show upcoming fixtures while on the results tab', () => {
-  render_()
-  expect(screen.queryByText(/לעמוד המשחק/)).toBeInTheDocument() // result card link exists
-  expect(screen.queryByText('20 ביוני')).not.toBeInTheDocument() // B1 kickoff date hidden
-})
-
-test('switches to upcoming fixtures when the other tab is tapped', async () => {
-  render_()
-  await userEvent.click(screen.getByRole('tab', { name: 'המשחקים הבאים' }))
   expect(screen.getByRole('tab', { name: 'המשחקים הבאים' })).toHaveAttribute('aria-selected', 'true')
   expect(screen.getByText('20 ביוני')).toBeInTheDocument()
+})
+
+test('does not show recent results while on the fixtures tab', () => {
+  render_()
   expect(screen.queryByTestId('match-result')).not.toBeInTheDocument()
 })
 
-test('shows an empty message when the results tab has nothing yet', () => {
+test('switches to recent results when the other tab is tapped', async () => {
+  render_()
+  await userEvent.click(screen.getByRole('tab', { name: 'תוצאות אחרונות' }))
+  expect(screen.getByRole('tab', { name: 'תוצאות אחרונות' })).toHaveAttribute('aria-selected', 'true')
+  expect(screen.getByTestId('match-result')).toBeInTheDocument()
+  expect(screen.queryByText('20 ביוני')).not.toBeInTheDocument() // B1 kickoff date hidden
+})
+
+test('shows an empty message when the results tab has nothing yet', async () => {
   render(<HomeFeed users={users} now={new Date('2026-06-10T00:00:00Z')} matches={MATCHES} />)
+  await userEvent.click(screen.getByRole('tab', { name: 'תוצאות אחרונות' }))
   expect(screen.getByText('עוד לא נגמרו משחקים')).toBeInTheDocument()
 })

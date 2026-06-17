@@ -16,10 +16,10 @@ type Props = {
 }
 
 // The home page's match feed: one tap swaps between the last few results and the
-// next few fixtures, so the two never stack into a scroll wall. Opens on results
-// — the morning "how did I do" view.
+// next few fixtures, so the two never stack into a scroll wall. Opens on the
+// upcoming fixtures — the "what's next" view.
 export default function HomeFeed({ users, currentUser, now = new Date(), matches = SCORED_MATCHES, playerMatchGoals }: Props) {
-  const [view, setView] = useState<View>('results')
+  const [view, setView] = useState<View>('fixtures')
   const list = view === 'results' ? recentMatches(matches, now) : nextMatches(matches, now)
 
   return (
