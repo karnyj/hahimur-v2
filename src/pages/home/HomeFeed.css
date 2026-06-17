@@ -24,7 +24,7 @@
   transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
-.home-feed__tab:hover {
+.home-feed__tab:not(.home-feed__tab--active):hover {
   border-color: var(--navy);
   color: var(--navy);
 }

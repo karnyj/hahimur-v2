@@ -106,7 +106,7 @@
   transition: border-color 0.12s, background 0.12s, color 0.12s;
 }
 
-.pg-group-btn:hover {
+.pg-group-btn:not(.pg-group-btn--active):hover {
   border-color: var(--navy);
   color: var(--navy);
 }

@@ -989,7 +989,7 @@
   border-inline-start: none;
 }
 
-.lb-scope-mode:hover {
+.lb-scope-mode:not(.lb-scope-mode--active):hover {
   color: var(--navy);
 }
 
@@ -1028,7 +1028,7 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-.lb-scope-group:hover {
+.lb-scope-group:not(.lb-scope-group--active):hover {
   border-color: var(--navy);
   color: var(--navy);
 }
