@@ -1,5 +1,5 @@
 import { matchSortKey } from './matchOrder'
-import type { Match } from './types'
+import type { Match, MatchScores, TournamentResults } from './types'
 import { GROUPS, ALL_GROUP_LETTERS, type GroupLetter } from './groups'
 
 export type MatchEntry = { match: Match; group: GroupLetter }
@@ -34,3 +34,20 @@ export const GROUP_MATCHES_BY_DATE: DateGroup[] = groupMatchesByDate(
     (GROUPS[l]?.matches ?? []).map(m => ({ match: m, group: l }))
   )
 )
+
+// Earliest chronological group match with no finished score, or undefined once
+// they're all played. Both the results page and per-bettor form view use this
+// to auto-scroll their by-date view to where the tournament currently is.
+export function nextUnplayedMatchId(results: TournamentResults): string | undefined {
+  const scores: Record<string, MatchScores> = {}
+  for (const matches of Object.values(results.groupMatches)) {
+    for (const m of matches) if (m.scores) scores[m.id] = m.scores
+  }
+  for (const { matches } of GROUP_MATCHES_BY_DATE) {
+    for (const { match } of matches) {
+      const s = scores[match.id]
+      if (!s || s.home === null || s.away === null) return match.id
+    }
+  }
+  return undefined
+}

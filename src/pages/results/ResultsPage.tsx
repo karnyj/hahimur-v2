@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import GoalScorerSection from './GoalScorerSection'
 import PageLayout from '../../shared/PageLayout'
 import MatchRow from '../../formView/groupStage/MatchRow'
@@ -16,7 +16,7 @@ import { useTournament } from '../../shared/useTournament'
 import { useCurrentUser } from '../../shared/useCurrentUser'
 import { GROUPS, ALL_GROUP_LETTERS, TEAMS } from '../../shared/groups'
 import type { PredictionsState, MatchScores, TournamentResults } from '../../shared/types'
-import { GROUP_MATCHES_BY_DATE } from '../../shared/matchesByDate'
+import { GROUP_MATCHES_BY_DATE, nextUnplayedMatchId } from '../../shared/matchesByDate'
 import { tournamentResults as realTournamentResults } from '../../tournament-results'
 import { getLockedMatchIds } from './resultsUtils'
 import { TEAM_STRENGTH } from './teamStrength'
@@ -31,6 +31,8 @@ Object.values(GROUPS).forEach(group =>
 
 const LOCKED_MATCH_IDS = getLockedMatchIds(realTournamentResults)
 const INITIAL_PLAYED_COUNT = playedGroupMatchesChrono(realTournamentResults).length
+// Frozen at load from the committed real scores — the by-date view scrolls here
+const NEXT_MATCH_ID = nextUnplayedMatchId(realTournamentResults)
 
 function getInitialState(): PredictionsState {
   const state: PredictionsState = {}
@@ -103,6 +105,13 @@ export default function ResultsPage({ users }: { users: User[] }) {
   const [goalScorerResetKey, setGoalScorerResetKey] = useState(0)
 
   const players = predictedPlayers(users)
+
+  const nextMatchRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    if (groupStageView === 'by-date') {
+      nextMatchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [groupStageView])
 
   const updateMatch = (matchId: string, scores: MatchScores) => {
     setEditedResults(prev => ({ ...prev, [matchId]: scores }))
@@ -311,18 +320,26 @@ export default function ResultsPage({ users }: { users: User[] }) {
                       </div>
                       <span className="pg-date-band__rule" />
                     </div>
-                    {matches.map(({ match, group }) => (
-                      <MatchRow
-                        key={match.id}
-                        match={match}
-                        scores={editedResults[match.id] ?? { home: null, away: null }}
-                        onChange={scores => updateMatch(match.id, scores)}
-                        readOnly={LOCKED_MATCH_IDS.has(match.id)}
-                        href={`/matches/${match.id.toLowerCase()}`}
-                        hideDate
-                        groupLabel={GROUPS[group].he}
-                      />
-                    ))}
+                    {matches.map(({ match, group }) => {
+                      const isNext = match.id === NEXT_MATCH_ID
+                      return (
+                        <div
+                          key={match.id}
+                          ref={isNext ? nextMatchRef : undefined}
+                          className={isNext ? 'pg-next-match' : undefined}
+                        >
+                          <MatchRow
+                            match={match}
+                            scores={editedResults[match.id] ?? { home: null, away: null }}
+                            onChange={scores => updateMatch(match.id, scores)}
+                            readOnly={LOCKED_MATCH_IDS.has(match.id)}
+                            href={`/matches/${match.id.toLowerCase()}`}
+                            hideDate
+                            groupLabel={GROUPS[group].he}
+                          />
+                        </div>
+                      )
+                    })}
                   </div>
                 ))}
               </div>

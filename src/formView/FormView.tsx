@@ -5,7 +5,7 @@ import { isUnpredicted } from '../shared/types'
 import { GROUP_MATCHES, GROUPS, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../shared/groups'
 import { calculateStandings } from '../shared/standings'
 import { useTournament } from '../shared/useTournament'
-import { GROUP_MATCHES_BY_DATE } from '../shared/matchesByDate'
+import { GROUP_MATCHES_BY_DATE, nextUnplayedMatchId } from '../shared/matchesByDate'
 import { singleMatchOutcome, singleMatchPoints, type MatchOutcome } from '../leaderboard/points'
 import { tournamentResults } from '../tournament-results'
 import MatchRow from './groupStage/MatchRow'
@@ -24,6 +24,9 @@ interface Props {
 }
 
 const noop = () => {}
+
+// Frozen at load from the committed real scores — the by-date view scrolls here
+const NEXT_MATCH_ID = nextUnplayedMatchId(tournamentResults)
 
 // fire-and-forget usage signal for the chronological view; localhost clicks are
 // dev noise and never reach the counter, and failures must never break the view
@@ -81,25 +84,12 @@ export default function FormView({
     [activeMatches, actualScores]
   )
 
-  // The next group match still to be played — earliest (chronological) match
-  // without a finished actual score. Used to auto-scroll the date view to it.
-  const nextMatchId = useMemo(() => {
-    for (const { matches } of GROUP_MATCHES_BY_DATE) {
-      for (const { match } of matches) {
-        const actual = actualScores[match.id]
-        const finished = actual && actual.home !== null && actual.away !== null
-        if (!finished) return match.id
-      }
-    }
-    return undefined
-  }, [actualScores])
-
   const nextMatchRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (groupStageView === 'by-date') {
       nextMatchRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
-  }, [groupStageView, nextMatchId])
+  }, [groupStageView])
 
   // Compute outcome and points for a finished match
   const getOutcomeAndPoints = (matchId: string): { outcome?: MatchOutcome; points?: number } => {
@@ -190,7 +180,7 @@ export default function FormView({
                   const { outcome, points } = getOutcomeAndPoints(match.id)
                   const actual = actualScores[match.id]
                   const isFinished = actual && actual.home !== null && actual.away !== null
-                  const isNext = match.id === nextMatchId
+                  const isNext = match.id === NEXT_MATCH_ID
                   return (
                     <div
                       key={match.id}
