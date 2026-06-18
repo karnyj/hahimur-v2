@@ -1,56 +1,70 @@
 // Attack = goals scored relative to average (1.0). Defense = goals conceded relative to average (lower = harder to score against).
 // λ_home_goals = 1.3 × home.att × away.def
+//
+// Source: derived from the World Football Elo Ratings (eloratings.net) snapshot of
+// 18 June 2026 — the most predictive public rating for match outcomes. Teams are
+// ordered and scaled by their Elo so the ladder is objective rather than hand-set.
+// Mapping (REF Elo 1780 = average WC team → 1.0/1.0):
+//   att = clamp((Elo/1780)^3.2, 0.50, 1.85)
+//   def = clamp((1780/Elo)^2.4, 0.62, 1.35)
+// Frozen for the tournament on purpose: pre-tournament priors stay stable so
+// win-probabilities remain comparable and don't chase in-tournament results.
+// To refresh from a newer Elo snapshot, re-run the same mapping (see _handoff).
 export const TEAM_STRENGTH: Record<string, { att: number; def: number }> = {
-  // Elite
-  'Argentina':              { att: 1.80, def: 0.60 },
-  'France':                 { att: 1.70, def: 0.65 },
-  'Spain':                  { att: 1.65, def: 0.65 },
-  'Brazil':                 { att: 1.60, def: 0.70 },
-  'Portugal':               { att: 1.60, def: 0.75 },
-  'England':                { att: 1.50, def: 0.70 },
-  // Strong
-  'Netherlands':            { att: 1.40, def: 0.75 },
-  'Germany':                { att: 1.40, def: 0.80 },
-  'Morocco':                { att: 1.20, def: 0.80 },
-  'Belgium':                { att: 1.30, def: 0.80 },
-  'Uruguay':                { att: 1.30, def: 0.80 },
-  'Croatia':                { att: 1.20, def: 0.85 },
-  'Colombia':               { att: 1.25, def: 0.85 },
-  'Switzerland':            { att: 1.15, def: 0.85 },
-  'Senegal':                { att: 1.15, def: 0.85 },
-  'Japan':                  { att: 1.10, def: 0.85 },
-  'Norway':                 { att: 1.20, def: 0.90 },
-  'Austria':                { att: 1.15, def: 0.90 },
-  'Sweden':                 { att: 1.10, def: 0.90 },
-  'Turkey':                 { att: 1.05, def: 0.90 },
-  // Average
-  'United States':          { att: 1.05, def: 0.90 },
-  'Ivory Coast':            { att: 1.05, def: 0.95 },
-  'Mexico':                 { att: 1.00, def: 0.90 },
-  'South Korea':            { att: 1.00, def: 0.95 },
-  'Czech Republic':         { att: 1.00, def: 0.95 },
-  'Ecuador':                { att: 1.00, def: 0.95 },
-  'Canada':                 { att: 0.95, def: 0.95 },
-  'Ghana':                  { att: 0.95, def: 0.95 },
-  'Egypt':                  { att: 0.95, def: 1.00 },
-  'Algeria':                { att: 0.95, def: 1.00 },
-  'Australia':              { att: 0.90, def: 1.00 },
-  'Paraguay':               { att: 0.90, def: 1.00 },
-  'Tunisia':                { att: 0.90, def: 1.00 },
-  'Scotland':               { att: 0.90, def: 1.00 },
-  'Iran':                   { att: 0.85, def: 1.00 },
-  'Uzbekistan':             { att: 0.85, def: 1.05 },
-  // Weaker
-  'Saudi Arabia':           { att: 0.80, def: 1.10 },
-  'Bosnia and Herzegovina': { att: 0.80, def: 1.10 },
-  'DR Congo':               { att: 0.80, def: 1.10 },
-  'South Africa':           { att: 0.75, def: 1.15 },
-  'Cape Verde':             { att: 0.75, def: 1.15 },
-  'Iraq':                   { att: 0.70, def: 1.20 },
-  'Jordan':                 { att: 0.70, def: 1.20 },
-  'New Zealand':            { att: 0.70, def: 1.20 },
-  'Panama':                 { att: 0.65, def: 1.25 },
-  'Qatar':                  { att: 0.65, def: 1.30 },
-  'Curaçao':                { att: 0.60, def: 1.30 },
-  'Haiti':                  { att: 0.60, def: 1.35 },
+  // Elite (Elo ≥ 2050)
+  'Spain':                  { att: 1.77, def: 0.65 }, // Elo 2129 (#1)
+  'Argentina':              { att: 1.77, def: 0.65 }, // Elo 2128 (#2)
+  'France':                 { att: 1.66, def: 0.69 }, // Elo 2084 (#3)
+  'England':                { att: 1.58, def: 0.71 }, // Elo 2055 (#4)
+  // Very strong (1950–2049)
+  'Colombia':               { att: 1.45, def: 0.76 }, // Elo 1998 (#5)
+  'Brazil':                 { att: 1.40, def: 0.78 }, // Elo 1978 (#6)
+  'Portugal':               { att: 1.38, def: 0.79 }, // Elo 1967 (#7)
+  // Strong (1870–1949)
+  'Netherlands':            { att: 1.33, def: 0.81 }, // Elo 1944 (#8)
+  'Germany':                { att: 1.32, def: 0.81 }, // Elo 1939 (#9)
+  'Norway':                 { att: 1.29, def: 0.82 }, // Elo 1929 (#10)
+  'Japan':                  { att: 1.25, def: 0.84 }, // Elo 1910 (#11)
+  'Ecuador':                { att: 1.21, def: 0.87 }, // Elo 1890 (#12)
+  'Croatia':                { att: 1.19, def: 0.88 }, // Elo 1881 (#13)
+  'Mexico':                 { att: 1.19, def: 0.88 }, // Elo 1881 (#13)
+  'Belgium':                { att: 1.19, def: 0.88 }, // Elo 1879 (#15)
+  'Uruguay':                { att: 1.17, def: 0.89 }, // Elo 1870 (#16)
+  // Upper-mid (1800–1869)
+  'Switzerland':            { att: 1.16, def: 0.89 }, // Elo 1865 (#17)
+  'Austria':                { att: 1.15, def: 0.90 }, // Elo 1857 (#18)
+  'Turkey':                 { att: 1.13, def: 0.91 }, // Elo 1849 (#19)
+  'Morocco':                { att: 1.11, def: 0.92 }, // Elo 1840 (#20)
+  'Australia':              { att: 1.11, def: 0.93 }, // Elo 1839 (#21)
+  'Senegal':                { att: 1.11, def: 0.93 }, // Elo 1839 (#21)
+  // Mid (1740–1799)
+  'Scotland':               { att: 1.03, def: 0.98 }, // Elo 1794 (#23)
+  'South Korea':            { att: 1.01, def: 0.99 }, // Elo 1786 (#24)
+  'Paraguay':               { att: 1.00, def: 1.00 }, // Elo 1780 (#25)
+  'United States':          { att: 1.00, def: 1.00 }, // Elo 1780 (#25)
+  'Canada':                 { att: 0.98, def: 1.02 }, // Elo 1767 (#27)
+  'Algeria':                { att: 0.96, def: 1.03 }, // Elo 1759 (#28)
+  'Iran':                   { att: 0.96, def: 1.03 }, // Elo 1756 (#29)
+  'Sweden':                 { att: 0.96, def: 1.03 }, // Elo 1755 (#30)
+  'Ivory Coast':            { att: 0.94, def: 1.05 }, // Elo 1743 (#31)
+  // Lower-mid (1650–1739)
+  'Czech Republic':         { att: 0.88, def: 1.10 }, // Elo 1712 (#32)
+  'Egypt':                  { att: 0.88, def: 1.10 }, // Elo 1711 (#33)
+  'Uzbekistan':             { att: 0.86, def: 1.12 }, // Elo 1698 (#34)
+  'Panama':                 { att: 0.84, def: 1.14 }, // Elo 1683 (#35)
+  'DR Congo':               { att: 0.82, def: 1.16 }, // Elo 1674 (#36)
+  'Jordan':                 { att: 0.79, def: 1.19 }, // Elo 1653 (#37)
+  // Weak (1550–1649)
+  'Bosnia and Herzegovina': { att: 0.73, def: 1.26 }, // Elo 1616 (#38)
+  'Cape Verde':             { att: 0.72, def: 1.28 }, // Elo 1606 (#39)
+  'Saudi Arabia':           { att: 0.71, def: 1.30 }, // Elo 1598 (#40)
+  'Iraq':                   { att: 0.70, def: 1.31 }, // Elo 1592 (#41)
+  'Tunisia':                { att: 0.69, def: 1.32 }, // Elo 1585 (#42)
+  'New Zealand':            { att: 0.68, def: 1.34 }, // Elo 1578 (#43)
+  'Ghana':                  { att: 0.65, def: 1.35 }, // Elo 1557 (#44)
+  // Weakest (< 1550)
+  'Haiti':                  { att: 0.62, def: 1.35 }, // Elo 1536 (#45)
+  'South Africa':           { att: 0.59, def: 1.35 }, // Elo 1511 (#46)
+  'Qatar':                  { att: 0.55, def: 1.35 }, // Elo 1447 (#47)
+  'Curaçao':                { att: 0.53, def: 1.35 }, // Elo 1427 (#48)
 }
