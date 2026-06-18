@@ -6,6 +6,9 @@ import { TEAMS } from '../../shared/groups'
 import type { User } from '../../users/index'
 import type { PredictionsState } from '../../shared/types'
 
+// Skip the 27 prediction files that load transitively via useCurrentUser.
+vi.mock('../../users/index', () => ({ get USERS() { return [] }, get USERS_SORTED() { return [] } }))
+
 // A1 is played (2–0), A2 is played (2–1), A3 is unplayed
 vi.mock('../../tournament-results', () => ({
   tournamentResults: {

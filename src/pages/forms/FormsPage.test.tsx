@@ -4,6 +4,9 @@ import FormsPage from './FormsPage'
 import type { User } from '../../users/index'
 
 vi.mock('../../Nav', () => ({ default: () => null }))
+// Tests pass their own `users` prop and read `me` from localStorage, so stub
+// the barrel to skip the 27 prediction files that load via useCurrentUser.
+vi.mock('../../users/index', () => ({ get USERS() { return [] }, get USERS_SORTED() { return [] } }))
 
 const USERS: User[] = [
   { label: 'טל ליכטר',  predictions: {}, topGoalscorer: 'מבאפה', groupMatches: {}, groupTables: {}, thirdPlaceQualification: { resolved: true, all: [], qualifiers: [] }, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] } },

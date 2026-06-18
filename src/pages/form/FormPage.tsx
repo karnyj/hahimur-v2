@@ -13,7 +13,7 @@ import ThirdPlaceTable from '../../formView/thirdPlace/ThirdPlaceTable'
 import KnockoutTable from '../../formView/knockout/KnockoutTable'
 import ChampionBanner from '../../formView/knockout/ChampionBanner'
 import type { User } from '../../users'
-import { derivePredictions } from '../../users'
+import { derivePredictions } from '../../users/derivePredictions'
 
 const STORAGE_KEY = 'user'
 

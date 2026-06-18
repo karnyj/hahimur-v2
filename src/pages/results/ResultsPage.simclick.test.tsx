@@ -3,6 +3,10 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, test, vi } from 'vitest'
 import ResultsPage from './ResultsPage'
 
+// The 27 prediction files load transitively via useCurrentUser's `import { USERS }`.
+// These tests pass their own `users` prop, so stub the barrel to skip that ~700KB load.
+vi.mock('../../users/index', () => ({ get USERS() { return [] }, get USERS_SORTED() { return [] } }))
+
 afterEach(() => {
   vi.unstubAllGlobals()
 })

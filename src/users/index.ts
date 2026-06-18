@@ -1,4 +1,7 @@
 import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutStages, GroupMatch } from '../shared/types'
+import { derivePredictions } from './derivePredictions'
+
+export { derivePredictions }
 
 import * as eldad_levi from './eldad-levi'
 import * as elrad_gome from './elrad-gome'
@@ -41,20 +44,6 @@ export interface User {
   predictedQFTeams?: string[]
   predictedSFTeams?: string[]
   predictedFinalTeams?: string[]
-}
-
-export function derivePredictions(groupMatches: Record<string, GroupMatch[]>, knockoutStages: KnockoutStages): PredictionsState {
-  const result: PredictionsState = {}
-  for (const matches of Object.values(groupMatches)) {
-    for (const match of matches) {
-      if (match.scores) result[match.id] = match.scores
-    }
-  }
-  const allKO = (['r32', 'r16', 'qf', 'sf', 'thirdPlace', 'final'] as const).flatMap(k => knockoutStages[k])
-  for (const match of allKO) {
-    if (match.scores) result[String(match.matchNum)] = match.scores
-  }
-  return result
 }
 
 function toUser(mod: Omit<User, 'predictions'> & Record<string, unknown>): User {

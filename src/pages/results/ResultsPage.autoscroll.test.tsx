@@ -3,6 +3,9 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, expect, test, vi } from 'vitest'
 import ResultsPage from './ResultsPage'
 
+// Skip the 27 prediction files that load transitively via useCurrentUser.
+vi.mock('../../users/index', () => ({ get USERS() { return [] }, get USERS_SORTED() { return [] } }))
+
 afterEach(() => {
   vi.restoreAllMocks()
 })
