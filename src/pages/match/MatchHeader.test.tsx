@@ -55,3 +55,23 @@ test('final score wins over live: no live indicator once a real score exists', (
   expect(screen.queryByTestId('live-indicator')).not.toBeInTheDocument()
   expect(screen.getByTestId('real-score')).toBeInTheDocument()
 })
+
+test('shows a live badge with the match minute while a score is in progress', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} realScore={{ home: 1, away: 0 }} liveScore={{ clock: "67'" }} />)
+  const badge = screen.getByTestId('live-score-badge')
+  expect(badge).toHaveTextContent('חי')
+  expect(badge).toHaveTextContent("67'")
+  expect(screen.queryByText('נגמר')).not.toBeInTheDocument()
+})
+
+test('falls back to just "חי" when no minute is available', () => {
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} realScore={{ home: 1, away: 0 }} liveScore={{ clock: null }} />)
+  expect(screen.getByTestId('live-score-badge')).toHaveTextContent('חי')
+})
+
+test('shows "נגמר", not "חי", once the match is finished even within its time window', () => {
+  // live (time window) is still true, but there is no live status → the match is over.
+  render(<MatchHeader match={match} home={home} away={away} {...scoreProps} live realScore={{ home: 2, away: 1 }} />)
+  expect(screen.getByText('נגמר')).toBeInTheDocument()
+  expect(screen.queryByTestId('live-score-badge')).not.toBeInTheDocument()
+})

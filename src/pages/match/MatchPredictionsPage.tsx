@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import Nav from '../../Nav'
+import PageLayout from '../../shared/PageLayout'
 import type { Match, MatchScores, Score, TournamentResults } from '../../shared/types'
 import type { User } from '../../users/index'
 import { isLive } from '../../shared/matchOrder'
@@ -39,15 +39,17 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
 
   if (!match || !home || !away) {
     return (
-      <>
-        <Nav />
+      <PageLayout title="ההימור 2026">
         <p style={{ textAlign: 'center', marginTop: '2rem' }}>משחק לא נמצא</p>
-      </>
+      </PageLayout>
     )
   }
 
   const live = isLive(match, now)
   const realScore = realScoreFor(results, match.id)
+  // Present only while the match is actually being played (from the live feed),
+  // which is how the header tells "in progress" from "finished".
+  const liveScore = results.live?.[match.id] ?? null
   const actualScore = realScore ?? (homeScore !== null && awayScore !== null ? { home: homeScore, away: awayScore } : null)
   const scorers = realScore
     ? Object.entries(results.playerMatchGoals ?? {})
@@ -64,14 +66,13 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
   const myGroupTable = currentUser?.groupTables[groupLetter]
 
   return (
-    <>
+    <PageLayout title="ההימור 2026">
       <MatchHeader
         match={match} home={home} away={away}
         homeScore={homeScore} awayScore={awayScore}
         onHomeScore={setHomeScore} onAwayScore={setAwayScore}
-        realScore={realScore} live={live}
+        realScore={realScore} live={live} liveScore={liveScore}
       />
-      <Nav />
 
       <div className="match-predictions">
         {scorers.length > 0 && (
@@ -128,6 +129,6 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
           ? <p className="match-predictions__empty">אין תחזיות למשחק זה</p>
           : <ScoreFrequencyTable matchId={match.id} users={users} actualScore={actualScore} />}
       </div>
-    </>
+    </PageLayout>
   )
 }

@@ -9,13 +9,22 @@ import type { LiveOverlay } from './espnLive'
 export function mergeLiveResults(base: TournamentResults, live: LiveOverlay): TournamentResults {
   const hasScores = Object.keys(live.scores).length > 0
   const hasGoals = Object.keys(live.goals).length > 0
-  if (!hasScores && !hasGoals) return base
+  const hasLive = Object.keys(live.live ?? {}).length > 0
+  if (!hasScores && !hasGoals && !hasLive) return base
 
   const finalIds = new Set<string>()
   for (const matches of Object.values(base.groupMatches)) {
     for (const m of matches) {
       if (m.scores?.home != null && m.scores?.away != null) finalIds.add(m.id)
     }
+  }
+
+  // Carry live status for in-progress matches, but never for one that already
+  // has a baked final score — a finished match is finished even if ESPN is slow
+  // to flip its state.
+  const liveStatus: NonNullable<TournamentResults['live']> = {}
+  for (const [matchId, status] of Object.entries(live.live ?? {})) {
+    if (!finalIds.has(matchId)) liveStatus[matchId] = status
   }
 
   const groupMatches: TournamentResults['groupMatches'] = {}
@@ -44,5 +53,6 @@ export function mergeLiveResults(base: TournamentResults, live: LiveOverlay): To
     groupMatches,
     playerMatchGoals,
     playerGoals: derivePlayerGoals(playerMatchGoals),
+    live: liveStatus,
   }
 }

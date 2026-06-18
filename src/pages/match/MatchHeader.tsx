@@ -15,13 +15,16 @@ type Props = {
   onAwayScore: (v: Score) => void
   realScore?: MatchScores | null
   live?: boolean
+  // Set only while the match is actually in progress (from the live feed), so a
+  // finished match never keeps the "חי" badge. `clock` is the match minute.
+  liveScore?: { clock: string | null } | null
 }
 
-export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore, realScore = null, live = false }: Props) {
+export default function MatchHeader({ match, home, away, homeScore, awayScore, onHomeScore, onAwayScore, realScore = null, live = false, liveScore = null }: Props) {
   const showLive = live && !realScore
   // A score that is showing while the match is still in progress is provisional,
-  // so it gets a "חי" badge instead of "נגמר".
-  const showLiveScore = !!realScore && live
+  // so it gets a "חי" badge (with the minute) instead of "נגמר".
+  const showLiveScore = !!realScore && !!liveScore
   return (
     <div className="match-header">
       <a className="match-header__group-badge" href={`/stats/groups/${match.id[0].toLowerCase()}`}>בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]} ›</a>
@@ -43,6 +46,7 @@ export default function MatchHeader({ match, home, away, homeScore, awayScore, o
               <span className="match-header__final-badge match-header__final-badge--live" data-testid="live-score-badge">
                 <span className="match-header__live-dot" />
                 חי
+                {liveScore?.clock && <span className="match-header__live-clock">{liveScore.clock}</span>}
               </span>
             ) : (
               <span className="match-header__final-badge">נגמר</span>

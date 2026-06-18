@@ -11,12 +11,17 @@ export interface LiveEvent {
   homeScore: number | null
   awayScore: number | null
   scorers: string[] // one entry per (non-own) goal, ESPN athlete displayName
+  clock?: string | null // ESPN displayClock, e.g. "67'" — only set while in progress
 }
 
 export interface LiveOverlay {
   scores: Record<string, { home: number; away: number }>
   // player (Hebrew) -> match id -> goals in that match
   goals: Record<string, Record<string, number>>
+  // match id -> live status, present ONLY while a match is in progress (ESPN
+  // state 'in', not completed). Its absence is how the UI tells "finished" from
+  // "still being played" without leaning on a wall-clock window.
+  live?: Record<string, { clock: string | null }>
 }
 
 // ESPN/source team names -> the names used in shared/groups.ts. Intentionally a
@@ -64,6 +69,7 @@ for (const group of Object.values(GROUPS)) {
 export function mapLiveEvents(events: LiveEvent[]): LiveOverlay {
   const scores: LiveOverlay['scores'] = {}
   const goals: LiveOverlay['goals'] = {}
+  const live: NonNullable<LiveOverlay['live']> = {}
 
   for (const e of events) {
     if (!e.completed && e.state !== 'in') continue
@@ -79,6 +85,12 @@ export function mapLiveEvents(events: LiveEvent[]): LiveOverlay {
         : { home: e.homeScore, away: e.awayScore }
     }
 
+    // Only an in-progress match (not a completed one) gets a live entry — this
+    // is what stops the "חי" badge from lingering after the final whistle.
+    if (e.state === 'in' && !e.completed) {
+      live[hit.id] = { clock: e.clock ?? null }
+    }
+
     for (const name of e.scorers) {
       const hePlayer = SCORER_ALIASES[name]
       if (!hePlayer) continue
@@ -87,5 +99,5 @@ export function mapLiveEvents(events: LiveEvent[]): LiveOverlay {
     }
   }
 
-  return { scores, goals }
+  return { scores, goals, live }
 }

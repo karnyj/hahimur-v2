@@ -6,6 +6,10 @@
   text-align: center;
   position: relative;
   overflow: hidden;
+  /* A gold rule frames the band off the cream content below it — the same
+     treatment the home page gives its navy countdown band, so a dark panel
+     sitting under the nav reads as a deliberate scoreboard, not a loose stripe. */
+  border-bottom: 2px solid rgba(212, 160, 22, 0.25);
 }
 
 .match-header::before {
@@ -231,8 +235,53 @@
   background: linear-gradient(to left, transparent, rgba(212, 160, 22, 0.5));
 }
 
+/* ── Live score: the scoreboard chip charges red and breathes, so an
+   in-progress result never reads like a settled, final one ───────────── */
+.match-header__vs--live {
+  border-color: rgba(192, 39, 45, 0.42);
+  animation: live-vs-pulse 2.4s ease-in-out infinite;
+}
+
+.match-header__vs--live .match-header__final-digit {
+  color: #ffdcc8;
+  text-shadow:
+    0 0 14px rgba(255, 90, 90, 0.5),
+    0 0 42px rgba(192, 39, 45, 0.32);
+}
+
+.match-header__vs--live .match-header__vs-text {
+  color: rgba(255, 122, 122, 0.55);
+}
+
+@keyframes live-vs-pulse {
+  0%, 100% {
+    box-shadow:
+      inset 0 3px 14px rgba(0, 0, 0, 0.5),
+      0 0 24px rgba(192, 39, 45, 0.12),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+  50% {
+    box-shadow:
+      inset 0 3px 14px rgba(0, 0, 0, 0.5),
+      0 0 42px rgba(192, 39, 45, 0.3),
+      0 4px 12px rgba(0, 0, 0, 0.3);
+  }
+}
+
 .match-header__final-badge--live {
   color: #ff7a7a;
+}
+
+/* the live minute — a tabular Bebas numeral so it reads like a match clock,
+   freed from the badge's wide tracking */
+.match-header__live-clock {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.92rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  text-indent: 0;
+  font-variant-numeric: tabular-nums;
+  color: #ff9a8a;
 }
 
 .match-header__final-badge--live::before {

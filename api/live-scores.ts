@@ -15,6 +15,7 @@ interface SlimEvent {
   homeScore: number | null
   awayScore: number | null
   scorers: string[]
+  clock: string | null // ESPN displayClock, e.g. "67'" — only meaningful while live
 }
 
 interface EspnCompetitor {
@@ -30,7 +31,7 @@ interface EspnScoringPlay {
 }
 
 interface EspnEvent {
-  status?: { type?: { state?: string; completed?: boolean } }
+  status?: { displayClock?: string; type?: { state?: string; completed?: boolean } }
   competitions?: { competitors?: EspnCompetitor[]; details?: EspnScoringPlay[] }[]
 }
 
@@ -63,6 +64,7 @@ function slimEvent(e: EspnEvent): SlimEvent | null {
     homeScore: toScore(home.score),
     awayScore: toScore(away.score),
     scorers,
+    clock: e.status?.displayClock ?? null,
   }
 }
 
@@ -79,6 +81,7 @@ function fakeEvent(spec: string, scorer: string | undefined): SlimEvent | null {
     homeScore: parseInt(m[2], 10),
     awayScore: parseInt(m[3], 10),
     scorers: scorer ? [scorer] : [],
+    clock: "1'",
   }
 }
 

@@ -54,4 +54,14 @@ describe('mergeLiveResults', () => {
     expect(b.groupMatches.L.find(m => m.id === 'L1')?.scores).toEqual({ home: null, away: null })
     expect(b.playerMatchGoals?.['הארי קיין']).toEqual({ L2: 1 })
   })
+
+  it('carries live status for an in-progress match', () => {
+    const merged = mergeLiveResults(base(), { scores: { L1: { home: 1, away: 0 } }, goals: {}, live: { L1: { clock: "67'" } } })
+    expect(merged.live).toEqual({ L1: { clock: "67'" } })
+  })
+
+  it('drops live status for a match that already has a baked final score', () => {
+    const merged = mergeLiveResults(base(), { scores: {}, goals: {}, live: { L2: { clock: "90'" } } })
+    expect(merged.live).toEqual({})
+  })
 })

@@ -79,4 +79,18 @@ describe('mapLiveEvents', () => {
     ])
     expect(goals).toEqual({})
   })
+
+  it('marks an in-progress match as live with its minute', () => {
+    const { live } = mapLiveEvents([
+      ev({ home: 'England', away: 'Croatia', homeScore: 1, awayScore: 0, clock: "67'" }),
+    ])
+    expect(live).toEqual({ L1: { clock: "67'" } })
+  })
+
+  it('does not mark a completed match as live', () => {
+    const { live } = mapLiveEvents([
+      ev({ state: 'post', completed: true, home: 'England', away: 'Croatia', homeScore: 3, awayScore: 1, clock: "90'" }),
+    ])
+    expect(live).toEqual({})
+  })
 })
