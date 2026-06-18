@@ -319,9 +319,17 @@
   flex-direction: column;
   align-items: flex-start;
   gap: 2px;
+  /* margin-top owns the gap between sections — uniform regardless of whether the
+     preceding block carries its own bottom margin (e.g. the standings tables
+     don't), so every section gets the same breathing room. */
+  margin-top: 2.5rem;
   margin-bottom: 0.85rem;
   padding-right: 10px;
   border-right: 3px solid var(--gold);
+}
+
+.match-predictions > .section-heading:first-of-type {
+  margin-top: 0;
 }
 
 .section-heading__eyebrow {
@@ -366,7 +374,6 @@
   background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 1.75rem;
   border-top: 2px solid rgba(212, 160, 22, 0.65);
   box-shadow:
     0 0 0 1px rgba(212, 160, 22, 0.12),
@@ -478,7 +485,6 @@
   background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
   border-radius: 6px;
   overflow: hidden;
-  margin-bottom: 1.75rem;
   border-top: 2px solid rgba(212, 160, 22, 0.65);
   box-shadow:
     0 0 0 1px rgba(212, 160, 22, 0.12),
@@ -825,4 +831,190 @@
 
 .prediction-row--exact .prediction-row__sep {
   color: rgba(212, 160, 22, 0.45);
+}
+
+/* ── per-match leaderboard: a standings card, sorted by running total ─────── */
+.match-lb {
+  position: relative;
+  background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
+  border-radius: 6px;
+  overflow: hidden;
+  border-top: 2px solid rgba(212, 160, 22, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(212, 160, 22, 0.12),
+    0 8px 28px rgba(0, 0, 0, 0.28);
+  animation: summary-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
+}
+
+/* same fractal grain as the frequency table, so the two cards read as a set */
+.match-lb::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.match-lb__table {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.match-lb__th {
+  font-family: 'Bebas Neue', sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.09em;
+  font-size: 0.74rem;
+  color: rgba(212, 160, 22, 0.7);
+  padding: 0.55rem 0.45rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(212, 160, 22, 0.18);
+  white-space: nowrap;
+}
+
+.match-lb__th--rank { width: 1.9rem; }
+.match-lb__th--name { text-align: right; padding-right: 0.4rem; width: 99%; }
+.match-lb__th--total { color: rgba(212, 160, 22, 0.95); padding-left: 1rem; }
+
+.match-lb__row {
+  opacity: 0;
+  animation: row-in 0.35s ease forwards;
+}
+
+.match-lb__row td {
+  padding: 0.62rem 0.45rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(212, 160, 22, 0.08);
+  color: #eef2fb;
+}
+
+.match-lb__row:last-child td { border-bottom: none; }
+
+/* the standings position — a ghosted scoreboard numeral in the gutter */
+.match-lb__rank {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: rgba(239, 228, 184, 0.32);
+  text-align: center !important;
+  padding-right: 0.7rem !important;
+}
+
+.match-lb__name {
+  text-align: right !important;
+  padding-right: 0.4rem !important;
+  font-family: 'Heebo', sans-serif;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: rgba(239, 228, 184, 0.92);
+}
+
+.match-lb__pred {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  direction: ltr;
+  color: rgba(239, 228, 184, 0.6);
+}
+
+/* points won here — a compact gold pill, echoing the frequency table */
+.match-lb__pts {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+}
+
+.match-lb__pts-zero { color: rgba(239, 228, 184, 0.28); }
+
+/* the sort key, and the visual anchor on the reading-end of the row */
+.match-lb__total {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  color: var(--cream);
+  padding-left: 1rem !important;
+}
+
+.match-lb__move {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.1rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.02rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 0.16rem 0.4rem;
+  border-radius: 3px;
+}
+.match-lb__move-arrow { font-size: 0.62rem; }
+.match-lb__move--up   { color: #5fd07d; background: rgba(95, 208, 125, 0.1); }
+.match-lb__move--down { color: #e2606a; background: rgba(192, 39, 45, 0.14); }
+.match-lb__move--flat { color: rgba(239, 228, 184, 0.25); background: none; padding: 0; }
+
+/* the standings leader — gold tick on the reading edge, gilded name + total */
+.match-lb__row--leader td { background: rgba(212, 160, 22, 0.06); }
+.match-lb__row--leader .match-lb__rank {
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(212, 160, 22, 0.5);
+}
+.match-lb__row--leader .match-lb__name { color: var(--cream); }
+.match-lb__row--leader .match-lb__total {
+  color: var(--gold);
+  text-shadow: 0 0 22px rgba(212, 160, 22, 0.45);
+}
+.match-lb__row--leader .match-lb__rank::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  width: 3px;
+  height: 1.1rem;
+  margin-top: -0.1rem;
+  border-radius: 0 2px 2px 0;
+  background: var(--gold);
+}
+.match-lb__row--leader .match-lb__rank { position: relative; }
+
+/* "me": the viewer's own row — a gold spotlight band framed top and bottom by
+   gold rails, with a gold end-cap bleeding to the card edge so it can be found
+   at a glance while scanning a long table, even out of the corner of the eye. */
+.match-lb__row--me td {
+  background:
+    linear-gradient(to left,
+      rgba(212, 160, 22, 0.16) 0%,
+      rgba(212, 160, 22, 0.07) 60%,
+      rgba(212, 160, 22, 0.12) 100%);
+  border-top: 1px solid rgba(212, 160, 22, 0.55);
+  border-bottom: 1px solid rgba(212, 160, 22, 0.55);
+}
+.match-lb__row--me .match-lb__name { color: #fff; }
+/* end-cap on the reading-end edge — leaves the start edge free for the leader's
+   gold tick, so a me-row that is also the leader shows both without collision */
+.match-lb__row--me .match-lb__total {
+  color: var(--cream);
+  box-shadow: inset 3px 0 0 var(--gold);
+}
+
+/* the pennant: a solid gold chip with navy caps — the one warm spot of fill on
+   the dark card, so the eye snaps straight to it */
+.match-lb__me {
+  display: inline-block;
+  margin-inline-start: 7px;
+  padding: 1px 7px 0;
+  vertical-align: middle;
+  transform: translateY(-1px);
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  line-height: 1.55;
+  color: var(--navy);
+  background: var(--gold);
+  border-radius: 999px;
+  box-shadow: 0 1px 6px rgba(212, 160, 22, 0.4);
 }

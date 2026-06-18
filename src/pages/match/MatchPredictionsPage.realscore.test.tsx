@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { expect, test, vi } from 'vitest'
 import MatchPredictionsPage from './MatchPredictionsPage'
 import { findMatch } from './matchUtils'
@@ -52,7 +52,8 @@ test('played match scores each scoreline row against the real result', () => {
     u('כיוון', { A1: { home: 1, away: 0 } }),
     u('פספוס', { A1: { home: 0, away: 3 } }),
   ])
-  const pts = (name: string) => screen.getByText(name).closest('[data-testid="score-freq-row"]')!.querySelector('.score-freq__pts')!.textContent
+  const freq = within(screen.getByTestId('score-freq-table'))
+  const pts = (name: string) => freq.getByText(name).closest('[data-testid="score-freq-row"]')!.querySelector('.score-freq__pts')!.textContent
   expect(pts('מדויק')).toBe('4')
   expect(pts('כיוון')).toBe('2')
   expect(pts('פספוס')).toBe('0')

@@ -4,12 +4,14 @@ import type { Match, MatchScores, Score, TournamentResults } from '../../shared/
 import type { User } from '../../users/index'
 import { isLive } from '../../shared/matchOrder'
 import { useLiveResults } from '../../shared/useLiveResults'
+import { useCurrentUser } from '../../shared/useCurrentUser'
 import { GROUP_HEBREW, GROUP_MATCHES } from '../../shared/groups'
 import { calculateStandings, liveGroupScores } from '../../shared/standings'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
 import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
+import MatchLeaderboard from './MatchLeaderboard'
 import './MatchPredictionsPage.css'
 
 type Team = { iso: string; he: string }
@@ -33,6 +35,7 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
   // Live-overlaid results: a live score/scorers appear here in real time while
   // the match is in progress, then settle to the baked final when it ends.
   const results = useLiveResults()
+  const { me, currentUser } = useCurrentUser()
 
   if (!match || !home || !away) {
     return (
@@ -56,6 +59,9 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
   // in via useLiveResults — the two teams playing are highlighted.
   const groupLetter = match.id[0]
   const { standings } = calculateStandings(GROUP_MATCHES[groupLetter] ?? [], liveGroupScores(results, groupLetter))
+  // The viewer's own predicted final table for this group, shown beneath the
+  // live one so they can compare their call to how it's actually unfolding.
+  const myGroupTable = currentUser?.groupTables[groupLetter]
 
   return (
     <>
@@ -78,6 +84,36 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
           </div>
         )}
 
+        {users.length > 0 && (
+          <>
+            <header className="section-heading" dir="rtl">
+              <span className="section-heading__eyebrow">דירוג</span>
+              <h2 className="section-heading__title">טבלת המנחשים</h2>
+            </header>
+            <MatchLeaderboard matchId={match.id} users={users} results={results} me={me} />
+          </>
+        )}
+
+        <header className="section-heading" dir="rtl">
+          <span className="section-heading__eyebrow">בית {GROUP_HEBREW[groupLetter]}</span>
+          <h2 className="section-heading__title">טבלת הבית</h2>
+        </header>
+        <div data-testid="live-group-table">
+          <StandingsTable standings={standings} highlightTeams={[match.homeTeam, match.awayTeam]} />
+        </div>
+
+        {myGroupTable && (
+          <>
+            <header className="section-heading" dir="rtl">
+              <span className="section-heading__eyebrow">התחזית שלך</span>
+              <h2 className="section-heading__title">טבלת הבית שלי</h2>
+            </header>
+            <div data-testid="my-group-table">
+              <StandingsTable standings={myGroupTable} highlightTeams={[match.homeTeam, match.awayTeam]} />
+            </div>
+          </>
+        )}
+
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">ניחושים</span>
           <h2 className="section-heading__title">סך הכל</h2>
@@ -91,14 +127,6 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
         {users.length === 0
           ? <p className="match-predictions__empty">אין תחזיות למשחק זה</p>
           : <ScoreFrequencyTable matchId={match.id} users={users} actualScore={actualScore} />}
-
-        <header className="section-heading" dir="rtl">
-          <span className="section-heading__eyebrow">בית {GROUP_HEBREW[groupLetter]}</span>
-          <h2 className="section-heading__title">טבלת הבית</h2>
-        </header>
-        <div data-testid="live-group-table">
-          <StandingsTable standings={standings} highlightTeams={[match.homeTeam, match.awayTeam]} />
-        </div>
       </div>
     </>
   )
