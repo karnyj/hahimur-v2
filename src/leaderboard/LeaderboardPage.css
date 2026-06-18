@@ -1627,8 +1627,47 @@
 
 @media (max-width: 639px) {
   .lb-prob { padding: 0 0.5rem; }
-  .wp-name { font-size: 13px; }
-  .wp-td { padding: 7px 6px; }
-  .wp-td--win { min-width: 120px; }
-  .wp-point-label { flex-basis: 84px; }
+
+  /* Fit the whole table inside the phone width instead of scrolling sideways.
+     A fixed layout also keeps the tap-to-open detail row (colSpan) exactly as
+     wide as the screen, so its card wraps cleanly instead of overflowing. */
+  .lb-prob-scroll { overflow-x: visible; }
+  .wp-table { table-layout: fixed; }
+
+  .wp-th {
+    white-space: normal;
+    vertical-align: bottom;
+    font-size: 10.5px;
+    padding: 0 3px 8px;
+    line-height: 1.25;
+  }
+  .wp-td { padding: 8px 3px; }
+
+  .wp-th--rank,
+  .wp-td--rank { width: 22px; }
+  .wp-td--rank { font-size: 15px; }
+
+  .wp-td--name { white-space: normal; overflow-wrap: anywhere; }
+  .wp-name { font-size: 12.5px; }
+  .wp-flag { display: inline-block; margin-top: 2px; }
+  .wp-chevron { margin-inline-start: 3px; }
+
+  .wp-th--win,
+  .wp-td--win { width: auto; min-width: 0; }
+  .wp-bar-wrap { height: 19px; }
+  .wp-bar-pct { font-size: 12px; }
+
+  .wp-th--exp,
+  .wp-td--exp { width: 42px; }
+  .wp-exp { font-size: 15px; }
+  .wp-exp-arrow { margin-inline-start: 1px; }
+
+  .wp-th--delta,
+  .wp-td--delta { width: 46px; font-size: 12px; }
+
+  /* The expand-on-tap detail reads far better stacked than as a cramped
+     label/value two-column grid on a narrow screen. */
+  .wp-detail-card { padding: 11px 12px; }
+  .wp-points li { flex-direction: column; align-items: flex-start; gap: 1px; }
+  .wp-point-label { flex: none; font-size: 11px; }
 }

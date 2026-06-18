@@ -200,8 +200,8 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
               <th className="wp-th wp-th--rank">#</th>
               <th className="wp-th wp-th--name">מהמר</th>
               <th className="wp-th wp-th--win">סיכוי זכייה</th>
-              <th className="wp-th wp-th--exp">מקום&nbsp;צפוי</th>
-              <th className="wp-th wp-th--delta">שינוי&nbsp;%</th>
+              <th className="wp-th wp-th--exp">מקום צפוי</th>
+              <th className="wp-th wp-th--delta">שינוי %</th>
             </tr>
           </thead>
           <tbody>
