@@ -111,7 +111,7 @@ function NameCell({ label, isMe }: { label: string; isMe: boolean }) {
   )
 }
 
-export default function LeaderboardTable({ rows, me, trajectories }: { rows: LeaderboardRow[]; me?: string; trajectories?: Record<string, number[]> }) {
+export default function LeaderboardTable({ rows, me, trajectories, hits }: { rows: LeaderboardRow[]; me?: string; trajectories?: Record<string, number[]>; hits?: Record<string, { pgiya: number; tzelifa: number }> }) {
   // mobile: tap a bettor to reveal their rank trajectory beneath their row
   const [openLabel, setOpenLabel] = useState<string | null>(null)
   const activeRounds = ROUNDS.filter(({ key }) =>
@@ -163,7 +163,7 @@ export default function LeaderboardTable({ rows, me, trajectories }: { rows: Lea
       <tr className="lb-traj-row">
         <td className="lb-td lb-traj-cell" colSpan={colSpan} data-testid={`lb-traj-${row.label}`}>
           <PicksPanel row={row} />
-          {trajectory && <RankTrajectoryChart ranks={trajectory} />}
+          {trajectory && <RankTrajectoryChart ranks={trajectory} hits={hits?.[row.label]} />}
         </td>
       </tr>
     )

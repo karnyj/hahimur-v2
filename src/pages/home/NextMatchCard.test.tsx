@@ -32,6 +32,13 @@ test('home team comes first in DOM so it renders on the right in RTL', () => {
   expect(names).toEqual(['דרום קוריאה', 'צ׳כיה']) // A2: South Korea (home) vs Czech Republic (away)
 })
 
+test('marks a match in progress with a live indicator instead of the kickoff time', () => {
+  // A2 kicks off 12 June 05:00 IST (02:00 UTC); an hour later it's in progress.
+  const live = new Date('2026-06-12T03:00:00Z')
+  render(<NextMatchCard users={users} now={live} matches={MATCHES} />)
+  expect(screen.getByTestId('live-indicator')).toHaveTextContent('משחק חי')
+})
+
 test('shows the most common prediction', () => {
   render(<NextMatchCard users={users} now={NOW} matches={MATCHES} />)
   expect(screen.getByTestId('consensus')).toHaveTextContent('1–2')

@@ -30,18 +30,20 @@ export default function MatchHeader({ match, home, away, homeScore, awayScore, o
   const showLiveScore = !!realScore && !!liveScore
   return (
     <div className="match-header">
-      {/* Step through matches in kickoff order. Previous sits on the right
-          (›, backwards), next on the left (‹, forwards). Hidden at the edges. */}
-      {prevId && (
-        <a className="match-header__nav match-header__nav--prev" href={`/matches/${prevId.toLowerCase()}`} aria-label="המשחק הקודם">›</a>
-      )}
-      {nextId && (
-        <a className="match-header__nav match-header__nav--next" href={`/matches/${nextId.toLowerCase()}`} aria-label="המשחק הבא">‹</a>
-      )}
-
       <a className="match-header__group-badge" href={`/stats/groups/${match.id[0].toLowerCase()}`}>בית {GROUPS[match.id[0]]?.he} · משחק {match.id[1]} ›</a>
 
       <div className="match-header__teams">
+        {/* Step through matches in kickoff order. Previous sits on the right
+            (›, backwards), next on the left (‹, forwards). They're anchored to
+            the teams row and lifted above the flags so they never sit on top of
+            a flag, which matters most on a narrow phone. Hidden at the edges. */}
+        {prevId && (
+          <a className="match-header__nav match-header__nav--prev" href={`/matches/${prevId.toLowerCase()}`} aria-label="המשחק הקודם">›</a>
+        )}
+        {nextId && (
+          <a className="match-header__nav match-header__nav--next" href={`/matches/${nextId.toLowerCase()}`} aria-label="המשחק הבא">‹</a>
+        )}
+
         <div className="match-team">
           <span className={`fi fi-${away.iso} match-team__flag`} />
           <span className="match-team__name">{away.he}</span>

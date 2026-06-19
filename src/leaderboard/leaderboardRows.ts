@@ -121,6 +121,14 @@ export function rankTrajectories(users: User[], results: TournamentResults): Rec
   return Object.fromEntries(users.map(u => [u.label, snapshots.map(s => s[u.label])]))
 }
 
+// Each bettor's hit tally across all played group matches — pgiya (correct
+// direction) and tzelifa (exact score) — matching the trajectory's scope, so
+// the chart caption can summarise accuracy alongside the rank line.
+export function hitStats(users: User[], results: TournamentResults): Record<string, { pgiya: number; tzelifa: number }> {
+  const rows = rowsForMatches(users, results, playedGroupMatchesChrono(results), false)
+  return Object.fromEntries(rows.map(r => [r.label, { pgiya: r.pgiyaCount, tzelifa: r.tzelifaCount }]))
+}
+
 type MatchResult = TournamentResults['groupMatches'][string][number]
 
 export function buildGroupScopeRows(users: User[], results: TournamentResults, group: GroupLetter): GroupScopeRow[] {

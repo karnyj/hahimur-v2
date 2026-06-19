@@ -56,6 +56,52 @@
   color: var(--ink);
 }
 
+/* In-progress match: a pulsing red "live" badge replaces the kickoff time,
+   echoing the match-page header's live treatment. */
+.next-match--live {
+  border-color: rgba(192, 39, 45, 0.42);
+}
+
+.next-match__live {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+
+.next-match__live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: var(--red);
+}
+
+.next-match__live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(192, 39, 45, 0.8);
+  animation: next-match-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes next-match-live-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%      { opacity: 0.45; transform: scale(0.78); }
+}
+
+.next-match__live-time {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .next-match__live-dot { animation: none; }
+}
+
 .next-match__score-block {
   display: flex;
   flex-direction: column;

@@ -202,6 +202,250 @@ export function currentResults(played: PredictionsState, playerGoals?: Record<st
   }
 }
 
+// ---- expected points for a single bettor ----------------------------------
+// Average the bettor's points over `n` simulated completions of the tournament,
+// starting from a fixed `played` state. Reseeding to the same `seed` for every
+// call makes the draws for all *unfixed* matches identical across calls, so two
+// `played` states that differ only in a few matches can be compared as a paired
+// (common-random-numbers) experiment — tiny but real differences survive while
+// the shared noise cancels. Per-stage means are returned so callers can explain
+// *where* a difference comes from (group / cross / each knockout round).
+export interface ExpectedBreakdown {
+  total: number
+  group: { matchPoints: number; placePoints: number; advancementPoints: number; total: number }
+  r32: number; r16: number; qf: number; sf: number; third: number; final: number; goldenBoot: number
+}
+
+export function expectedUserPoints(
+  user: User,
+  played: PredictionsState,
+  n: number,
+  seed: number,
+  realGoals: Record<string, number> = {},
+): ExpectedBreakdown {
+  reseed(seed)
+  const realGames = Object.keys(realGoals).length ? realGamesByTeam(played) : new Map<string, number>()
+  let total = 0, gm = 0, gp = 0, ga = 0, gtot = 0, r32 = 0, r16 = 0, qf = 0, sf = 0, third = 0, final = 0, gb = 0
+  for (let i = 0; i < n; i++) {
+    const res = simulateTournament(played, realGoals, realGames)
+    const b = computeUserPoints(user, res)
+    total += b.total
+    gm += b.group.matchPoints; gp += b.group.placePoints; ga += b.group.advancementPoints; gtot += b.group.total
+    r32 += b.r32.total; r16 += b.r16.total; qf += b.qf.total; sf += b.sf.total
+    third += b.third.total; final += b.final.total; gb += b.goldenBoot.total
+  }
+  const d = (x: number) => x / n
+  return {
+    total: d(total),
+    group: { matchPoints: d(gm), placePoints: d(gp), advancementPoints: d(ga), total: d(gtot) },
+    r32: d(r32), r16: d(r16), qf: d(qf), sf: d(sf), third: d(third), final: d(final), goldenBoot: d(gb),
+  }
+}
+
+// ---- competitive view for one bettor --------------------------------------
+// The pool is a race against the other 26 forms, so "what's best for me" is a
+// *competitive* question, not a point-count one: an outcome can earn me points
+// yet still hurt me if it earns a close rival more. For a fixed `played` state
+// we simulate the rest of the tournament and, each run, score the whole field
+// to read off my finishing rank and whether I top it — then average. Per-rival
+// expected points + "beat rate" (how often they finish above me) let the caller
+// name the threat. Common random numbers (same seed) make two `played` states
+// comparable as a paired experiment.
+export interface RivalStat { label: string; expPoints: number; beatRate: number }
+export interface CompetitiveEval {
+  winProb: number   // P(I'm the (shared) leader of the whole field)
+  expRank: number   // expected 1-based finish (lower is better)
+  expPoints: number
+  rivals: RivalStat[]
+}
+
+export function competitiveOutcome(
+  viewerLabel: string,
+  played: PredictionsState,
+  n: number,
+  seed: number,
+  realGoals: Record<string, number> = {},
+): CompetitiveEval {
+  reseed(seed)
+  const realGames = Object.keys(realGoals).length ? realGamesByTeam(played) : new Map<string, number>()
+  const others = USERS.filter(u => u.label !== viewerLabel)
+  const rivalPts = new Map<string, number>(others.map(u => [u.label, 0]))
+  const rivalBeat = new Map<string, number>(others.map(u => [u.label, 0]))
+  let winShare = 0, sumRank = 0, sumPts = 0
+
+  for (let i = 0; i < n; i++) {
+    const res = simulateTournament(played, realGoals, realGames)
+    const scored = USERS.map(u => ({ label: u.label, pts: computeUserPoints(u, res).total }))
+    const mine = scored.find(s => s.label === viewerLabel)?.pts ?? 0
+    let above = 0, top = mine, winners = 1
+    for (const s of scored) {
+      if (s.label === viewerLabel) continue
+      if (s.pts > mine) above++
+      if (s.pts > top) { top = s.pts; winners = 1 }
+      else if (s.pts === top) winners++
+      rivalPts.set(s.label, rivalPts.get(s.label)! + s.pts)
+      if (s.pts > mine) rivalBeat.set(s.label, rivalBeat.get(s.label)! + 1)
+    }
+    sumRank += above + 1
+    sumPts += mine
+    if (mine === top) winShare += 1 / winners
+  }
+
+  return {
+    winProb: winShare / n,
+    expRank: sumRank / n,
+    expPoints: sumPts / n,
+    rivals: others.map(u => ({
+      label: u.label,
+      expPoints: rivalPts.get(u.label)! / n,
+      beatRate: rivalBeat.get(u.label)! / n,
+    })),
+  }
+}
+
+// ---- competitive scenario: everything in one pass --------------------------
+// A superset of competitiveOutcome used by the group "what's best for you" card.
+// On top of the competitive read (rank / win-prob / per-rival threat) it returns
+// the viewer's expected points broken down by stage (a secondary "points" read)
+// and, for each `trackTeam` the viewer backed deep, P(it reaches the stage they
+// predicted for it). That reach probability is the human-readable proxy for
+// eligibility: the simulation already scores the cross exactly (a knockout match
+// only pays when the predicted matchup materialises — see koMatchPoints), so this
+// just *explains* where a finish helps without re-deriving the bracket.
+export interface ScenarioReach { team: string; rank: number; label: string; prob: number }
+export interface CompetitiveScenarioEval {
+  winProb: number
+  expRank: number
+  expPoints: number
+  rivals: RivalStat[]
+  stages: ExpectedBreakdown
+  reach: ScenarioReach[]
+}
+
+function roundTeamSet(matches: KnockoutMatch[]): Set<string> {
+  const s = new Set<string>()
+  for (const m of matches) { if (m.home) s.add(m.home); if (m.away) s.add(m.away) }
+  return s
+}
+
+// Did `team` reach the depth implied by `rank` (deepestStage ranks) in this run?
+// Ranks 1-2 (group/best-third) just mean "made the round of 32".
+function teamReachedStage(res: TournamentResults, team: string, rank: number): boolean {
+  const ko = res.knockoutStages
+  if (rank >= 7) return res.champion === team
+  if (rank === 6) return roundTeamSet(ko.final).has(team)
+  if (rank === 5) return roundTeamSet(ko.sf).has(team)
+  if (rank === 4) return roundTeamSet(ko.qf).has(team)
+  if (rank === 3) return roundTeamSet(ko.r16).has(team)
+  return roundTeamSet(ko.r32).has(team)
+}
+
+export function competitiveScenario(
+  viewer: User,
+  played: PredictionsState,
+  n: number,
+  seed: number,
+  realGoals: Record<string, number> = {},
+  trackTeams: string[] = [],
+): CompetitiveScenarioEval {
+  reseed(seed)
+  const realGames = Object.keys(realGoals).length ? realGamesByTeam(played) : new Map<string, number>()
+  const others = USERS.filter(u => u.label !== viewer.label)
+  const rivalPts = new Map<string, number>(others.map(u => [u.label, 0]))
+  const rivalBeat = new Map<string, number>(others.map(u => [u.label, 0]))
+  let winShare = 0, sumRank = 0, sumPts = 0
+  let gm = 0, gp = 0, ga = 0, gtot = 0, r32 = 0, r16 = 0, qf = 0, sf = 0, third = 0, final = 0, gb = 0
+
+  const tracked = trackTeams
+    .map(team => ({ team, ...deepestStage(viewer, team) }))
+    .filter(t => t.rank > 0)
+  const reachCount = new Map<string, number>(tracked.map(t => [t.team, 0]))
+
+  for (let i = 0; i < n; i++) {
+    const res = simulateTournament(played, realGoals, realGames)
+    const meB = computeUserPoints(viewer, res)
+    const mine = meB.total
+    gm += meB.group.matchPoints; gp += meB.group.placePoints; ga += meB.group.advancementPoints; gtot += meB.group.total
+    r32 += meB.r32.total; r16 += meB.r16.total; qf += meB.qf.total; sf += meB.sf.total
+    third += meB.third.total; final += meB.final.total; gb += meB.goldenBoot.total
+
+    let above = 0, top = mine, winners = 1
+    for (const u of others) {
+      const pts = computeUserPoints(u, res).total
+      if (pts > mine) above++
+      if (pts > top) { top = pts; winners = 1 }
+      else if (pts === top) winners++
+      rivalPts.set(u.label, rivalPts.get(u.label)! + pts)
+      if (pts > mine) rivalBeat.set(u.label, rivalBeat.get(u.label)! + 1)
+    }
+    sumRank += above + 1
+    sumPts += mine
+    if (mine === top) winShare += 1 / winners
+
+    for (const t of tracked) if (teamReachedStage(res, t.team, t.rank)) reachCount.set(t.team, reachCount.get(t.team)! + 1)
+  }
+
+  const d = (x: number) => x / n
+  return {
+    winProb: winShare / n,
+    expRank: sumRank / n,
+    expPoints: sumPts / n,
+    rivals: others.map(u => ({ label: u.label, expPoints: rivalPts.get(u.label)! / n, beatRate: rivalBeat.get(u.label)! / n })),
+    stages: {
+      total: d(sumPts),
+      group: { matchPoints: d(gm), placePoints: d(gp), advancementPoints: d(ga), total: d(gtot) },
+      r32: d(r32), r16: d(r16), qf: d(qf), sf: d(sf), third: d(third), final: d(final), goldenBoot: d(gb),
+    },
+    reach: tracked.map(t => ({ team: t.team, rank: t.rank, label: t.label, prob: reachCount.get(t.team)! / n })),
+  }
+}
+
+// ---- viewer-only scenario (fast) ------------------------------------------
+// Like competitiveScenario but WITHOUT scoring the rest of the field — just the
+// viewer's own expected points (broken down by stage) and, for each tracked team
+// they backed deep, P(it reaches the stage they predicted). Dropping the 26
+// rival score computations per simulation makes it dramatically cheaper, so the
+// match card can answer "what's best for *my* bet" fast.
+export interface ViewerScenarioEval {
+  stages: ExpectedBreakdown
+  reach: ScenarioReach[]
+}
+
+export function viewerScenario(
+  user: User,
+  played: PredictionsState,
+  n: number,
+  seed: number,
+  realGoals: Record<string, number> = {},
+  trackTeams: string[] = [],
+): ViewerScenarioEval {
+  reseed(seed)
+  const realGames = Object.keys(realGoals).length ? realGamesByTeam(played) : new Map<string, number>()
+  const tracked = trackTeams
+    .map(team => ({ team, ...deepestStage(user, team) }))
+    .filter(t => t.rank > 0)
+  const reachCount = new Map<string, number>(tracked.map(t => [t.team, 0]))
+  let total = 0, gm = 0, gp = 0, ga = 0, gtot = 0, r32 = 0, r16 = 0, qf = 0, sf = 0, third = 0, final = 0, gb = 0
+  for (let i = 0; i < n; i++) {
+    const res = simulateTournament(played, realGoals, realGames)
+    const b = computeUserPoints(user, res)
+    total += b.total
+    gm += b.group.matchPoints; gp += b.group.placePoints; ga += b.group.advancementPoints; gtot += b.group.total
+    r32 += b.r32.total; r16 += b.r16.total; qf += b.qf.total; sf += b.sf.total
+    third += b.third.total; final += b.final.total; gb += b.goldenBoot.total
+    for (const t of tracked) if (teamReachedStage(res, t.team, t.rank)) reachCount.set(t.team, reachCount.get(t.team)! + 1)
+  }
+  const d = (x: number) => x / n
+  return {
+    stages: {
+      total: d(total),
+      group: { matchPoints: d(gm), placePoints: d(gp), advancementPoints: d(ga), total: d(gtot) },
+      r32: d(r32), r16: d(r16), qf: d(qf), sf: d(sf), third: d(third), final: d(final), goldenBoot: d(gb),
+    },
+    reach: tracked.map(t => ({ team: t.team, rank: t.rank, label: t.label, prob: reachCount.get(t.team)! / n })),
+  }
+}
+
 // ---- Monte Carlo aggregation ----------------------------------------------
 export const STAGE_KEYS = ['group', 'r32', 'r16', 'qf', 'sf', 'third', 'final', 'gb'] as const
 export type StageKey = typeof STAGE_KEYS[number]
@@ -311,7 +555,7 @@ function teamSignals(played: PredictionsState): Map<string, 'won' | 'lost' | 'dr
   return map
 }
 
-function deepestStage(u: typeof USERS[number], team: string): { rank: number; label: string } {
+export function deepestStage(u: typeof USERS[number], team: string): { rank: number; label: string } {
   if (u.predictedChampion === team) return { rank: 7, label: 'אלופה' }
   if ((u.predictedFinalTeams ?? []).includes(team)) return { rank: 6, label: 'גמר' }
   if ((u.predictedSFTeams ?? []).includes(team)) return { rank: 5, label: 'חצי גמר' }
@@ -353,39 +597,60 @@ function explain(u: typeof USERS[number], winPct: number, avgWin: number, signal
   return `${lead} — ${parts.join('; ')}`
 }
 
-// Plain-Hebrew "why" for the win% move after a played game. Covers every
-// scenario that matters to this bettor: a backed team winning, losing but still
-// alive, or being knocked out (real eliminations, not the sims) — and the same
-// for draws. With no stake the move is purely relative to rivals. Keyed by label.
+// Plain-Hebrew "why" for the win% move after a played game. Each clause names
+// the scoreline and a short forward read on the bettor's predicted finish ("the
+// target you called"), keyed off whether that team is still alive. When `delta`
+// is given we add one short line only when the move is counter-intuitive — your
+// pick won yet you slipped (rivals on the same team gained more), or your pick
+// stumbled yet you rose (a rival's deeper pick fell). Keyed by label.
 export function explainMatchForUser(
   u: User,
   home: string, away: string,
   homeScore: number, awayScore: number,
   eliminations?: Map<string, TeamExit>,
+  delta?: number,
 ): string {
   const isOut = (team: string) => !!eliminations?.has(team)
   const draw = homeScore === awayScore
   const winner = draw ? '' : homeScore > awayScore ? home : away
 
   // One clause per team the bettor had backed, ordered deepest pick first so the
-  // most meaningful swing (e.g. their champion) leads.
+  // most meaningful swing (e.g. their champion) leads. The base outcome wording
+  // is kept intact and the score + a short forward note are appended after it.
   const clause = (team: string): { rank: number; text: string } | null => {
     const d = deepestStage(u, team)
     if (d.rank === 0) return null
     const name = `${he(team)} (${d.label})`
+    const tg = team === home ? homeScore : awayScore
+    const og = team === home ? awayScore : homeScore
+    const score = `${tg}–${og}`
+
     if (draw) {
-      return { rank: d.rank, text: isOut(team) ? `${name} נפלטה בתיקו` : `${name} סיימה בתיקו ועדיין בחיים` }
+      if (isOut(team)) return { rank: d.rank, text: `${name} נפלטה בתיקו (${score}) — היעד שחזית ירד מהפרק` }
+      return { rank: d.rank, text: `${name} סיימה בתיקו ועדיין בחיים (${score}) — היעד שחזית נשמר` }
     }
-    if (team === winner) return { rank: d.rank, text: `${name} ניצחה` }
-    return { rank: d.rank, text: isOut(team) ? `${name} הודחה מהטורניר` : `${name} הפסידה אך עדיין בחיים` }
+    if (team === winner) {
+      return { rank: d.rank, text: `${name} ניצחה ${score} — מתקרבת ליעד שחזית` }
+    }
+    if (isOut(team)) return { rank: d.rank, text: `${name} הודחה מהטורניר (${score}) — היעד שחזית ירד מהפרק` }
+    return { rank: d.rank, text: `${name} הפסידה אך עדיין בחיים (${score}) — היעד שחזית עדיין פתוח` }
   }
 
   const clauses = [clause(home), clause(away)]
     .filter((c): c is { rank: number; text: string } => c !== null)
     .sort((a, b) => b.rank - a.rank)
 
-  if (!clauses.length) return 'לא בחרת קבוצה מהמשחק — השינוי נובע מההשפעה על היריבים'
-  return `מהבחירות שלך: ${clauses.map(c => c.text).join(' · ')}`
+  if (!clauses.length) return 'לא בחרת קבוצה מהמשחק — השינוי נובע מהיריבים שבחרו אותן'
+
+  // The surprising-move note: only when the win% direction fights the result of
+  // your own picks, since this is a "first among all bettors" race.
+  const backedWinner = !draw && deepestStage(u, winner).rank > 0
+  let note = ''
+  if (delta !== undefined && Math.abs(delta) >= 0.1) {
+    if (delta > 0 && !backedWinner) note = ' · העלייה הגיעה מנפילת מתחרים'
+    else if (delta < 0 && backedWinner) note = ' · למרות הניצחון, מתחרים שבחרו אותה הרוויחו יותר'
+  }
+  return `מהבחירות שלך: ${clauses.map(c => c.text).join(' · ')}${note}`
 }
 
 export function explainLastMatch(
@@ -393,9 +658,10 @@ export function explainLastMatch(
   home: string, away: string,
   homeScore: number, awayScore: number,
   eliminations?: Map<string, TeamExit>,
+  delta?: number,
 ): string {
   const u = USERS.find(x => x.label === label)
-  return u ? explainMatchForUser(u, home, away, homeScore, awayScore, eliminations) : ''
+  return u ? explainMatchForUser(u, home, away, homeScore, awayScore, eliminations, delta) : ''
 }
 
 // ---- bracket survival vs reality ------------------------------------------

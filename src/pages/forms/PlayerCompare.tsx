@@ -272,7 +272,7 @@ export default function PlayerCompare({ userA, userB, allUsers }: Props) {
           onClick={() => toggleChip('h2h')}
           aria-expanded={openChip === 'h2h'}
         >
-          <span className="pc-chip__num pc-chip__score">
+          <span className="pc-chip__num pc-chip__score" dir="ltr">
             <span>{tally.a}</span>
             <span className="pc-chip__dash">-</span>
             <span>{tally.b}</span>
@@ -286,7 +286,7 @@ export default function PlayerCompare({ userA, userB, allUsers }: Props) {
           explain="משחקים ששניכם ניחשתם בהם תוצאה מדויקת זהה. כולל משחקי נוקאאוט רק כששניכם צופים בהם אותו מפגש."
           empty="אין ניחושים זהים"
           rows={identicalRows}
-          renderMeta={r => <span className="pc-dl__val">{fmtScore(r.a)}</span>}
+          renderMeta={r => <span className="pc-dl__val" dir="ltr">{fmtScore(r.a)}</span>}
         />
       )}
 
@@ -452,7 +452,7 @@ export default function PlayerCompare({ userA, userB, allUsers }: Props) {
             {visible.map(r => (
               <div key={r.id} className={`pc-row${r.differ ? ' pc-row--differ' : ''}`}>
                 <div className={`pc-row__bet${r.finished && r.winner === 'a' ? ' pc-row__bet--win' : ''}`}>
-                  <span className="pc-row__score">{fmtScore(r.a)}</span>
+                  <span className="pc-row__score" dir="ltr">{fmtScore(r.a)}</span>
                   {r.finished && (
                     <span className={`pc-verdict pc-verdict--${r.aOutcome}`}>
                       {OUTCOME_LABEL[r.aOutcome!]} {fmtPoints(r.aPoints!)}
@@ -466,7 +466,7 @@ export default function PlayerCompare({ userA, userB, allUsers }: Props) {
                   {r.finished && <span className="pc-row__actual" dir="ltr">{r.actual!.home}-{r.actual!.away}</span>}
                 </div>
                 <div className={`pc-row__bet${r.finished && r.winner === 'b' ? ' pc-row__bet--win' : ''}`}>
-                  <span className="pc-row__score">{fmtScore(r.b)}</span>
+                  <span className="pc-row__score" dir="ltr">{fmtScore(r.b)}</span>
                   {r.finished && (
                     <span className={`pc-verdict pc-verdict--${r.bOutcome}`}>
                       {OUTCOME_LABEL[r.bOutcome!]} {fmtPoints(r.bPoints!)}

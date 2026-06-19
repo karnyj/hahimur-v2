@@ -20,6 +20,7 @@ export default function NextMatchCard({ users, now = new Date(), matches = SCORE
           match={match}
           isNext={match.matchDate === next.matchDate && match.kickoffIST === next.kickoffIST}
           currentUser={currentUser}
+          now={now}
         />
       ))}
     </>

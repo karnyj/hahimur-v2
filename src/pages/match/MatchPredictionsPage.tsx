@@ -13,6 +13,7 @@ import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
 import MatchLeaderboard from './MatchLeaderboard'
+import MatchRecommendation from './MatchRecommendation'
 import './MatchPredictionsPage.css'
 
 type Team = { iso: string; he: string }
@@ -99,6 +100,13 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
             <MatchLeaderboard matchId={match.id} users={users} results={results} me={me} />
           </>
         )}
+
+        <MatchRecommendation
+          matchId={match.id}
+          currentUser={currentUser}
+          results={results}
+          decided={!!realScore && !liveScore}
+        />
 
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">בית {GROUP_HEBREW[groupLetter]}</span>

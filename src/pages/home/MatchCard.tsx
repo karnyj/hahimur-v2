@@ -2,6 +2,7 @@ import { GROUPS, TEAMS } from '../../shared/groups'
 import type { GroupMatch, MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
 import { singleMatchOutcome, singleMatchPoints, OUTCOME_LABEL, POINTS_PER_GOAL } from '../../leaderboard/points'
+import { isLive } from '../../shared/matchOrder'
 import { topPrediction } from './nextMatch'
 import './MatchCard.css'
 
@@ -15,9 +16,11 @@ type Props = {
   result?: MatchScores
   // player → match ID → goals, so we can credit the user's picked scorer for this match.
   playerMatchGoals?: Record<string, Record<string, number>>
+  // "Now" for deciding whether the match is in progress; injectable for tests.
+  now?: Date
 }
 
-export default function MatchCard({ users, match, currentUser, isNext = false, result, playerMatchGoals = {} }: Props) {
+export default function MatchCard({ users, match, currentUser, isNext = false, result, playerMatchGoals = {}, now = new Date() }: Props) {
   const home = TEAMS[match.homeTeam]
   const away = TEAMS[match.awayTeam]
   const consensus = topPrediction(users, match.id)
@@ -26,9 +29,11 @@ export default function MatchCard({ users, match, currentUser, isNext = false, r
   const points = result && mine ? singleMatchPoints(match.id, mine, result) : 0
   const scorerGoals = currentUser ? playerMatchGoals[currentUser.topGoalscorer]?.[match.id] ?? 0 : 0
   const scorerPoints = scorerGoals * POINTS_PER_GOAL
+  // The match has kicked off but no final score is in yet: it's in progress.
+  const live = !result && isLive(match, now)
 
   return (
-    <div dir="rtl" className="next-match" data-testid="next-match">
+    <div dir="rtl" className={`next-match${live ? ' next-match--live' : ''}`} data-testid="next-match">
       <div className="next-match__heading">{isNext ? 'המשחק הבא · ' : ''}בית {GROUPS[match.id[0]].he}</div>
 
       <div className="next-match__teams">
@@ -42,6 +47,14 @@ export default function MatchCard({ users, match, currentUser, isNext = false, r
             <div className="next-match__score" data-testid="match-result" dir="ltr">
               {result.away}–{result.home}
             </div>
+          </div>
+        ) : live ? (
+          <div className="next-match__live" data-testid="live-indicator">
+            <span className="next-match__live-badge">
+              <span className="next-match__live-dot" />
+              משחק חי
+            </span>
+            <span className="next-match__live-time">{match.kickoffIST}</span>
           </div>
         ) : (
           <div className="next-match__kickoff">

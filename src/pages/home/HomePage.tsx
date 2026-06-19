@@ -3,6 +3,7 @@ import Countdown from '../../shared/Countdown'
 import { useCurrentUser } from '../../shared/useCurrentUser'
 import HomeFeed from './HomeFeed'
 import LeaderboardGlance from './LeaderboardGlance'
+import RivalryEntry from './RivalryEntry'
 import { USERS } from '../../users/index'
 import { tournamentResults } from '../../tournament-results'
 import { useLiveResults } from '../../shared/useLiveResults'
@@ -20,6 +21,7 @@ export default function HomePage() {
     <PageLayout title="ההימור 2026">
       <Countdown targetDate={FIRST_MATCH} label="לשריקת הפתיחה" />
       <LeaderboardGlance users={USERS} results={liveResults} currentUser={currentUser} />
+      <RivalryEntry users={USERS} results={liveResults} />
       <HomeFeed users={USERS} currentUser={currentUser} playerMatchGoals={tournamentResults.playerMatchGoals} />
 
       <main dir="rtl" style={{ maxWidth: '700px', margin: '0 auto', padding: '3rem 1.5rem', fontSize: '1.1rem', lineHeight: '1.9' }}>

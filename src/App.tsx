@@ -4,6 +4,7 @@ import FormsPage from './pages/forms/FormsPage'
 import HomePage from './pages/home/HomePage'
 import MatchPredictionsPage from './pages/match/MatchPredictionsPage'
 import ResultsPage from './pages/results/ResultsPage'
+import RivalryPage from './pages/rivalry/RivalryPage'
 import StatsPage from './pages/stats/StatsPage'
 import GroupStatsPage from './pages/stats/group/GroupStatsPage'
 import type { GroupLetter } from './shared/groups'
@@ -35,6 +36,7 @@ export default function App() {
        pathname === '/stats'                             ? <StatsPage users={USERS} /> :
        pathname === '/forms'                              ? <FormsPage users={USERS} usersSorted={USERS_SORTED} /> :
        pathname === '/updates'                           ? <UpdatesPage /> :
+       pathname === '/rivalry'                            ? <RivalryPage /> :
        pathname === '/admin'                            ? <AdminPage /> :
        <HomePage />}
     </>

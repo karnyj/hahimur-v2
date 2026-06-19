@@ -10,7 +10,7 @@ const H = 90
 const PAD_X = 14
 const PAD_Y = 16
 
-export default function RankTrajectoryChart({ ranks }: { ranks: number[] }) {
+export default function RankTrajectoryChart({ ranks, hits }: { ranks: number[]; hits?: { pgiya: number; tzelifa: number } }) {
   const best = Math.min(...ranks)
   const worst = Math.max(...ranks)
   const current = ranks[ranks.length - 1]
@@ -85,6 +85,18 @@ export default function RankTrajectoryChart({ ranks }: { ranks: number[] }) {
           <dd className="lb-traj-stat-num">{current}</dd>
           <dt className="lb-traj-stat-label">עכשיו</dt>
         </div>
+        {hits && (
+          <>
+            <div className="lb-traj-stat">
+              <dd className="lb-traj-stat-num">{hits.pgiya}</dd>
+              <dt className="lb-traj-stat-label">פגיעות</dt>
+            </div>
+            <div className="lb-traj-stat">
+              <dd className="lb-traj-stat-num">{hits.tzelifa}</dd>
+              <dt className="lb-traj-stat-label">צליפות</dt>
+            </div>
+          </>
+        )}
       </dl>
     </div>
   )

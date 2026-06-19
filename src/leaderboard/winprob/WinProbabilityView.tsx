@@ -60,11 +60,11 @@ function RowDetail({ row, delta, reason, survival }: { row: Row; delta: number |
   const dirWord = exp < row.curRank ? 'עלייה' : exp > row.curRank ? 'ירידה' : 'ללא שינוי'
   const moveCls = exp < row.curRank ? 'up' : exp > row.curRank ? 'down' : 'flat'
 
-  let deltaText = 'למשחק לא הייתה השפעה משמעותית על הסיכוי'
+  let deltaText = 'למשחק לא הייתה השפעה משמעותית על הסיכוי שלך'
   if (delta !== undefined && Math.abs(delta) >= 0.1) {
     deltaText = delta > 0
-      ? `המשחק העלה את הסיכוי ב-${delta.toFixed(1)} נק׳ אחוז`
-      : `המשחק הוריד את הסיכוי ב-${Math.abs(delta).toFixed(1)} נק׳ אחוז`
+      ? `המשחק שיפר את הסיכוי שלך לסיים ראשון ב-${delta.toFixed(1)} נק׳ אחוז`
+      : `המשחק הוריד את הסיכוי שלך לסיים ראשון ב-${Math.abs(delta).toFixed(1)} נק׳ אחוז`
   }
   const reasonText = reason && reason.trim() ? reason : undefined
 
@@ -254,7 +254,7 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
                         <RowDetail
                           row={r}
                           delta={deltaByLabel[r.label]}
-                          reason={last ? explainLastMatch(r.label, last.home, last.away, last.homeScore, last.awayScore, eliminations) : undefined}
+                          reason={last ? explainLastMatch(r.label, last.home, last.away, last.homeScore, last.awayScore, eliminations, deltaByLabel[r.label]) : undefined}
                           survival={bracketSurvivalForLabel(r.label, eliminations)}
                         />
                       </td>

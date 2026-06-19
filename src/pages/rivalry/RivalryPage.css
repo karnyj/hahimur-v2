@@ -1,0 +1,532 @@
+.rivalry {
+  max-width: 640px;
+  margin: 1.5rem auto 3rem;
+  padding: 0 1.25rem;
+  color: var(--ink);
+}
+
+.rivalry--empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 3rem 1.25rem;
+}
+
+.rivalry__hero {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+.rivalry__crest {
+  font-size: 2.4rem;
+  line-height: 1;
+}
+
+.rivalry__title {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0.4rem 0 0.2rem;
+}
+
+.rivalry__subtitle {
+  color: var(--muted);
+  font-weight: 600;
+  margin: 0;
+}
+
+/* Scoreboard ----------------------------------------------------------- */
+.rivalry__scoreboard {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: stretch;
+  gap: 0.6rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 1.1rem 1rem;
+}
+
+.rivalry__side {
+  text-align: center;
+  border-radius: 10px;
+  padding: 0.6rem 0.4rem;
+  border: 1px solid transparent;
+}
+
+.rivalry__side--leading {
+  border-color: var(--gold);
+  background: color-mix(in srgb, var(--gold) 12%, transparent);
+}
+
+.rivalry__avatar-wrap {
+  position: relative;
+  display: inline-block;
+  margin-bottom: 0.4rem;
+}
+
+.rivalry__avatar {
+  width: 82px;
+  height: 82px;
+  border-radius: 50%;
+  object-fit: cover;
+  /* Bias the crop toward the top so heads aren't cut off. */
+  object-position: center 22%;
+  border: 3px solid var(--border);
+  background: var(--cream);
+  display: block;
+}
+
+.rivalry__side-card--a .rivalry__avatar {
+  border-color: var(--navy);
+}
+
+.rivalry__side-card--b .rivalry__avatar {
+  border-color: var(--red);
+}
+
+/* The current leader: gold ring + crown; the trailer fades back a touch. */
+.rivalry__side--leading .rivalry__avatar {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--gold) 35%, transparent);
+}
+
+.rivalry__side:not(.rivalry__side--leading) .rivalry__avatar {
+  filter: grayscale(0.35) opacity(0.9);
+}
+
+/* A tie means equals, not two losers — keep both photos in full colour. */
+.rivalry__scoreboard--tie .rivalry__avatar {
+  filter: none;
+}
+
+.rivalry__crown {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-12deg);
+  font-size: 1.4rem;
+  filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.25));
+}
+
+/* Eldad's head sits right-of-centre in his photo, so shift his crown over it. */
+.rivalry__side-card--b .rivalry__crown {
+  left: 54%;
+}
+
+.rivalry__vs-swords {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.rivalry__rank {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.rivalry__name {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin: 0.15rem 0;
+}
+
+.rivalry__points {
+  font-size: 1.9rem;
+  font-weight: 800;
+  color: var(--ink);
+}
+
+.rivalry__vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--red);
+  gap: 0.2rem;
+}
+
+.rivalry__gap {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.rivalry__verdict {
+  text-align: center;
+  font-weight: 700;
+  color: var(--navy);
+  margin: 1rem 0 1.4rem;
+}
+
+/* Stat chips ----------------------------------------------------------- */
+.rivalry__chips {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.6rem;
+}
+
+.rivalry__chip {
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.7rem 0.6rem;
+  text-align: center;
+}
+
+.rivalry__chip-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.rivalry__chip-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin-top: 0.2rem;
+}
+
+.rivalry__blowout {
+  margin: 1.2rem 0 0;
+  padding: 0.8rem 1rem;
+  background: var(--cream);
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Quips ---------------------------------------------------------------- */
+.rivalry__quips {
+  margin: 1.4rem 0 0;
+  display: grid;
+  gap: 0.6rem;
+}
+
+.rivalry__quip {
+  margin: 0;
+  padding: 0.7rem 0.9rem;
+  background: var(--paper);
+  border-right: 4px solid var(--red);
+  border-radius: 8px;
+  font-style: italic;
+  line-height: 1.6;
+}
+
+/* Lead timeline -------------------------------------------------------- */
+.rivalry__timeline {
+  margin-top: 1.8rem;
+  text-align: center;
+}
+
+.rivalry__timeline-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--navy);
+  margin-bottom: 0.7rem;
+}
+
+.rivalry__timeline-track {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.rivalry__dot {
+  width: 1.7rem;
+  height: 1.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: #fff;
+  background: var(--muted);
+}
+
+.rivalry__dot.rivalry__side--a,
+.rivalry__swatch.rivalry__side--a {
+  background: var(--navy);
+  border-color: transparent;
+}
+
+.rivalry__dot.rivalry__side--b,
+.rivalry__swatch.rivalry__side--b {
+  background: var(--red);
+  border-color: transparent;
+}
+
+.rivalry__legend {
+  display: flex;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-top: 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.rivalry__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.rivalry__swatch {
+  width: 0.9rem;
+  height: 0.9rem;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+/* Shared section title */
+.rivalry__section-title {
+  font-size: 1rem;
+  font-weight: 800;
+  color: var(--navy);
+  text-align: center;
+  margin: 0 0 0.7rem;
+}
+
+/* WhatsApp / group share — small inline pill, not a full-width bar */
+.rivalry__share {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  width: fit-content;
+  margin: 0 auto 1.4rem;
+  padding: 0.35rem 0.9rem;
+  background: #25d366;
+  color: #073b22;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  text-decoration: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.rivalry__share:hover {
+  filter: brightness(1.05);
+}
+
+.rivalry__share:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+/* Head-to-head block */
+.rivalry__h2h {
+  margin: 0 0 1.4rem;
+  padding: 1rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+}
+
+.rivalry__h2h-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.rivalry__h2h-side,
+.rivalry__h2h-mid {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
+.rivalry__h2h-num {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.rivalry__h2h-mid .rivalry__h2h-num {
+  color: var(--muted);
+  font-size: 1.5rem;
+}
+
+.rivalry__h2h-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.rivalry__h2h-side.rivalry__side--a .rivalry__h2h-num { color: var(--navy); }
+.rivalry__h2h-side.rivalry__side--b .rivalry__h2h-num { color: var(--red); }
+
+.rivalry__h2h-hint {
+  margin: 0.6rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* Paired chip values (per-player numbers) */
+.rivalry__chip-value--pair {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  font-size: 1rem;
+}
+
+.rivalry__chip-value--pair .rivalry__side--a { color: var(--navy); }
+.rivalry__chip-value--pair .rivalry__side--b { color: var(--red); }
+
+/* Leader indicator on the paired chips */
+.rivalry__chip-value--pair .is-ahead { font-weight: 800; }
+.rivalry__chip-value--pair .is-ahead::after {
+  content: ' 🔥';
+  font-size: 0.85em;
+}
+
+/* Upset / lead-change banner */
+.rivalry__banner {
+  margin: 0 0 1rem;
+  padding: 0.6rem 1rem;
+  text-align: center;
+  font-weight: 800;
+  color: var(--navy);
+  background: color-mix(in srgb, var(--gold) 22%, var(--paper));
+  border: 1px solid var(--gold);
+  border-radius: 10px;
+  animation: rivalry-banner-in 0.4s ease;
+}
+
+@keyframes rivalry-banner-in {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* "Who's projected to win the rivalry?" Monte-Carlo odds line */
+.rivalry__odds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.3rem 0.5rem;
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  text-align: center;
+}
+
+.rivalry__odds-pct {
+  font-size: 1.55rem;
+  font-weight: 800;
+  color: var(--medal-gold);
+}
+
+.rivalry__odds-text { font-weight: 600; }
+.rivalry__odds-text--muted { color: var(--muted); font-weight: 600; }
+.rivalry__odds-sub { flex-basis: 100%; font-size: 0.72rem; color: var(--muted); }
+
+.rivalry__odds-spinner {
+  display: inline-block;
+  width: 0.8rem;
+  height: 0.8rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--navy);
+  border-radius: 50%;
+  vertical-align: -1px;
+  animation: rivalry-spin 0.8s linear infinite;
+}
+
+@keyframes rivalry-spin { to { transform: rotate(360deg); } }
+
+/* Momentum + peak-gap pulse strip */
+.rivalry__pulse {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0 0 1.2rem;
+}
+
+.rivalry__pulse-item {
+  padding: 0.55rem 0.8rem;
+  background: var(--cream);
+  border-radius: 8px;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* Rank-over-time graph */
+.rivalry__graph-frame {
+  position: relative;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 0.4rem;
+}
+
+.rivalry__graph {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.rivalry__graph-line {
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.rivalry__graph-line--a { stroke: var(--navy); }
+.rivalry__graph-line--b { stroke: var(--red); }
+.rivalry__graph-dot--a { fill: var(--navy); }
+.rivalry__graph-dot--b { fill: var(--red); }
+
+/* Y-axis hints float in the top/bottom-right corners (RTL) of the plot. */
+.rivalry__graph-ylabel {
+  position: absolute;
+  left: 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--paper) 85%, transparent);
+  padding: 0 0.2rem;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.rivalry__graph-ylabel--top { top: 0.5rem; }
+.rivalry__graph-ylabel--bottom { bottom: 0.5rem; }
+
+.rivalry__graph-xaxis {
+  display: flex;
+  justify-content: space-between;
+  /* Read left-to-right like the chart: start-of-tournament left, now right. */
+  direction: ltr;
+  margin-top: 0.4rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.rivalry__graph-note {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.rivalry__live-note {
+  text-align: center;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--muted);
+  margin: 1.6rem 0 0;
+}
