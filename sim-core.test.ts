@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest'
 import type { KnockoutMatch, PredictionsState, Standing, TournamentResults } from './src/shared/types'
 import { makeUser } from './src/leaderboard/testFixtures'
 import { USERS } from './src/users'
-import { realEliminations, bracketSurvival, currentResults, simulateTournament, realGamesByTeam, explainMatchForUser, he } from './sim-core'
+import { realEliminations, bracketSurvival, currentResults, simulateTournament, realGamesByTeam, explainMatchForUser, he, runSims, mergeSimAgg } from './sim-core'
 
 const standing = (team: string): Standing =>
   ({ team, played: 3, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 })
@@ -175,6 +175,42 @@ describe('currentResults knockout resolution', () => {
     expect(m73.scores).toEqual(fullState['73'])
     expect(res.champion).toBeTruthy()
     expect(res.knockoutStages.final[0].scores).toEqual(fullState['104'])
+  })
+})
+
+describe('mergeSimAgg', () => {
+  // Slicing a simulation into separately-seeded batches and merging must give the
+  // same tallies as adding the batches by hand — this is what lets the worker run
+  // in yielding chunks without changing the result.
+  const played: PredictionsState = { A1: { home: 1, away: 0 } }
+  const label = USERS[0].label
+
+  test('merges every tally additively and concatenates the point series', () => {
+    const a = runSims(played, 40, 1, true, {})
+    const b = runSims(played, 40, 2, true, {})
+
+    const aWin = a.win.get(label)!, bWin = b.win.get(label)!
+    const aPts = a.sumPts.get(label)!, bPts = b.sumPts.get(label)!
+    const aR32 = a.stages.get(label)!.r32, bR32 = b.stages.get(label)!.r32
+    const aSeries = a.series!.get(label)!.length, bSeries = b.series!.get(label)!.length
+
+    const merged = mergeSimAgg(a, b)
+
+    expect(merged.win.get(label)!).toBeCloseTo(aWin + bWin, 10)
+    expect(merged.sumPts.get(label)!).toBe(aPts + bPts)
+    expect(merged.stages.get(label)!.r32).toBe(aR32 + bR32)
+    expect(merged.series!.get(label)!.length).toBe(aSeries + bSeries)
+  })
+
+  test('champion frequencies from both batches are summed', () => {
+    const a = runSims(played, 60, 7, false, {})
+    const b = runSims(played, 60, 8, false, {})
+    const champs = new Set([...a.champFreq.keys(), ...b.champFreq.keys()])
+    const expected = new Map([...champs].map(t => [t, (a.champFreq.get(t) ?? 0) + (b.champFreq.get(t) ?? 0)]))
+    const merged = mergeSimAgg(a, b)
+    for (const [t, v] of expected) expect(merged.champFreq.get(t)).toBe(v)
+    // total champion attributions equals the combined number of simulations
+    expect([...merged.champFreq.values()].reduce((x, y) => x + y, 0)).toBe(120)
   })
 })
 

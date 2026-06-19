@@ -526,6 +526,33 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
   return { win, top3, top5, sumPts, sumSq, sumRank, stages, champFreq, series }
 }
 
+// Add every tally of `b` into `a` (in place) and return `a`. All aggregate
+// fields are sums/counts so they merge additively; `series` (per-bettor point
+// samples) concatenates. This lets the engine be run in several smaller batches
+// and combined into one result identical to a single n = Σ batchN run — used by
+// the worker to slice a long simulation into yielding chunks without changing
+// the maths (each chunk just needs its own seed so the draws don't repeat).
+export function mergeSimAgg(a: SimAgg, b: SimAgg): SimAgg {
+  const addMap = (ma: Map<string, number>, mb: Map<string, number>) => {
+    for (const [k, v] of mb) ma.set(k, (ma.get(k) ?? 0) + v)
+  }
+  addMap(a.win, b.win); addMap(a.top3, b.top3); addMap(a.top5, b.top5)
+  addMap(a.sumPts, b.sumPts); addMap(a.sumSq, b.sumSq); addMap(a.sumRank, b.sumRank)
+  addMap(a.champFreq, b.champFreq)
+  for (const [label, st] of b.stages) {
+    const cur = a.stages.get(label)
+    if (!cur) { a.stages.set(label, { ...st }); continue }
+    for (const k of STAGE_KEYS) cur[k] += st[k]
+  }
+  if (a.series && b.series) {
+    for (const [label, arr] of b.series) {
+      const cur = a.series.get(label)
+      if (cur) cur.push(...arr); else a.series.set(label, [...arr])
+    }
+  }
+  return a
+}
+
 export function percentile(arr: number[], p: number): number {
   const a = [...arr].sort((x, y) => x - y)
   return a[Math.floor(p * (a.length - 1))]
