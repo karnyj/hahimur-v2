@@ -2,6 +2,8 @@
 
 ## How We Build
 
+> "We are trying to prove ourselves wrong as quickly as possible, because only in that way can we find progress." — Richard Feynman
+
 **Goal: learn as fast as possible.**
 
 Every step should be small, end with working software, and give us real feedback we couldn't have gotten without building it.
