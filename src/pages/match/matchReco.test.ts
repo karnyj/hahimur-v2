@@ -38,9 +38,11 @@ describe('recommendMatchOutcome', () => {
     expect([...pts].sort((a, b) => b - a)).toEqual(pts)
   })
 
-  test('the recommended outcome never scores worse than the obvious one', () => {
+  test('the recommended outcome never banks fewer table points than the obvious one', () => {
     const rec = recommendMatchOutcome(user, 'A5', resultsForGroupA(4))!
-    expect(rec.best!.expPoints).toBeGreaterThanOrEqual(rec.naive!.expPoints - 1e-9)
+    // Table-first: a recommendation may give up a rare צליפה (lower total) but
+    // must never give up solid place + advancement points.
+    expect(rec.best!.tablePoints).toBeGreaterThanOrEqual(rec.naive!.tablePoints - 1e-9)
   })
 
   test('counterIntuitive iff the recommendation differs from the obvious pick', () => {
@@ -48,10 +50,12 @@ describe('recommendMatchOutcome', () => {
     expect(rec.counterIntuitive).toBe(rec.best!.want !== rec.naive!.want)
   })
 
-  test('a counter-intuitive nudge always earns strictly more points', () => {
+  test('a counter-intuitive nudge never sacrifices table points', () => {
     const rec = recommendMatchOutcome(user, 'A5', resultsForGroupA(4))!
     if (rec.counterIntuitive) {
-      expect(rec.best!.expPoints).toBeGreaterThan(rec.naive!.expPoints)
+      // The nudge is justified by table points (or, at equal table, by seeding /
+      // match-point bonus) — never at the cost of table points.
+      expect(rec.best!.tablePoints).toBeGreaterThanOrEqual(rec.naive!.tablePoints)
     }
   })
 

@@ -23,9 +23,11 @@ const settled = settledState(tournamentResults)
 
 const orderOf = (u: typeof USERS[number], g: string) => (u.groupTables[g] ?? []).map(s => s.team)
 
-// Re-derive the maximum honest group points over EVERY remaining-scoreline combo,
-// independently of the engine, so we can prove the engine's pick is point-optimal.
-function maxHonestPoints(u: typeof USERS[number], g: string): number {
+// Re-derive the maximum achievable TABLE points (place + advancement) over EVERY
+// remaining-scoreline combo, independently of the engine. The engine is now
+// table-first — it maximizes the solid table points before match points — so this
+// is the quantity the recommendation must always hit.
+function maxTablePoints(u: typeof USERS[number], g: string): number {
   const matches = GROUPS[g]?.matches ?? []
   const isPlayed = (s: MatchScores | undefined) => !!s && s.home != null && s.away != null
   const remIds = matches.filter(m => !isPlayed(settled[m.id])).map(m => m.id)
@@ -35,8 +37,9 @@ function maxHonestPoints(u: typeof USERS[number], g: string): number {
   const ctx = buildContextFromOrder(g, order, thirdPickFromQualification(u, g), settled)
   let max = -Infinity
   for (const combo of enumerateScores(remIds, boundedMaxGoals(remIds.length))) {
-    const t = scoreGroupOutcome(u.predictions, ctx, { ...played, ...combo }).total
-    if (t > max) max = t
+    const s = scoreGroupOutcome(u.predictions, ctx, { ...played, ...combo })
+    const table = s.placePoints + s.advPoints
+    if (table > max) max = table
   }
   return max
 }
@@ -171,7 +174,7 @@ describe('bestRemainingResult — the unified holistic engine', () => {
   // Full re-enumeration is expensive, so prove optimality on a spread of users
   // across every group; the integrity test below still runs over ALL users.
   const sample = USERS.filter((_, i) => i % 4 === 0)
-  it('returns an honest-points-optimal result across a spread of users × groups', () => {
+  it('returns a table-points-optimal result across a spread of users × groups', () => {
     for (const u of sample) {
       for (const g of ALL_GROUPS) {
         const order = orderOf(u, g)
@@ -184,7 +187,9 @@ describe('bestRemainingResult — the unified holistic engine', () => {
           settledAll: settled,
         })
         if (!res) continue // no remaining matches in this group
-        expect(res.groupPoints, `${u.label} / group ${g}`).toBe(maxHonestPoints(u, g))
+        // Table-first contract: the recommendation banks the maximum achievable
+        // place + advancement points (match points are only a tiebreak bonus).
+        expect(res.placePoints + res.advancementPoints, `${u.label} / group ${g}`).toBe(maxTablePoints(u, g))
       }
     }
   }, 60000)

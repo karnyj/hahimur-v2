@@ -37,9 +37,12 @@ export interface OutcomeReason {
 export interface OutcomeEval {
   want: Want
   text: string
-  // The points you'd earn from this group under this result (your scoreline +
-  // exact order + advancers). Higher is better — the whole basis of the ranking.
+  // The total points you'd earn from this group under this result (scoreline +
+  // exact order + advancers).
   expPoints: number
+  // The solid table points (place + advancement) — what the table-first ranking
+  // maximizes first. Match points are only a tiebreak bonus on top.
+  tablePoints: number
   // How many points worse this outcome is than the best one (0 for the best).
   gapFromBest: number
   // Whether this is the result your own bracket roots for.
@@ -120,12 +123,12 @@ function buildReasons(
     if (isMatch) {
       reasons.push({
         good: true,
-        textHe: `ניחשת ${pred.home}–${pred.away} — התוצאה בכיוון הזה, אז יש פגיעה (ובול עליה צליפה).`,
+        textHe: `ניחשת ${pred.away}:${pred.home} — התוצאה בכיוון הזה, אז יש פגיעה (ובול עליה צליפה).`,
       })
     } else {
       reasons.push({
         good: false,
-        textHe: `ניחשת ${pred.home}–${pred.away} — תוצאה בכיוון אחר, אז אין פה פגיעה.`,
+        textHe: `ניחשת ${pred.away}:${pred.home} — תוצאה בכיוון אחר, אז אין פה פגיעה.`,
       })
     }
   }
@@ -258,24 +261,33 @@ export function recommendMatchOutcome(
   }
 
   const naiveW: Want = dir(user.predictions[matchId]) ?? 'home'
-  const totalOf = (w: Want) => scores.get(w)!.total
+  const tableOf = (w: Want) => scores.get(w)!.placePoints + scores.get(w)!.advPoints
+  const matchOf = (w: Want) => scores.get(w)!.matchPoints
   const seedOf = (w: Want) => topTwoExact(scores.get(w)!.order, ctx.predOrder)
 
-  // Best = most of *your* points. Ties break toward the result that best seeds
-  // the knockout bracket (your predicted top-two in their exact slots), then to
-  // the result you predicted, then to the safer at-risk best-third pick.
+  // Best for you is TABLE-FIRST: the result that banks the most place +
+  // advancement points. Exact scorelines are rare, so match points never beat a
+  // better table — they only break ties as a bonus. Order: table points, then
+  // knockout seeding (your predicted top-two in slot), then match points, then
+  // your own predicted direction, then the safer at-risk best-third.
   const bestW = [...wants].sort((a, b) => {
-    const d = totalOf(b) - totalOf(a)
-    if (Math.abs(d) > CAT) return d
+    const dt = tableOf(b) - tableOf(a)
+    if (Math.abs(dt) > CAT) return dt
     if (seedOf(b) !== seedOf(a)) return seedOf(b) - seedOf(a)
+    const dm = matchOf(b) - matchOf(a)
+    if (Math.abs(dm) > CAT) return dm
     if (a === naiveW) return -1
     if (b === naiveW) return 1
     return (scores.get(b)!.thirdPoints ?? 0) - (scores.get(a)!.thirdPoints ?? 0)
   })[0]
 
-  const totals = wants.map(totalOf)
-  const spread = Math.max(...totals) - Math.min(...totals)
-  const noPreference = spread <= CAT
+  // No preference only when all three directions are truly indistinguishable for
+  // your bet — same table points, same seeding AND same match points. (A table or
+  // match-point difference is a real preference, even if the totals happen to tie.)
+  const noPreference =
+    wants.every(w => Math.abs(tableOf(w) - tableOf(wants[0])) < CAT) &&
+    wants.every(w => seedOf(w) === seedOf(wants[0])) &&
+    wants.every(w => Math.abs(matchOf(w) - matchOf(wants[0])) < CAT)
 
   // Does this match leave your place + advancement POINTS untouched no matter how
   // it ends? Only then is it honest to say "this match can't change your standings
@@ -287,8 +299,13 @@ export function recommendMatchOutcome(
     Math.abs(s.advPoints - scoreList[0].advPoints) < CAT &&
     (s.thirdStatus ?? '') === (scoreList[0].thirdStatus ?? ''))
 
-  // Reference for the best outcome: the worst alternative (what you secure).
-  const worstAltW = [...wants].filter(w => w !== bestW).sort((a, b) => totalOf(a) - totalOf(b))[0]
+  // Reference for the best outcome: the worst alternative (what you secure),
+  // ranked the same table-first way (fewest table points, then match points).
+  const worstAltW = [...wants].filter(w => w !== bestW).sort((a, b) => {
+    const dt = tableOf(a) - tableOf(b)
+    if (Math.abs(dt) > CAT) return dt
+    return matchOf(a) - matchOf(b)
+  })[0]
   const bestScore = scores.get(bestW)!
 
   const outcomes: OutcomeEval[] = wants.map(want => {
@@ -298,6 +315,7 @@ export function recommendMatchOutcome(
       want,
       text: choiceText(m, want),
       expPoints: cur.total,
+      tablePoints: cur.placePoints + cur.advPoints,
       gapFromBest: bestScore.total - cur.total,
       matchesBracket: want === naiveW,
       reasons: noPreference ? [] : buildReasons(m, user, ctx, want, cur, ref, want === bestW, standingsInvariant),

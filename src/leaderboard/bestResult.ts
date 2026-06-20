@@ -23,6 +23,17 @@ export interface IdealMatch {
   homeTeam: string
   awayTeam: string
   scores: MatchScores
+  /** Your own predicted scoreline for this match, so the card can show it as a
+   *  reference next to the recommended one. Undefined if you never tipped it. */
+  predicted?: MatchScores
+}
+
+/** A group order that matches the top-two you predicted (for your knockout
+ *  crossings), offered as an alternative when the points-best result reshuffles
+ *  your top two — with the group-point cost of preferring it. */
+export interface AlternativeOrder {
+  orderHe: string[]      // [1st, 2nd] in Hebrew, as you predicted them
+  tableCost: number      // group points you'd give up vs the recommended result
 }
 
 export interface SlotInfo {
@@ -64,6 +75,9 @@ export interface BestResult {
   thirdTeamPoints: number
   /** Our plain-language explanation of why this result is best for your bet. */
   reasons: OutcomeReason[]
+  /** Present only when the recommended result reshuffles your predicted top two:
+   *  the bracket-faithful order you predicted and what it costs in group points. */
+  alternativeOrder?: AlternativeOrder
 }
 
 export interface BestResultParams {
@@ -97,12 +111,17 @@ function lexGreater(a: number[], b: number[]): boolean {
  *     and a best-third pick, judged 'in'/'open'/'out' against the real, already-
  *     settled third-place lines of the other groups.
  *
- * The result with the most honest points wins. Ties break toward the result that
- * seeds the knockout bracket the way you predicted (your top-two in their exact
- * slots — which protects your downstream bracket picks), then your full order,
- * then your own predicted scoreline (the צליפה), then fewer goals. So we never
- * trade away a guaranteed point for seeding, but among equals we prefer the
- * bracket-faithful, prediction-faithful result.
+ * Ranking is TABLE-FIRST: the result that banks the most table points wins —
+ * place points (your exact 1st…4th) plus advancement (your qualifiers). Exact
+ * scorelines (צליפה) are rare, so match points never justify recommending a
+ * worse table; they only break ties as a bonus. The lexicographic order is:
+ *   1) table points (place + advancement) — the solid, likeliest points,
+ *   2) topTwoExact — seed the knockout bracket the way you predicted,
+ *   3) match points — grab the easy פגיעה/צליפה when it costs no table,
+ *   4) your own predicted scoreline, then
+ *   5) fewer goals (a calmer, more plausible scoreline).
+ * So we never trade a placement/advancement point for a long-shot scoreline, and
+ * among table-equal results we prefer the bracket-faithful, prediction-faithful one.
  */
 export function bestRemainingResult(params: BestResultParams): BestResult | null {
   const { groupLetter, predictions, predictedOrder, thirdPick, settledAll } = params
@@ -127,17 +146,28 @@ export function bestRemainingResult(params: BestResultParams): BestResult | null
       return p && p.home === combo[id].home && p.away === combo[id].away
     })
 
+  // Table value — the solid points we optimize for first: your exact placements
+  // plus your advancers. Match points are a bonus that only breaks ties.
+  const tableValue = (s: { placePoints: number; advPoints: number }) => s.placePoints + s.advPoints
+  const topTwoMatches = (order: string[]) =>
+    predictedOrder.length >= 2 && order[0] === predictedOrder[0] && order[1] === predictedOrder[1]
+
   let bestCombo: PredictionsState | null = null
   let bestScore = scoreGroupOutcome(predictions, ctx, { ...played })
   let bestKey: number[] = []
+
+  // The best result that keeps your predicted top-two in their exact slots — the
+  // bracket-faithful alternative we offer when the points-best result reshuffles them.
+  let altScore: typeof bestScore | null = null
+  let altKey: number[] = []
 
   for (const combo of enumerateScores(remIds, maxGoals)) {
     const state = { ...played, ...combo }
     const score = scoreGroupOutcome(predictions, ctx, state)
     const key = [
-      score.total,
+      tableValue(score),
       topTwoExact(score.order, predictedOrder),
-      score.placePoints,
+      score.matchPoints,
       isPrediction(combo) ? 1 : 0,
       -goalSum(combo),
     ]
@@ -145,6 +175,13 @@ export function bestRemainingResult(params: BestResultParams): BestResult | null
       bestKey = key
       bestCombo = combo
       bestScore = score
+    }
+    if (topTwoMatches(score.order)) {
+      const aKey = [tableValue(score), score.matchPoints, isPrediction(combo) ? 1 : 0, -goalSum(combo)]
+      if (altScore === null || lexGreater(aKey, altKey)) {
+        altKey = aKey
+        altScore = score
+      }
     }
   }
   if (!bestCombo) return null
@@ -174,9 +211,27 @@ export function bestRemainingResult(params: BestResultParams): BestResult | null
     ? buildGroupWhy(bestScore, predictedOrder, remaining, predictions)
     : buildGroupReasons(bestScore, naiveScore, predictedOrder)
 
+  // Offer the bracket-faithful order only when the recommended result actually
+  // reshuffles your predicted top two and a faithful alternative exists at a cost.
+  let alternativeOrder: AlternativeOrder | undefined
+  if (!topTwoMatches(order) && altScore && predictedOrder.length >= 2) {
+    const tableCost = tableValue(bestScore) - tableValue(altScore)
+    if (tableCost > 0) {
+      alternativeOrder = {
+        orderHe: [he(predictedOrder[0]), he(predictedOrder[1])],
+        tableCost,
+      }
+    }
+  }
+
+  const predictedScore = (id: string): MatchScores | undefined => {
+    const p = predictions[id]
+    return p && p.home != null && p.away != null ? { home: p.home, away: p.away } : undefined
+  }
+
   return {
     groupLetter,
-    ideal: remaining.map(m => ({ id: m.id, homeTeam: m.homeTeam, awayTeam: m.awayTeam, scores: bestCombo![m.id] })),
+    ideal: remaining.map(m => ({ id: m.id, homeTeam: m.homeTeam, awayTeam: m.awayTeam, scores: bestCombo![m.id], predicted: predictedScore(m.id) })),
     resultingOrder: order,
     orderHe: order.map(he),
     predictedOrderHe: predictedOrder.map(he),
@@ -196,5 +251,6 @@ export function bestRemainingResult(params: BestResultParams): BestResult | null
     thirdTeam: standings[2]?.team ?? '',
     thirdTeamPoints: standings[2]?.points ?? 0,
     reasons,
+    alternativeOrder,
   }
 }

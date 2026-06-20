@@ -100,9 +100,11 @@ describe('recommendation engine correctness (exhaustive)', () => {
           const bestScore = scores.get(rec.best.want)!
           const bestStanding = bestScore.placePoints + bestScore.advPoints
 
-          const maxTotal = Math.max(...WANTS.map(w => scores.get(w)!.total))
-          if (bestScore.total < maxTotal - EPS) {
-            violations.push(`[OPT] ${user.label} ${m.id}: best total ${bestScore.total} < max ${maxTotal}`)
+          // Table-first optimality: the recommended direction banks the most
+          // place + advancement points (match points are only a tiebreak bonus).
+          const maxStanding = Math.max(...WANTS.map(w => scores.get(w)!.placePoints + scores.get(w)!.advPoints))
+          if (bestStanding < maxStanding - EPS) {
+            violations.push(`[OPT] ${user.label} ${m.id}: best table ${bestStanding} < max ${maxStanding}`)
           }
 
           const heToTeam = new Map(groupTeams(letter).map(t => [he(t), t]))
@@ -157,17 +159,20 @@ describe('recommendation engine correctness (exhaustive)', () => {
           return scoreGroupOutcome(user.predictions, ctx, state)
         }
 
-        // True optimality: no combination of remaining results scores higher.
-        const maxTotal = Math.max(...allWantCombos(remaining.length).map(w => scoreCombo(w).total))
-        if (rec.best.points < maxTotal - EPS) {
-          violations.push(`[GRP-OPT] ${user.label} ${letter}: best ${rec.best.points} < achievable ${maxTotal}`)
-        }
-
         // Reconstruct the recommended scenario from the per-match advice and verify
         // it reproduces the headline, then check the text against it.
         const bestWants = rec.neededOutcomes.map(o => o.want!)
         const bestScore = scoreCombo(bestWants)
         const naiveScore = scoreCombo(remaining.map(m => dir(user.predictions[m.id]) ?? 'home'))
+
+        // Table-first optimality: no combination of remaining results banks more
+        // place + advancement points than the recommended scenario.
+        const tableOf = (s: GroupScore) => s.placePoints + s.advPoints
+        const maxTable = Math.max(...allWantCombos(remaining.length).map(w => tableOf(scoreCombo(w))))
+        if (tableOf(bestScore) < maxTable - EPS) {
+          violations.push(`[GRP-OPT] ${user.label} ${letter}: best table ${tableOf(bestScore)} < achievable ${maxTable}`)
+        }
+
         if (Math.abs(bestScore.total - rec.best.points) > EPS) {
           violations.push(`[GRP-RECON] ${user.label} ${letter}: neededOutcomes total ${bestScore.total} != best ${rec.best.points}`)
         }

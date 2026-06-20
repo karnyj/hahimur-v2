@@ -14,10 +14,17 @@ import {
   slotsWon,
   describeSlots,
   listTeams,
+  topTwoExact,
   MIN_VIABLE_THIRD_POINTS,
   type Want,
   type GroupScore,
 } from './selfScore'
+
+// Strict lexicographic "a ranks above b" over a key vector (higher wins).
+function lexGreater(a: number[], b: number[]): boolean {
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i]
+  return false
+}
 
 export type { Want }
 
@@ -73,7 +80,10 @@ export interface ScenarioEval {
   choices: OutcomeChoice[]
   order: string[]          // team codes in final group order (1st, 2nd, 3rd, 4th)
   orderHe: string[]
-  points: number           // the points you'd earn from this group (basis for ranking)
+  points: number           // total points you'd earn from this group
+  // The solid table points (place + advancement) — what the table-first ranking
+  // actually maximizes. Match points are only a tiebreak bonus on top.
+  tablePoints: number
 }
 
 // One concrete, illustrated line in the "why this is best for you" explanation.
@@ -351,20 +361,25 @@ export function recommendGroupOutcomes(
   const naiveWants: Want[] = remaining.map(m => dir(user.predictions[m.id]) ?? 'home')
   const deviations = (w: Want[]) => w.reduce((n, x, i) => n + (x === naiveWants[i] ? 0 : 1), 0)
 
-  // Best = most of *your* points; ties go to staying on your own predicted
-  // results, then to the safer at-risk third (more points).
+  // Best for you is TABLE-FIRST: maximize place + advancement points (the solid,
+  // likeliest points). Exact scorelines are rare, so match points never beat a
+  // better table — they only break ties. Order: table points, then knockout
+  // seeding (your predicted top-two in slot), then match points, then staying on
+  // your own predicted results, then the safer at-risk third.
+  const keyOf = (s: GroupScore, wants: Want[]): number[] => [
+    s.placePoints + s.advPoints,
+    topTwoExact(s.order, predOrder),
+    s.matchPoints,
+    -deviations(wants),
+    s.thirdPoints ?? 0,
+  ]
   let bestWants = naiveWants
   let bestScore = scoreCombo(naiveWants)
-  let bestDev = 0
+  let bestKey = keyOf(bestScore, naiveWants)
   for (const wants of allWantCombos(remaining.length)) {
     const s = scoreCombo(wants)
-    const dev = deviations(wants)
-    const better =
-      s.total > bestScore.total + CAT ||
-      (Math.abs(s.total - bestScore.total) <= CAT &&
-        (dev < bestDev ||
-          (dev === bestDev && (s.thirdPoints ?? 0) > (bestScore.thirdPoints ?? 0))))
-    if (better) { bestScore = s; bestWants = wants; bestDev = dev }
+    const k = keyOf(s, wants)
+    if (lexGreater(k, bestKey)) { bestScore = s; bestWants = wants; bestKey = k }
   }
   const naiveScore = scoreCombo(naiveWants)
 
@@ -376,6 +391,7 @@ export function recommendGroupOutcomes(
     order: score.order,
     orderHe: score.order.map(he),
     points: score.total,
+    tablePoints: score.placePoints + score.advPoints,
   })
 
   const counterIntuitive = deviations(bestWants) > 0

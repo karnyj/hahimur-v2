@@ -28,45 +28,48 @@ export default function BestResultCard({ result }: { result: BestResult }) {
 
       {showPoints && (
         <div className="best-result__points" id={panelId}>
-          <div className="best-result__points-cat">
-            <span className="best-result__points-name">ניחוש המשחקים (פגיעה/צליפה)</span>
-            <span className="best-result__points-val">{result.matchPoints} נק׳</span>
+          <div className="best-result__points-group">
+            <div className="best-result__points-cat">
+              <span className="best-result__points-name">נקודות פוטנציאליות מהניחוש</span>
+              <span className="best-result__points-val">{result.matchPoints} נק׳</span>
+            </div>
+            <p className="best-result__points-note">פגיעה/צליפה על תוצאות המשחקים — תלוי בתוצאה המדויקת, אז הכי פחות בטוח.</p>
           </div>
-          <p className="best-result__points-note">מהתוצאות שניחשת במשחקי הבית.</p>
 
-          <div className="best-result__points-cat">
-            <span className="best-result__points-name">מיקום מדויק</span>
-            <span className="best-result__points-val">{result.placePoints} נק׳</span>
-          </div>
-          {cleanSlots.length > 0 ? (
-            <ul className="best-result__points-list">
-              {cleanSlots.map(s => (
-                <li key={s.position}>{he(s.team)} — מקום {s.position + 1} <span className="best-result__points-each">· 1 נק׳</span></li>
-              ))}
-            </ul>
-          ) : (
-            <p className="best-result__points-note">אין מקום שיוצא בדיוק כמו שניחשת.</p>
-          )}
+          <div className="best-result__points-group">
+            <div className="best-result__points-cat">
+              <span className="best-result__points-name">נקודות בטוחות מסידור הבית</span>
+              <span className="best-result__points-val">{result.placePoints + result.advancementPoints} נק׳</span>
+            </div>
 
-          <div className="best-result__points-cat">
-            <span className="best-result__points-name">עולות לשלב הבא</span>
-            <span className="best-result__points-val">{result.advancementPoints} נק׳</span>
+            <div className="best-result__points-sub">מיקום מדויק <span className="best-result__points-each">· {result.placePoints} נק׳</span></div>
+            {cleanSlots.length > 0 ? (
+              <ul className="best-result__points-list">
+                {cleanSlots.map(s => (
+                  <li key={s.position}>{he(s.team)} — מקום {s.position + 1} <span className="best-result__points-each">· 1 נק׳</span></li>
+                ))}
+              </ul>
+            ) : (
+              <p className="best-result__points-note">אין מקום שיוצא בדיוק כמו שניחשת.</p>
+            )}
+
+            <div className="best-result__points-sub">עולות לשלב הבא <span className="best-result__points-each">· {result.advancementPoints} נק׳</span></div>
+            {result.advancers.length > 0 ? (
+              <ul className="best-result__points-list">
+                {result.advancers.map(t => {
+                  const conditional = result.thirdStatus === 'open' && t === result.thirdPick
+                  return (
+                    <li key={t}>
+                      {he(t)} <span className="best-result__points-each">· 4 נק׳</span>
+                      {conditional && <span className="best-result__points-cond"> (מותנה — עלייה כשלישית עדיין לא מובטחת)</span>}
+                    </li>
+                  )
+                })}
+              </ul>
+            ) : (
+              <p className="best-result__points-note">אף קבוצה שניחשת לא עולה בתרחיש הזה.</p>
+            )}
           </div>
-          {result.advancers.length > 0 ? (
-            <ul className="best-result__points-list">
-              {result.advancers.map(t => {
-                const conditional = result.thirdStatus === 'open' && t === result.thirdPick
-                return (
-                  <li key={t}>
-                    {he(t)} <span className="best-result__points-each">· 4 נק׳</span>
-                    {conditional && <span className="best-result__points-cond"> (מותנה — עלייה כשלישית עדיין לא מובטחת)</span>}
-                  </li>
-                )
-              })}
-            </ul>
-          ) : (
-            <p className="best-result__points-note">אף קבוצה שניחשת לא עולה בתרחיש הזה.</p>
-          )}
 
           <div className="best-result__points-total">
             <span>סה״כ</span>
@@ -76,13 +79,25 @@ export default function BestResultCard({ result }: { result: BestResult }) {
       )}
 
       <ul className="best-result__matches">
-        {result.ideal.map(m => (
-          <li key={m.id} className="best-result__match">
-            <span className="best-result__team">{he(m.homeTeam)}</span>
-            <span className="best-result__score">{m.scores.home}–{m.scores.away}</span>
-            <span className="best-result__team">{he(m.awayTeam)}</span>
-          </li>
-        ))}
+        {result.ideal.map(m => {
+          const same = m.predicted && m.predicted.home === m.scores.home && m.predicted.away === m.scores.away
+          return (
+            <li key={m.id} className="best-result__match">
+              <span className="best-result__team">{he(m.homeTeam)}</span>
+              <span className="best-result__scorewrap">
+                <span className="best-result__score" dir="ltr">{m.scores.away}:{m.scores.home}</span>
+                <span className="best-result__pred">
+                  {same
+                    ? 'כמו שניחשת'
+                    : m.predicted
+                      ? <>ניחשת <span dir="ltr">{m.predicted.away}:{m.predicted.home}</span></>
+                      : 'לא ניחשת'}
+                </span>
+              </span>
+              <span className="best-result__team">{he(m.awayTeam)}</span>
+            </li>
+          )
+        })}
       </ul>
 
       <div className="best-result__order">
@@ -92,6 +107,13 @@ export default function BestResultCard({ result }: { result: BestResult }) {
           </span>
         ))}
       </div>
+
+      {result.alternativeOrder && (
+        <div className="best-result__alt">
+          רוצה לשמור על ההצלבות שניחשת? סידור חלופי: {result.alternativeOrder.orderHe[0]} ראשונה, {result.alternativeOrder.orderHe[1]} שנייה —
+          {' '}אבל זה עולה לך {result.alternativeOrder.tableCost} נק׳ בבית מול ההמלצה.
+        </div>
+      )}
 
       {result.matchesPrediction && (
         <div className="best-result__note">

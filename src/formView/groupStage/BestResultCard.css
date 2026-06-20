@@ -58,15 +58,26 @@
   color: #3a4a3a;
 }
 
+.best-result__points-group {
+  margin-top: 0.5rem;
+  padding-top: 0.45rem;
+  border-top: 1px solid #e6efe6;
+}
+.best-result__points-group:first-child { margin-top: 0; padding-top: 0; border-top: none; }
+
 .best-result__points-cat {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 0.5rem;
   font-weight: 700;
-  margin-top: 0.45rem;
 }
-.best-result__points-cat:first-child { margin-top: 0; }
+
+.best-result__points-sub {
+  margin-top: 0.4rem;
+  font-weight: 600;
+  color: #4a5a4a;
+}
 
 .best-result__points-val {
   font-variant-numeric: tabular-nums;
@@ -149,12 +160,25 @@
 .best-result__match > .best-result__team:first-child { text-align: left; }
 .best-result__match > .best-result__team:last-child { text-align: right; }
 
+.best-result__scorewrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+}
+
 .best-result__score {
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   padding: 0.05rem 0.45rem;
   border-radius: 6px;
   background: #e3f1e3;
+}
+
+.best-result__pred {
+  font-size: 0.68rem;
+  color: #8a8a7a;
+  white-space: nowrap;
 }
 
 .best-result__breakdown {
@@ -205,6 +229,17 @@
 .best-result__bullet {
   font-weight: 700;
   text-align: center;
+}
+
+.best-result__alt {
+  margin-top: 0.55rem;
+  padding: 0.45rem 0.6rem;
+  border-radius: 8px;
+  background: #fbf4e8;
+  border: 1px solid #ecdcc0;
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: #6b5532;
 }
 
 .best-result__foot {
