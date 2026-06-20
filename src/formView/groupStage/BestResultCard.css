@@ -93,6 +93,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.best-result__points-cond {
+  color: #b5742a;
+  font-size: 0.72rem;
+}
+
 .best-result__points-total {
   display: flex;
   align-items: baseline;

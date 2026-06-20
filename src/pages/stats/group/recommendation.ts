@@ -205,13 +205,17 @@ export function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder
 
   const advD = best.advPoints - naive.advPoints
   if (advD > CAT) {
-    const gained = best.advancers.filter(t => !naive.advancers.includes(t))
-    reasons.push({
-      good: true,
-      textHe: gained.length
-        ? `${listTeams(gained)} ${gained.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${advD} נק' עלייה.`
-        : `יותר מהקבוצות שניחשת עולות כך — ${advD} נק' עלייה.`,
-    })
+    // Don't bank a still-'open' best-third as a definite gain — the dedicated
+    // third-place line explains it as the conditional bonus it is.
+    const openThird = best.thirdStatus === 'open' ? best.thirdPick : undefined
+    const gained = best.advancers.filter(t => !naive.advancers.includes(t) && t !== openThird)
+    const sureGain = gained.length * 4
+    if (sureGain > CAT) {
+      reasons.push({
+        good: true,
+        textHe: `${listTeams(gained)} ${gained.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${sureGain} נק' עלייה.`,
+      })
+    }
   } else if (advD < -CAT) {
     const dropped = naive.advancers.filter(t => !best.advancers.includes(t))
     reasons.push({
@@ -225,7 +229,7 @@ export function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder
   if (best.thirdStatus && best.thirdPick) {
     const teamHe = he(best.thirdPick)
     if (best.thirdStatus === 'in') {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
+      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — וזה כבר מבטיח עלייה כאחת מ‑8 השלישיות הטובות (לפי הבתים שכבר נסגרו).` })
     } else if (best.thirdStatus === 'out') {
       reasons.push({
         good: false,
@@ -234,7 +238,7 @@ export function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder
           : `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — לא יספיק לעלייה.`,
       })
     } else {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — העלייה כשלישית עדיין פתוחה, תלוי בבתים שטרם נסגרו.` })
+      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — העלייה כשלישית עדיין לא מובטחת ותלויה בבתים שטרם נסגרו.` })
     }
   }
 
@@ -275,17 +279,22 @@ export function buildGroupWhy(
     })
   }
 
-  if (best.advancers.length > 0) {
+  // A still-'open' best-third is NOT a sure thing, so we keep it out of the
+  // definite "advances — N points" claim and let the dedicated third-place line
+  // below explain it as the conditional bonus it is.
+  const openThird = best.thirdStatus === 'open' ? best.thirdPick : undefined
+  const sureAdvancers = best.advancers.filter(t => t !== openThird)
+  if (sureAdvancers.length > 0) {
     reasons.push({
       good: true,
-      textHe: `${listTeams(best.advancers)} ${best.advancers.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${best.advancers.length * 4} נק' עלייה.`,
+      textHe: `${listTeams(sureAdvancers)} ${sureAdvancers.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${sureAdvancers.length * 4} נק' עלייה.`,
     })
   }
 
   if (best.thirdStatus && best.thirdPick) {
     const teamHe = he(best.thirdPick)
     if (best.thirdStatus === 'in') {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
+      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — וזה כבר מבטיח עלייה כאחת מ‑8 השלישיות הטובות (לפי הבתים שכבר נסגרו).` })
     } else if (best.thirdStatus === 'out') {
       reasons.push({
         good: false,
@@ -294,7 +303,7 @@ export function buildGroupWhy(
           : `${teamHe} תסיים שלישית — לא תעלה כשלישית, אז העלייה שלה כבר לא בתמונה.`,
       })
     } else {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — שומר לה את הסיכוי לעלות (תלוי בבתים שטרם נסגרו).` })
+      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — העלייה כשלישית עדיין לא מובטחת ותלויה בבתים שטרם נסגרו.` })
     }
   }
 

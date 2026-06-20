@@ -54,9 +54,15 @@ export default function BestResultCard({ result }: { result: BestResult }) {
           </div>
           {result.advancers.length > 0 ? (
             <ul className="best-result__points-list">
-              {result.advancers.map(t => (
-                <li key={t}>{he(t)} <span className="best-result__points-each">· 4 נק׳</span></li>
-              ))}
+              {result.advancers.map(t => {
+                const conditional = result.thirdStatus === 'open' && t === result.thirdPick
+                return (
+                  <li key={t}>
+                    {he(t)} <span className="best-result__points-each">· 4 נק׳</span>
+                    {conditional && <span className="best-result__points-cond"> (מותנה — עלייה כשלישית עדיין לא מובטחת)</span>}
+                  </li>
+                )
+              })}
             </ul>
           ) : (
             <p className="best-result__points-note">אף קבוצה שניחשת לא עולה בתרחיש הזה.</p>

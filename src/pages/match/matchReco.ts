@@ -155,13 +155,17 @@ function buildReasons(
   // 3) Your advancers — name the team whose advancement this result wins or costs.
   const advD = cur.advPoints - ref.advPoints
   if (advD > CAT) {
-    const gained = cur.advancers.filter(t => !ref.advancers.includes(t))
-    reasons.push({
-      good: true,
-      textHe: gained.length
-        ? `${listTeams(gained)} ${gained.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${advD} נק' עלייה.`
-        : `יותר מהקבוצות שניחשת עולות כך — ${advD} נק' עלייה.`,
-    })
+    // A still-'open' best-third isn't a sure advancer, so keep it out of the
+    // definite gain claim — reason #4 below explains it as a conditional bonus.
+    const openThird = cur.thirdStatus === 'open' ? cur.thirdPick : undefined
+    const gained = cur.advancers.filter(t => !ref.advancers.includes(t) && t !== openThird)
+    const sureGain = gained.length * 4
+    if (sureGain > CAT) {
+      reasons.push({
+        good: true,
+        textHe: `${listTeams(gained)} ${gained.length > 1 ? 'עולות' : 'עולה'} מהבית כמו שניחשת — ${sureGain} נק' עלייה.`,
+      })
+    }
   } else if (advD < -CAT) {
     const dropped = ref.advancers.filter(t => !cur.advancers.includes(t))
     reasons.push({
@@ -176,7 +180,7 @@ function buildReasons(
   if (cur.thirdStatus && cur.thirdPick) {
     const teamHe = he(cur.thirdPick)
     if (cur.thirdStatus === 'in') {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
+      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — וזה כבר מבטיח עלייה כאחת מ‑8 השלישיות הטובות (לפי הבתים שכבר נסגרו).` })
     } else if (cur.thirdStatus === 'out') {
       reasons.push({
         good: false,
@@ -185,7 +189,7 @@ function buildReasons(
           : `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — לא יספיק, כבר יש 8 שלישיות עם יותר נקודות.`,
       })
     } else {
-      reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — העלייה כשלישית עדיין פתוחה, תלוי בבתים שטרם נסגרו.` })
+      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — העלייה כשלישית עדיין לא מובטחת ותלויה בבתים שטרם נסגרו.` })
     }
   }
 

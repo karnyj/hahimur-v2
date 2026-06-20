@@ -105,7 +105,7 @@ describe('scoreGroupOutcome — hand-computed group A scenario', () => {
     expect(s.total).toBe(28)
   })
 
-  it('sets thirdStatus only for the explicit best-third pick when it lands 3rd', () => {
+  it('sets thirdStatus for the predicted advancer that lands 3rd', () => {
     const user = makeUser({
       predictions: actual,
       predOrderA: ['Mexico', 'Czech Republic', 'South Korea', 'South Africa'],

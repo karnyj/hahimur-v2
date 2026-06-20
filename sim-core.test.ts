@@ -162,6 +162,24 @@ describe('bracketSurvival', () => {
     expect(s.out).toBe(0)
     expect(s.painful).toBeUndefined()
   })
+
+  // Regression: a team backed only to *advance from the group* (top-2, never set
+  // to reach the R16) must still count toward survival and show as a casualty when
+  // it goes out — otherwise the card says "all your picks alive" while the match
+  // line flags that same team as eliminated.
+  test('a group-advance pick that exits is counted, not silently ignored', () => {
+    const groupUser = makeUser({
+      groupTables: { D: [standing('Turkey'), standing('Spain'), standing('X'), standing('Y')] },
+      predictedR16Teams: ['Spain'],
+    })
+    const exits = new Map([['Turkey', { rank: 0, label: 'שלב הבתים' }]])
+    const s = bracketSurvival(groupUser, exits)!
+    expect(s.total).toBe(2)
+    expect(s.out).toBe(1)
+    expect(s.alive).toBe(1)
+    expect(s.painful?.teamHe).toBeDefined()
+    expect(s.painful?.predictedLabel).toBe('עולה מהבית')
+  })
 })
 
 describe('explainMatchForUser', () => {
@@ -186,6 +204,13 @@ describe('explainMatchForUser', () => {
   test('a backed team eliminated in reality is reported as knocked out', () => {
     const txt = explainMatchForUser(user, 'Germany', 'Spain', 0, 1, groupOut)
     expect(txt).toContain(`${he('Germany')} (שמינית) הודחה מהטורניר`)
+  })
+
+  test('a backed team that won its match but is out is reported as ejected, never "closing in"', () => {
+    const txt = explainMatchForUser(user, 'Germany', 'Spain', 1, 0, groupOut)
+    expect(txt).toContain(`${he('Germany')} (שמינית) ניצחה`)
+    expect(txt).toContain('נפלטה מהטורניר')
+    expect(txt).not.toContain('מתקרבת ליעד')
   })
 
   test('a draw keeps an alive pick neutral but flags one that got ejected', () => {

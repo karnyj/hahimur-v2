@@ -39,10 +39,10 @@ function checkMatchReasonText(tag: string, reasons: { textHe: string }[], cur: G
         if (!advLost && !advances) v.push(`${tag} [ADV-NAME] ${cand} claimed advancing but doesn't`)
       }
     }
-    if (t.includes('ובטוח עולה כאחת מ') && cur.thirdStatus !== 'in') v.push(`${tag} [THIRD-IN] vs ${cur.thirdStatus}`)
+    if (t.includes('מבטיח עלייה כאחת מ') && cur.thirdStatus !== 'in') v.push(`${tag} [THIRD-IN] vs ${cur.thirdStatus}`)
     if (t.includes('ריאלית לא מספיק') && (cur.thirdStatus !== 'out' || (cur.thirdPoints ?? 0) >= MIN_VIABLE_THIRD_POINTS)) v.push(`${tag} [THIRD-FLOOR] vs ${cur.thirdStatus}/${cur.thirdPoints}`)
     if ((t.includes('כבר יש 8 שלישיות')) && cur.thirdStatus !== 'out') v.push(`${tag} [THIRD-OUT] vs ${cur.thirdStatus}`)
-    if (t.includes('עדיין פתוחה') && cur.thirdStatus !== 'open') v.push(`${tag} [THIRD-OPEN] vs ${cur.thirdStatus}`)
+    if (t.includes('עדיין לא מובטחת') && cur.thirdStatus !== 'open') v.push(`${tag} [THIRD-OPEN] vs ${cur.thirdStatus}`)
   }
   return v
 }
@@ -183,7 +183,11 @@ describe('recommendation engine correctness (exhaustive)', () => {
           const advGain = r.textHe.match(/— (\d+) נק' עלייה\./)
           if (advGain) {
             const stated = Number(advGain[1])
-            const expected = rec.counterIntuitive ? bestScore.advPoints - naiveScore.advPoints : bestScore.advancers.length * 4
+            // A still-'open' best-third is excluded from the definite gain claim.
+            const openThird = bestScore.thirdStatus === 'open' ? bestScore.thirdPick : undefined
+            const expected = rec.counterIntuitive
+              ? bestScore.advancers.filter(t => !naiveScore.advancers.includes(t) && t !== openThird).length * 4
+              : bestScore.advancers.filter(t => t !== openThird).length * 4
             if (stated !== expected) {
               violations.push(`[GRP-ADV] ${user.label} ${letter}: states ${stated} עלייה but expected ${expected} (counterIntuitive=${rec.counterIntuitive})`)
             }

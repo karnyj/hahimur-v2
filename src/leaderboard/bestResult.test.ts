@@ -85,11 +85,21 @@ function checkCardReasons(
   for (const r of reasons) {
     const t = r.textHe
 
-    // Advancement points: absolute (advancers×4) when it matches your guess, delta otherwise.
+    // Advancement points. A still-'open' best-third is excluded from the definite
+    // gain claim (it's the conditional bonus, explained on its own line), so the
+    // sure-gain count drops it. Loss sentences ("...נק' עלייה פחות") state the delta.
     const adv = t.match(/(\d+) נק' עלייה/)
     if (adv) {
       const stated = Number(adv[1])
-      const expected = matchesPrediction ? best.advancers.length * 4 : Math.abs(advD)
+      const openThird = best.thirdStatus === 'open' ? best.thirdPick : undefined
+      let expected: number
+      if (t.includes('עלייה פחות')) {
+        expected = Math.abs(advD)
+      } else if (matchesPrediction) {
+        expected = best.advancers.filter(x => x !== openThird).length * 4
+      } else {
+        expected = best.advancers.filter(x => !naive.advancers.includes(x) && x !== openThird).length * 4
+      }
       if (stated !== expected) v.push(`${tag} [ADV] states ${stated} but expected ${expected} (matchesPred=${matchesPrediction})`)
     }
 
@@ -140,7 +150,7 @@ function checkCardReasons(
     }
 
     // Third-place wording must match the computed status + the realism floor.
-    if (t.includes('ובטוח עולה כאחת מ')) {
+    if (t.includes('מבטיח עלייה כאחת מ')) {
       if (best.thirdStatus !== 'in') v.push(`${tag} [THIRD-IN] text says clinched but status=${best.thirdStatus}`)
     }
     if (t.includes('ריאלית לא מספיק')) {
@@ -150,7 +160,7 @@ function checkCardReasons(
     if (t.includes('לא תעלה כשלישית') || t.includes('לא יספיק לעלייה')) {
       if (best.thirdStatus !== 'out') v.push(`${tag} [THIRD-OUT] text says out but status=${best.thirdStatus}`)
     }
-    if (t.includes('עדיין פתוחה') || t.includes('שומר לה את הסיכוי')) {
+    if (t.includes('עדיין לא מובטחת')) {
       if (best.thirdStatus !== 'open') v.push(`${tag} [THIRD-OPEN] text says open but status=${best.thirdStatus}`)
     }
   }

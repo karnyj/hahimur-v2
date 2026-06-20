@@ -26,6 +26,22 @@ function resultsUpTo(results: TournamentResults, played: PredictionsState): Tour
 
 const MEDALS = ['🥇', '🥈', '🥉']
 
+// Turns a predicted-depth label (from deepestStage) into a grammatical Hebrew
+// clause for "you predicted (that) it would …", so the painful-bust line reads
+// naturally for both group-advance picks and deep knockout picks.
+function predictedDepthPhrase(label: string): string {
+  switch (label) {
+    case 'אלופה': return 'תהיה אלופה'
+    case 'גמר': return 'תגיע לגמר'
+    case 'חצי גמר': return 'תגיע לחצי הגמר'
+    case 'רבע גמר': return 'תגיע לרבע הגמר'
+    case 'שמינית': return 'תגיע לשמינית'
+    case 'עולה מהבית': return 'תעלה מהבית'
+    case 'עולה כשלישית': return 'תעלה כשלישית'
+    default: return `תגיע ל${label}`
+  }
+}
+
 // Expected final place + an arrow when it differs from the current standing
 // (green = projected to climb, red = projected to slip).
 function ExpectedPlace({ curRank, expRank }: { curRank: number; expRank: number }) {
@@ -118,8 +134,8 @@ function RowDetail({ row, winRank, delta, reason, survival, eliminatedPick }: { 
             <span className="wp-point-label">עדיין בטורניר</span>
             <span className="wp-point-val">
               <b className={`wp-point-move wp-point-move--${survival.out === 0 ? 'up' : survival.alive === 0 ? 'down' : 'flat'}`}>{survival.alive}/{survival.total}</b>
-              {' '}מהקבוצות שבחרת לשמינית עדיין חיות
-              {survival.painful && <span className="wp-point-move wp-point-move--down"> — נפילה כואבת: {survival.painful.teamHe} (בחרת ל{survival.painful.predictedLabel}, יצאה ב{survival.painful.exitLabel})</span>}
+              {' '}מהקבוצות שחזית שיעלו מהבתים עדיין בטורניר
+              {survival.painful && <span className="wp-point-move wp-point-move--down"> — נפילה כואבת: {survival.painful.teamHe} (חזית ש{predictedDepthPhrase(survival.painful.predictedLabel)}, יצאה ב{survival.painful.exitLabel})</span>}
               <span className="wp-point-reason"> (שרידות בלבד — ניצחון/הפסד ומיקום מדויק בבתים כבר נכללים בסיכוי ובניקוד הצפוי)</span>
             </span>
           </li>
@@ -250,7 +266,9 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
             {rows.map((r, i) => {
               const isMe = r.label === me
               const barW = (r.winPct / maxWin) * 100
-              const championOut = r.championHe !== '—' && !r.championAlive
+              // "אלופה הודחה" keys off the *same* elimination set as the survival
+              // line, so the flag can never contradict "still in the tournament".
+              const championOut = !!r.championTeam && eliminationsEff.has(r.championTeam)
               const isOpen = openLabel === r.label
               return (
                 <Fragment key={r.label}>

@@ -673,6 +673,9 @@ export function explainMatchForUser(
       return { rank: d.rank, text: `${name} סיימה בתיקו ועדיין בחיים (${score}) — היעד שחזית נשמר` }
     }
     if (team === winner) {
+      // A team can win its final group game yet still be out (poor record/GD, no
+      // best-third slot). Never say "closing in" for a side the engine has out.
+      if (isOut(team)) return { rank: d.rank, text: `${name} ניצחה ${score} אך נפלטה מהטורניר — היעד שחזית ירד מהפרק` }
       return { rank: d.rank, text: `${name} ניצחה ${score} — מתקרבת ליעד שחזית` }
     }
     if (isOut(team)) return { rank: d.rank, text: `${name} הודחה מהטורניר (${score}) — היעד שחזית ירד מהפרק` }
@@ -843,9 +846,31 @@ export interface BracketSurvival {
   painful?: { teamHe: string; predictedLabel: string; exitLabel: string }
 }
 
+// Every team the bettor predicted to *advance out of the groups* — the round-of-32
+// set: the top two of each group plus their best-third qualifiers. Deeper picks
+// (R16 → champion) are folded in defensively so a deep call is never dropped even
+// if the group tables disagree. This is the universe the survival line counts, and
+// it matches the per-match elimination callout (both key off "predicted to advance"),
+// so the card can't say "all your picks alive" while flagging a backed team as out.
+function predictedAdvancers(u: User): Set<string> {
+  const set = new Set<string>()
+  for (const g of Object.keys(u.groupTables))
+    for (const s of (u.groupTables[g] ?? []).slice(0, 2)) set.add(s.team)
+  if (u.thirdPlaceQualification.resolved)
+    for (const t of u.thirdPlaceQualification.qualifiers) set.add(t.team)
+  for (const t of [
+    u.predictedChampion,
+    ...(u.predictedFinalTeams ?? []),
+    ...(u.predictedSFTeams ?? []),
+    ...(u.predictedQFTeams ?? []),
+    ...(u.predictedR16Teams ?? []),
+  ]) if (t) set.add(t)
+  return set
+}
+
 export function bracketSurvival(u: User, exits: Map<string, TeamExit>): BracketSurvival | null {
-  const picks = u.predictedR16Teams ?? []
-  if (!picks.length) return null
+  const picks = predictedAdvancers(u)
+  if (!picks.size) return null
   let alive = 0
   let painful: { teamHe: string; predictedLabel: string; exitLabel: string; rank: number } | null = null
   for (const team of picks) {
@@ -858,8 +883,8 @@ export function bracketSurvival(u: User, exits: Map<string, TeamExit>): BracketS
   }
   return {
     alive,
-    total: picks.length,
-    out: picks.length - alive,
+    total: picks.size,
+    out: picks.size - alive,
     painful: painful
       ? { teamHe: painful.teamHe, predictedLabel: painful.predictedLabel, exitLabel: painful.exitLabel }
       : undefined,
@@ -876,7 +901,7 @@ export interface StageStat { key: StageKey; label: string; val: number; field: n
 export interface Row {
   label: string; winPct: number; top3Pct: number; top5Pct: number; avgPts: number
   std: number; ceiling: number; curRank: number; expRank: number; turkey: string
-  championHe: string; championAlive: boolean; scorer: string; reason: string
+  championHe: string; championTeam: string; championAlive: boolean; scorer: string; reason: string
   stages: StageStat[]
 }
 
@@ -915,6 +940,7 @@ export function buildRows(real: SimAgg, n: number, played: PredictionsState, pla
       expRank: real.sumRank.get(u.label)! / n,
       turkey: turkeyDepth(u),
       championHe: u.predictedChampion ? he(u.predictedChampion) : '—',
+      championTeam: u.predictedChampion ?? '',
       championAlive: !u.predictedChampion || (real.champFreq.get(u.predictedChampion) ?? 0) > 0,
       scorer: u.topGoalscorer || '—',
       reason: explain(u, winPct, avgWin, signals),

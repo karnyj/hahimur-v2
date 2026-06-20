@@ -254,13 +254,17 @@ export function scoreGroupOutcome(predictions: PredictionsState, ctx: SelfScoreC
   const advancers: string[] = []
   let thirdStatus: ThirdStatus | undefined
   let thirdPoints: number | undefined
+  let thirdAtThird: string | undefined
   for (const team of predAdvancers) {
     const p = pos.get(team)
     if (p == null) continue
     if (p < 2) { advPoints += OLEH_POINTS.group; advancers.push(team); continue }
     if (p === 2) {
       const status = thirdPlaceOutlook(lineOf(standings[2]), field)
-      if (team === thirdPick) { thirdStatus = status; thirdPoints = standings[2].points }
+      // Whichever of your predicted advancers lands 3rd carries the best-third
+      // uncertainty — not only your designated best-third pick. (Only one team
+      // can sit 3rd, so this is unambiguous.)
+      thirdStatus = status; thirdPoints = standings[2].points; thirdAtThird = team
       // 'in'/'open' both count toward the bet (open = still alive); only a
       // mathematically-out third is dropped.
       if (status !== 'out') { advPoints += OLEH_POINTS.group; advancers.push(team) }
@@ -270,6 +274,8 @@ export function scoreGroupOutcome(predictions: PredictionsState, ctx: SelfScoreC
   return {
     matchPoints, placePoints, advPoints,
     total: matchPoints + placePoints + advPoints,
-    order, advancers, thirdPick, thirdStatus, thirdPoints,
+    order, advancers,
+    thirdPick: thirdAtThird ?? thirdPick,
+    thirdStatus, thirdPoints,
   }
 }
