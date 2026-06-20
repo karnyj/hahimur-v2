@@ -33,12 +33,13 @@ const groupScores: Record<string, MatchScores> = {
   A4: { home: 1, away: 0 },
   D3: { home: 2, away: 0 },
   C3: { home: 0, away: 1 },
+  C4: { home: 3, away: 0 },
 }
 
 // Real goals by picked players: player → match ID → goals in that match.
 // Names must match users' topGoalscorer strings exactly.
 const realGoals: Record<string, Record<string, number>> = {
-  'ויניסיוס ג׳וניור': { C1: 1 },
+  'ויניסיוס ג׳וניור': { C1: 1, C4: 1 },
   'קאי האברץ': { E1: 2 },
   'קיליאן אמבפה': { I1: 2 },
   'הארי קיין': { L1: 2 },
