@@ -3,7 +3,7 @@ import { describe, expect, test } from 'vitest'
 import type { KnockoutMatch, PredictionsState, Standing, TournamentResults } from './src/shared/types'
 import { makeUser } from './src/leaderboard/testFixtures'
 import { USERS } from './src/users'
-import { realEliminations, bracketSurvival, currentResults, simulateTournament, realGamesByTeam, explainMatchForUser, he, runSims, mergeSimAgg } from './sim-core'
+import { realEliminations, effectiveEliminations, EFFECTIVE_OUT_EPS, eliminatedBackedPickInMatch, bracketSurvival, currentResults, simulateTournament, realGamesByTeam, explainMatchForUser, he, runSims, mergeSimAgg } from './sim-core'
 
 const standing = (team: string): Standing =>
   ({ team, played: 3, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 })
@@ -62,6 +62,64 @@ describe('realEliminations', () => {
     // with one match still unplayed, nobody is out yet
     const partial = { ...base, groupMatches: { A: [{ ...full[0], scores: { home: null, away: null } }, ...full.slice(1)] } }
     expect(realEliminations(partial).has('South Africa')).toBe(false)
+  })
+})
+
+describe('effectiveEliminations', () => {
+  const realExits = new Map([['Brazil', { rank: 4, label: 'רבע הגמר' }]])
+
+  test('a team the model gives ~0 path to the knockouts is treated as eliminated mid-group', () => {
+    // Turkey-style: not yet provably out (group unfinished) but reach ≈ 0.
+    const eff = effectiveEliminations(realExits, { Turkey: 0, Spain: 0.42 })
+    expect(eff.get('Turkey')).toMatchObject({ rank: 0, label: 'שלב הבתים' })
+    expect(eff.has('Spain')).toBe(false)          // a live pick stays alive
+  })
+
+  test('certain real exits are preserved and never overwritten by the model verdict', () => {
+    const eff = effectiveEliminations(realExits, { Brazil: 0 })
+    expect(eff.get('Brazil')).toMatchObject({ rank: 4 }) // keeps the specific KO exit
+  })
+
+  test('a team right at the threshold is not yet declared out', () => {
+    const eff = effectiveEliminations(new Map(), { Edge: EFFECTIVE_OUT_EPS })
+    expect(eff.has('Edge')).toBe(false)
+  })
+})
+
+describe('eliminatedBackedPickInMatch', () => {
+  const backer = USERS.find(u => (u.predictedR16Teams ?? []).length > 0)!
+  const pick = backer.predictedR16Teams![0]
+
+  test('names a backed team knocked out in the match and counts the whole field', () => {
+    const exits = new Map([[pick, { rank: 0, label: 'שלב הבתים' }]])
+    const res = eliminatedBackedPickInMatch(backer.label, pick, '__no_such_team__', exits)!
+    expect(res.team).toBe(pick)
+    expect(res.teamHe).toBe(he(pick))
+    expect(res.backers).toBeGreaterThanOrEqual(1) // at least this bettor backed it
+    expect(res.total).toBe(USERS.length)
+  })
+
+  test('returns null when no backed team in the match was eliminated', () => {
+    expect(eliminatedBackedPickInMatch(backer.label, pick, '__no_such_team__', new Map())).toBeNull()
+  })
+
+  test('returns null for an unknown bettor label', () => {
+    const exits = new Map([[pick, { rank: 0, label: 'שלב הבתים' }]])
+    expect(eliminatedBackedPickInMatch('__nobody__', pick, '__no_such_team__', exits)).toBeNull()
+  })
+})
+
+describe('runSims knockout-reach', () => {
+  test('every group team gets an explicit reach count, including a doomed 0', () => {
+    // A group already lost by one side: it should appear with reach 0, not be absent.
+    const played: PredictionsState = {
+      D1: { home: 4, away: 1 }, D2: { home: 2, away: 0 },
+      D3: { home: 2, away: 0 }, D4: { home: 0, away: 1 },
+    }
+    const agg = runSims(played, 200, 12345)
+    expect(agg.reachR32.has('Turkey')).toBe(true)      // present even at 0%
+    expect(agg.reachR32.get('Turkey')).toBe(0)
+    expect((agg.reachR32.get('United States') ?? 0)).toBeGreaterThan(0)
   })
 })
 

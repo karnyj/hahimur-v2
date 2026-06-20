@@ -1,7 +1,22 @@
-import type { Match, MatchScores } from '../shared/types'
+import type { Match, MatchScores, PredictionsState } from '../shared/types'
 import { GROUPS } from '../shared/groups'
 import { calculateStandings } from '../shared/standings'
-import { singleMatchPoints, OLEH_POINTS, PLACE_POINT } from './points'
+import {
+  buildContextFromOrder,
+  scoreGroupOutcome,
+  enumerateScores,
+  boundedMaxGoals,
+  topTwoExact,
+  he,
+  type ThirdStatus,
+} from '../pages/stats/group/selfScore'
+import {
+  buildGroupReasons,
+  buildGroupWhy,
+  type OutcomeReason,
+} from '../pages/stats/group/recommendation'
+
+export type { OutcomeReason }
 
 export interface IdealMatch {
   id: string
@@ -10,154 +25,176 @@ export interface IdealMatch {
   scores: MatchScores
 }
 
+export interface SlotInfo {
+  position: number   // 0 = 1st … 3 = 4th
+  team: string       // the team you predicted for this slot
+  placed: string     // the team that actually lands here in the ideal result
+  clean: boolean     // your predicted team lands here exactly, untied
+}
+
 export interface BestResult {
   groupLetter: string
   /** The remaining fixtures with the scoreline to root for. */
   ideal: IdealMatch[]
   resultingOrder: string[]
-  /** Positions (0=1st…) you predicted to qualify, and whether each lands cleanly. */
-  slots: { position: number; team: string; clean: boolean }[]
-  /** How many of your predicted qualifiers sit in their exact, non-tied slot. */
+  orderHe: string[]
+  predictedOrderHe: string[]
+  /** Every slot 1st→4th: who you predicted, who lands there, and whether it's exact. */
+  slots: SlotInfo[]
   cleanSlots: number
   matchPoints: number
   placePoints: number
   advancementPoints: number
-  /** Actual group points you'd bank (match + place + top-two advancement). */
+  /** Honest group points you'd bank: match (incl. already-played) + place (all four slots) + advancement (top-two AND a best-third). */
   groupPoints: number
+  /** Which of your predicted advancers actually go through in the ideal result. */
+  advancers: string[]
   /** The predicted top two end level on every tiebreaker — order is a coin flip. */
   tieAtTop: boolean
-  /** The ideal result is exactly what you predicted. */
+  /** The ideal result is exactly the scorelines you predicted. */
   matchesPrediction: boolean
-  /** Did you tip this group's third-place team to advance as a best-third? */
-  thirdShouldAdvance: boolean
-  /** The team finishing third in the ideal result, and its points. */
+  /** The ideal asks for at least one result you did NOT predict. */
+  counterIntuitive: boolean
+  /** Your best-third pick that lands 3rd in the ideal, and its live outlook. */
+  thirdPick?: string
+  thirdStatus?: ThirdStatus
+  thirdPoints?: number
+  /** The team finishing third in the ideal result (for the display line). */
   thirdTeam: string
-  thirdPoints: number
+  thirdTeamPoints: number
+  /** Our plain-language explanation of why this result is best for your bet. */
+  reasons: OutcomeReason[]
 }
 
-// Locking the 1st/2nd slots seeds the bracket halves — weighted to dominate
-// everything else. The third-place nudge is worth a few points either way.
-const W_SLOT = 100
-const W_THIRD = 3
+export interface BestResultParams {
+  groupLetter: string
+  /** The bettor's per-match score predictions (saved user or live form edits). */
+  predictions: PredictionsState
+  /** The bettor's predicted final order for the group, 1st→4th. */
+  predictedOrder: string[]
+  /** The bettor's best-third pick from THIS group, if they tipped one. */
+  thirdPick?: string
+  /** Settled real scores across ALL groups — drives the cross-group third-place outlook. */
+  settledAll: PredictionsState
+}
 
 const isPlayed = (s: MatchScores | undefined): s is MatchScores =>
-  !!s && s.home !== null && s.away !== null
-
-function enumerateScores(ids: string[], maxGoals: number): Record<string, MatchScores>[] {
-  if (ids.length === 0) return [{}]
-  const [head, ...tail] = ids
-  const rest = enumerateScores(tail, maxGoals)
-  const out: Record<string, MatchScores>[] = []
-  for (let h = 0; h <= maxGoals; h++)
-    for (let a = 0; a <= maxGoals; a++)
-      for (const r of rest) out.push({ ...r, [head]: { home: h, away: a } })
-  return out
-}
-
-function boundedMaxGoals(remaining: number, want = 5): number {
-  let g = want
-  while (g > 1 && Math.pow((g + 1) * (g + 1), remaining) > 60000) g--
-  return g
-}
+  !!s && s.home != null && s.away != null
 
 function lexGreater(a: number[], b: number[]): boolean {
-  for (let i = 0; i < a.length; i++) {
-    if (a[i] !== b[i]) return a[i] > b[i]
-  }
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return a[i] > b[i]
   return false
 }
 
 /**
- * Finds the remaining-match result that best reproduces the user's predicted
- * qualification: each predicted qualifier finishing in the exact slot it was
- * tipped for (winner→1st, runner-up→2nd, your third-place pick→3rd). Getting the
- * *slot* right is what seeds the bracket, so it ranks above raw group points,
- * which are used only as a tiebreak. A cheap local proxy for "keep my bracket
- * intact" — it ignores cross-group third-place displacement.
+ * The single, holistic "what's best for you" engine for a group.
+ *
+ * It enumerates every remaining-match scoreline and scores each candidate purely
+ * on YOUR bet, counting every point the pool actually awards:
+ *   • match points (פגיעה/צליפה) on the games you predicted,
+ *   • a place point for EVERY exact slot — 1st…4th, including non-advancing teams,
+ *   • an advancement point for each predicted qualifier that goes through — top-two
+ *     and a best-third pick, judged 'in'/'open'/'out' against the real, already-
+ *     settled third-place lines of the other groups.
+ *
+ * The result with the most honest points wins. Ties break toward the result that
+ * seeds the knockout bracket the way you predicted (your top-two in their exact
+ * slots — which protects your downstream bracket picks), then your full order,
+ * then your own predicted scoreline (the צליפה), then fewer goals. So we never
+ * trade away a guaranteed point for seeding, but among equals we prefer the
+ * bracket-faithful, prediction-faithful result.
  */
-export function bestRemainingResult(
-  groupLetter: string,
-  predictions: Record<string, MatchScores>,
-  predictedOrder: string[],
-  realScores: Record<string, MatchScores>,
-  opts: { thirdQualifies?: boolean } = {},
-): BestResult | null {
+export function bestRemainingResult(params: BestResultParams): BestResult | null {
+  const { groupLetter, predictions, predictedOrder, thirdPick, settledAll } = params
   const matches: Match[] = GROUPS[groupLetter]?.matches ?? []
   if (matches.length === 0) return null
 
-  const remaining = matches.filter(m => !isPlayed(realScores[m.id]))
+  const remaining = matches.filter(m => !isPlayed(settledAll[m.id]))
   if (remaining.length === 0) return null
 
-  const played: Record<string, MatchScores> = {}
-  for (const m of matches) if (isPlayed(realScores[m.id])) played[m.id] = realScores[m.id]
+  const played: PredictionsState = {}
+  for (const m of matches) if (isPlayed(settledAll[m.id])) played[m.id] = settledAll[m.id]
 
   const remIds = remaining.map(m => m.id)
-  const predTop2 = new Set(predictedOrder.slice(0, 2))
-  // Positions you predicted to qualify (the bracket-relevant slots).
-  const qualPositions = [0, 1, ...(opts.thirdQualifies ? [2] : [])]
+  const ctx = buildContextFromOrder(groupLetter, predictedOrder, thirdPick, settledAll)
   const maxGoals = boundedMaxGoals(remIds.length)
 
-  const goalSum = (combo: Record<string, MatchScores>) =>
+  const goalSum = (combo: PredictionsState) =>
     remIds.reduce((n, id) => n + (combo[id].home ?? 0) + (combo[id].away ?? 0), 0)
-  const isPrediction = (combo: Record<string, MatchScores>) =>
+  const isPrediction = (combo: PredictionsState) =>
     remIds.every(id => {
       const p = predictions[id]
       return p && p.home === combo[id].home && p.away === combo[id].away
     })
 
-  let best: BestResult | null = null
+  let bestCombo: PredictionsState | null = null
+  let bestScore = scoreGroupOutcome(predictions, ctx, { ...played })
   let bestKey: number[] = []
 
   for (const combo of enumerateScores(remIds, maxGoals)) {
-    const { standings, tiedTeams } = calculateStandings(matches, { ...played, ...combo })
-    const order = standings.map(s => s.team)
-
-    const slots = qualPositions.map(p => ({
-      position: p,
-      team: predictedOrder[p],
-      clean: order[p] === predictedOrder[p] && !tiedTeams.has(order[p]),
-    }))
-    const cleanSlots = slots.filter(s => s.clean).length
-
-    let matchPoints = 0
-    for (const id of remIds) {
-      const pred = predictions[id]
-      if (isPlayed(pred)) matchPoints += singleMatchPoints(id, pred, combo[id])
-    }
-    let placePoints = 0
-    for (let i = 0; i < order.length; i++) if (order[i] === predictedOrder[i]) placePoints += PLACE_POINT
-    let advancementPoints = 0
-    for (const t of order.slice(0, 2)) if (predTop2.has(t)) advancementPoints += OLEH_POINTS.group
-    const groupPoints = matchPoints + placePoints + advancementPoints
-
-    // Lock the two bracket-half slots (1st/2nd) above all else. Then nudge the
-    // third-place team in the direction you predicted: if you tipped it to go
-    // through, reward its strength (more likely to clear the best-thirds cut);
-    // if you didn't, reward it staying weak (so it can't bump *your* thirds).
-    const topSlots = [0, 1].filter(p => order[p] === predictedOrder[p] && !tiedTeams.has(order[p])).length
-    const third = standings[2]
-    const thirdTerm = opts.thirdQualifies
-      ? W_THIRD * (standings.find(s => s.team === predictedOrder[2])?.points ?? 0)
-      : -W_THIRD * third.points
-    const score = groupPoints + W_SLOT * topSlots + thirdTerm
-
-    const key = [score, isPrediction(combo) ? 1 : 0, -goalSum(combo)]
-    if (best === null || lexGreater(key, bestKey)) {
+    const state = { ...played, ...combo }
+    const score = scoreGroupOutcome(predictions, ctx, state)
+    const key = [
+      score.total,
+      topTwoExact(score.order, predictedOrder),
+      score.placePoints,
+      isPrediction(combo) ? 1 : 0,
+      -goalSum(combo),
+    ]
+    if (bestCombo === null || lexGreater(key, bestKey)) {
       bestKey = key
-      best = {
-        groupLetter,
-        ideal: remaining.map(m => ({ id: m.id, homeTeam: m.homeTeam, awayTeam: m.awayTeam, scores: combo[m.id] })),
-        resultingOrder: order,
-        slots, cleanSlots,
-        matchPoints, placePoints, advancementPoints, groupPoints,
-        tieAtTop: tiedTeams.has(order[0]) && tiedTeams.has(order[1]),
-        matchesPrediction: isPrediction(combo),
-        thirdShouldAdvance: !!opts.thirdQualifies,
-        thirdTeam: third.team,
-        thirdPoints: third.points,
-      }
+      bestCombo = combo
+      bestScore = score
     }
   }
+  if (!bestCombo) return null
 
-  return best
+  // The result you'd root for if you just expected your own predicted scorelines —
+  // the baseline our reasons explain the recommendation against.
+  const naiveState: PredictionsState = { ...played }
+  for (const id of remIds) {
+    const p = predictions[id]
+    naiveState[id] = isPlayed(p) ? { home: p.home, away: p.away } : { home: 1, away: 0 }
+  }
+  const naiveScore = scoreGroupOutcome(predictions, ctx, naiveState)
+
+  const matchesPrediction = isPrediction(bestCombo)
+  const idealState = { ...played, ...bestCombo }
+  const { standings, tiedTeams } = calculateStandings(matches, idealState)
+  const order = standings.map(s => s.team)
+
+  const slots: SlotInfo[] = predictedOrder.map((team, position) => ({
+    position,
+    team,
+    placed: order[position],
+    clean: order[position] === team && !tiedTeams.has(order[position]),
+  }))
+
+  const reasons = matchesPrediction
+    ? buildGroupWhy(bestScore, predictedOrder, remaining, predictions)
+    : buildGroupReasons(bestScore, naiveScore, predictedOrder)
+
+  return {
+    groupLetter,
+    ideal: remaining.map(m => ({ id: m.id, homeTeam: m.homeTeam, awayTeam: m.awayTeam, scores: bestCombo![m.id] })),
+    resultingOrder: order,
+    orderHe: order.map(he),
+    predictedOrderHe: predictedOrder.map(he),
+    slots,
+    cleanSlots: slots.filter(s => s.clean).length,
+    matchPoints: bestScore.matchPoints,
+    placePoints: bestScore.placePoints,
+    advancementPoints: bestScore.advPoints,
+    groupPoints: bestScore.total,
+    advancers: bestScore.advancers,
+    tieAtTop: tiedTeams.has(order[0]) && tiedTeams.has(order[1]),
+    matchesPrediction,
+    counterIntuitive: !matchesPrediction,
+    thirdPick: bestScore.thirdPick,
+    thirdStatus: bestScore.thirdStatus,
+    thirdPoints: bestScore.thirdPoints,
+    thirdTeam: standings[2]?.team ?? '',
+    thirdTeamPoints: standings[2]?.points ?? 0,
+    reasons,
+  }
 }

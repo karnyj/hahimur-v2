@@ -19,6 +19,10 @@ export interface WinProbResponse {
   // win% change since the last played game (real minus the same sim with that
   // match removed, common-seeded so the diff is low-noise). Empty before any game.
   deltaByLabel: Record<string, number>
+  // Simulated probability each team survives the group stage (reaches the round
+  // of 32), keyed by team code. Lets the view treat a ~0% team as eliminated even
+  // before its group formally finishes (see effectiveEliminations).
+  reachByTeam: Record<string, number>
 }
 
 // `self` is the dedicated worker global; the DOM-lib `Worker` shape covers the
@@ -54,6 +58,9 @@ worker.onmessage = async (e: MessageEvent<WinProbRequest>) => {
   const real = await runChunked(played, n, seed, true, playerGoals)
   const rows = buildRows(real, n, played, playerGoals)
 
+  const reachByTeam: Record<string, number> = {}
+  for (const [team, count] of real.reachR32) reachByTeam[team] = count / n
+
   const deltaByLabel: Record<string, number> = {}
   if (lastMatchId && played[lastMatchId]) {
     const prevPlayed: PredictionsState = { ...played }
@@ -67,5 +74,5 @@ worker.onmessage = async (e: MessageEvent<WinProbRequest>) => {
     }
   }
 
-  worker.postMessage({ rows, deltaByLabel } satisfies WinProbResponse)
+  worker.postMessage({ rows, deltaByLabel, reachByTeam } satisfies WinProbResponse)
 }

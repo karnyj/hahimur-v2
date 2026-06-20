@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from 'react'
 import type { PredictionsState, TournamentResults } from '../../shared/types'
-import type { Row, BracketSurvival } from '../../../sim-core'
-import { realEliminations, bracketSurvivalForLabel, explainLastMatch } from '../../../sim-core'
+import type { Row, BracketSurvival, EliminatedBackedPick } from '../../../sim-core'
+import { realEliminations, effectiveEliminations, bracketSurvivalForLabel, explainLastMatch, eliminatedBackedPickInMatch } from '../../../sim-core'
 import { playedChrono, playedStateUpTo } from './realPlayed'
 import { useWinProbabilities } from './useWinProbabilities'
 
@@ -55,18 +55,42 @@ function Delta({ delta }: { delta: number | undefined }) {
 }
 
 // Tap-to-open key points for one bettor — plain Hebrew, no tooltips (mobile-first).
-function RowDetail({ row, delta, reason, survival }: { row: Row; delta: number | undefined; reason?: string; survival?: BracketSurvival | null }) {
+function RowDetail({ row, winRank, delta, reason, survival, eliminatedPick }: { row: Row; winRank: number; delta: number | undefined; reason?: string; survival?: BracketSurvival | null; eliminatedPick?: EliminatedBackedPick | null }) {
   const exp = Math.round(row.expRank)
   const dirWord = exp < row.curRank ? 'עלייה' : exp > row.curRank ? 'ירידה' : 'ללא שינוי'
   const moveCls = exp < row.curRank ? 'up' : exp > row.curRank ? 'down' : 'flat'
 
+  // The win% (finish *first*) is tail-sensitive, so it can diverge sharply from
+  // the average finish: a high-variance bracket tops the field often yet lands
+  // mid-pack on average, while a steady one finishes high but rarely wins outright.
+  // Spell that gap out so a "wins 22% but average place 5" row reads as designed,
+  // not as a glitch.
+  let spreadNote: string | undefined
+  const gap = exp - winRank
+  if (gap >= 3) spreadNote = `שים לב: הסיכוי לזכות גבוה ביחס למקום הממוצע (${exp}) — ברקט בסיכון-תשואה גבוה, שמזנק לראש בחלק מהתרחישים אך בממוצע נוחת באמצע`
+  else if (gap <= -3) spreadNote = `שים לב: ברקט יציב — מסיים בממוצע במקום ${exp}, אך לעיתים רחוקות לבד בראש, ולכן הסיכוי לזכות נמוך יחסית`
+
   let deltaText = 'למשחק לא הייתה השפעה משמעותית על הסיכוי שלך'
-  if (delta !== undefined && Math.abs(delta) >= 0.1) {
+  if (eliminatedPick) {
+    // A backed team was knocked out here. Lead with that (the salient fact) and
+    // explain why the *relative* win% moved little/none: a widely-shared pick
+    // hurts almost the whole field, so it barely changes who leads.
+    const ep = eliminatedPick
+    const move = delta === undefined || Math.abs(delta) < 0.1
+      ? 'הסיכוי שלך לסיים ראשון כמעט לא זז'
+      : delta > 0
+        ? `הסיכוי שלך לסיים ראשון דווקא עלה ב-${delta.toFixed(1)} נק׳ אחוז`
+        : `הסיכוי שלך לסיים ראשון ירד ב-${Math.abs(delta).toFixed(1)} נק׳ אחוז`
+    const why = ep.backers / ep.total >= 0.4
+      ? `${ep.backers} מתוך ${ep.total} המהמרים בחרו גם הם את ${ep.teamHe}, כך שההדחה פוגעת כמעט בכולם במידה דומה וכמעט לא משנה מי מוביל`
+      : `המודל נתן מראש סיכוי נמוך לכך ש${ep.teamHe} תגיע רחוק, ולכן התרחישים שתלויים בה נשאו משקל קטן`
+    deltaText = `${ep.teamHe}, מהקבוצות שחזית שיעלו, הודחה. ${move} — ${why} (הסיכוי הוא יחסי: לסיים ראשון מול כל המהמרים)`
+  } else if (delta !== undefined && Math.abs(delta) >= 0.1) {
     deltaText = delta > 0
       ? `המשחק שיפר את הסיכוי שלך לסיים ראשון ב-${delta.toFixed(1)} נק׳ אחוז`
       : `המשחק הוריד את הסיכוי שלך לסיים ראשון ב-${Math.abs(delta).toFixed(1)} נק׳ אחוז`
   }
-  const reasonText = reason && reason.trim() ? reason : undefined
+  const reasonText = eliminatedPick ? undefined : (reason && reason.trim() ? reason : undefined)
 
   return (
     <div className="wp-detail-card">
@@ -80,7 +104,10 @@ function RowDetail({ row, delta, reason, survival }: { row: Row; delta: number |
         </li>
         <li>
           <span className="wp-point-label">סיכוי לזכות</span>
-          <span className="wp-point-val"><b>{row.winPct.toFixed(1)}%</b> לסיים ראשון מבין כל המהמרים · טופ 5: <b>{row.top5Pct.toFixed(1)}%</b></span>
+          <span className="wp-point-val">
+            <b>{row.winPct.toFixed(1)}%</b> לסיים ראשון מבין כל המהמרים · טופ 5: <b>{row.top5Pct.toFixed(1)}%</b>
+            {spreadNote && <span className="wp-point-reason"> ({spreadNote})</span>}
+          </span>
         </li>
         <li>
           <span className="wp-point-label">ניקוד צפוי בסיום</span>
@@ -152,7 +179,11 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
     return { playerGoals: cur, prevPlayerGoals: prev }
   }, [results, played, effId])
 
-  const { status, rows, deltaByLabel } = useWinProbabilities(played, last, playerGoals, prevPlayerGoals)
+  const { status, rows, deltaByLabel, reachByTeam } = useWinProbabilities(played, last, playerGoals, prevPlayerGoals)
+  // Certain real exits, widened by the model's verdict: a pick the simulation gives
+  // essentially no path to the knockouts is shown as eliminated even before its
+  // group formally closes — so "still alive" never contradicts a ~0% pick.
+  const eliminationsEff = useMemo(() => effectiveEliminations(eliminations, reachByTeam), [eliminations, reachByTeam])
 
   if (status === 'unsupported') {
     return <div className="lb-prob lb-prob--msg">הדפדפן הזה לא תומך בחישוב הסיכויים. נסו דפדפן עדכני.</div>
@@ -253,9 +284,11 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
                       <td className="wp-detail-cell" colSpan={5}>
                         <RowDetail
                           row={r}
+                          winRank={i + 1}
                           delta={deltaByLabel[r.label]}
-                          reason={last ? explainLastMatch(r.label, last.home, last.away, last.homeScore, last.awayScore, eliminations, deltaByLabel[r.label]) : undefined}
-                          survival={bracketSurvivalForLabel(r.label, eliminations)}
+                          reason={last ? explainLastMatch(r.label, last.home, last.away, last.homeScore, last.awayScore, eliminationsEff, deltaByLabel[r.label]) : undefined}
+                          survival={bracketSurvivalForLabel(r.label, eliminationsEff)}
+                          eliminatedPick={last ? eliminatedBackedPickInMatch(r.label, last.home, last.away, eliminationsEff) : null}
                         />
                       </td>
                     </tr>

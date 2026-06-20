@@ -5,9 +5,47 @@ import { GROUP_MATCHES, ALL_GROUP_LETTERS } from '../../shared/groups'
 import { realPlayedState } from '../../leaderboard/winprob/realPlayed'
 import { recommendMatchOutcome } from './matchReco'
 import { recommendGroupOutcomes } from '../stats/group/recommendation'
-import { buildContext, scoreGroupOutcome, repScore, dir, he, type Want, type GroupScore } from '../stats/group/selfScore'
+import { buildContext, scoreGroupOutcome, repScore, dir, he, groupTeams, SLOT_WORD, MIN_VIABLE_THIRD_POINTS, type Want, type GroupScore } from '../stats/group/selfScore'
 import type { PredictionsState } from '../../shared/types'
 import type { User } from '../../users'
+
+// Slot-name, advancer-name and third-place wording in a per-match reason must
+// match that outcome's real standings — the exact "explanation contradicts the
+// table" bug class. Positive sentences claim a slot/advancer is achieved; loss
+// sentences ("...לא קורה בתרחיש הזה" / "כבר לא עולה") claim it isn't.
+function checkMatchReasonText(tag: string, reasons: { textHe: string }[], cur: GroupScore, predOrder: string[], heToTeam: Map<string, string>): string[] {
+  const v: string[] = []
+  for (const r of reasons) {
+    const t = r.textHe
+    const slotLost = t.includes('לא קורה בתרחיש הזה')
+    for (const mm of t.matchAll(/([\u0590-\u05FF'’ ]+?) במקום ה(ראשון|שני|שלישי|רביעי)/g)) {
+      let nameHe = mm[1].trim()
+      const slot = SLOT_WORD.indexOf(mm[2])
+      let team = heToTeam.get(nameHe)
+      if (!team && nameHe.startsWith('ו')) { nameHe = nameHe.slice(1); team = heToTeam.get(nameHe) }
+      if (!team) { v.push(`${tag} [SLOT-NAME] can't resolve "${nameHe}"`); continue }
+      if (predOrder[slot] !== team) v.push(`${tag} [SLOT-PRED] ${nameHe}@${slot} but you predicted ${predOrder[slot]}`)
+      if (slotLost ? cur.order[slot] === team : cur.order[slot] !== team) v.push(`${tag} [SLOT] ${nameHe}@${slot} claim wrong vs ${cur.order[slot]} (lost=${slotLost})`)
+    }
+    if (/עול[הת] מהבית/.test(t)) {
+      const advLost = t.includes('כבר לא עול')
+      const before = t.split(/ (?:כבר לא )?עול/)[0]
+      for (const mm of before.matchAll(/[\u0590-\u05FF'’]+(?: [\u0590-\u05FF'’]+)*/g)) {
+        const cand = mm[0].replace(/^ו/, '')
+        const team = heToTeam.get(cand) ?? heToTeam.get(mm[0])
+        if (!team) continue
+        const advances = cur.advancers.includes(team)
+        if (advLost && advances) v.push(`${tag} [ADV-LOST] ${cand} claimed dropped but advances`)
+        if (!advLost && !advances) v.push(`${tag} [ADV-NAME] ${cand} claimed advancing but doesn't`)
+      }
+    }
+    if (t.includes('ובטוח עולה כאחת מ') && cur.thirdStatus !== 'in') v.push(`${tag} [THIRD-IN] vs ${cur.thirdStatus}`)
+    if (t.includes('ריאלית לא מספיק') && (cur.thirdStatus !== 'out' || (cur.thirdPoints ?? 0) >= MIN_VIABLE_THIRD_POINTS)) v.push(`${tag} [THIRD-FLOOR] vs ${cur.thirdStatus}/${cur.thirdPoints}`)
+    if ((t.includes('כבר יש 8 שלישיות')) && cur.thirdStatus !== 'out') v.push(`${tag} [THIRD-OUT] vs ${cur.thirdStatus}`)
+    if (t.includes('עדיין פתוחה') && cur.thirdStatus !== 'open') v.push(`${tag} [THIRD-OPEN] vs ${cur.thirdStatus}`)
+  }
+  return v
+}
 
 // Exhaustive correctness guard over every (user × match) and (user × group):
 // the recommended result must be point-optimal, expPoints must equal the engine's
@@ -58,7 +96,7 @@ describe('recommendation engine correctness (exhaustive)', () => {
 
           const ctx = buildContext(user, letter, settled)
           const scores = new Map<Want, GroupScore>()
-          for (const w of WANTS) scores.set(w, scoreGroupOutcome(user, ctx, groupStateForMatch(user, letter, settled, m.id, w)))
+          for (const w of WANTS) scores.set(w, scoreGroupOutcome(user.predictions, ctx, groupStateForMatch(user, letter, settled, m.id, w)))
           const bestScore = scores.get(rec.best.want)!
           const bestStanding = bestScore.placePoints + bestScore.advPoints
 
@@ -67,11 +105,13 @@ describe('recommendation engine correctness (exhaustive)', () => {
             violations.push(`[OPT] ${user.label} ${m.id}: best total ${bestScore.total} < max ${maxTotal}`)
           }
 
+          const heToTeam = new Map(groupTeams(letter).map(t => [he(t), t]))
           for (const o of rec.outcomes) {
             const cur = scores.get(o.want)!
             if (Math.abs(o.expPoints - cur.total) > EPS) {
               violations.push(`[EXP] ${user.label} ${m.id} ${o.want}: expPoints ${o.expPoints} vs truth ${cur.total}`)
             }
+            violations.push(...checkMatchReasonText(`${user.label} ${m.id} ${o.want}`, o.reasons, cur, ctx.predOrder, heToTeam))
             const curStanding = cur.placePoints + cur.advPoints
             for (const r of o.reasons) {
               if (r.textHe.includes(EQUIV_TO_BEST) && Math.abs(curStanding - bestStanding) > EPS) {
@@ -114,7 +154,7 @@ describe('recommendation engine correctness (exhaustive)', () => {
         const scoreCombo = (wants: Want[]): GroupScore => {
           const state: PredictionsState = { ...base }
           remaining.forEach((m, i) => { state[m.id] = repScore(wants[i], user.predictions[m.id]) })
-          return scoreGroupOutcome(user, ctx, state)
+          return scoreGroupOutcome(user.predictions, ctx, state)
         }
 
         // True optimality: no combination of remaining results scores higher.

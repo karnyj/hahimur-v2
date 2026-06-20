@@ -17,6 +17,15 @@ export const he = (team: string) => TEAMS[team]?.he ?? team
 const QUALIFY_COUNT = 8
 const TOTAL_GROUPS = ALL_GROUP_LETTERS.length
 
+// Realistic floor for a best-third to be worth betting on. With 8 of 12 thirds
+// advancing, the qualifying cut line sits around 3 points: a third on 3 is on the
+// bubble, 4 almost always goes through, but 0–2 points is — for all practical
+// purposes — dead (it would need four other groups to produce a ≤1-point third).
+// So once the race is still mathematically "open", we don't optimistically credit
+// a third below this floor. A clinched ('in') third is never downgraded — that's
+// guaranteed by the real, settled numbers, not a projection.
+export const MIN_VIABLE_THIRD_POINTS = 3
+
 export function dir(s?: MatchScores): Want | null {
   if (!s || s.home == null || s.away == null) return null
   if (s.home > s.away) return 'home'
@@ -112,7 +121,11 @@ function buildThirdField(targetGroup: string, settled: PredictionsState): ThirdF
 export function thirdPlaceOutlook(line: ThirdLine, field: ThirdField): ThirdStatus {
   const aheadNow = field.otherThirds.filter(o => betterThird(o, line)).length
   if (aheadNow >= QUALIFY_COUNT) return 'out'
+  // Clinched by the real numbers — advances no matter how the open groups end.
   if (aheadNow + field.unknownOthers < QUALIFY_COUNT) return 'in'
+  // Still mathematically open, but apply judgement: a third on 0–2 points is
+  // realistically out, so we don't bank its 4 points on a near-zero chance.
+  if (line.points < MIN_VIABLE_THIRD_POINTS) return 'out'
   return 'open'
 }
 
@@ -125,13 +138,26 @@ export interface SelfScoreContext {
   field: ThirdField
 }
 
-export function buildContext(user: User, groupLetter: string, settled: PredictionsState): SelfScoreContext {
-  const predOrder = selfPredictedOrder(user, groupLetter)
-  const thirdPick = thirdAdvancerPick(user, groupLetter)
-  const top2 = (user.groupTables[groupLetter] ?? []).slice(0, 2).map(s => s.team)
-  const fallbackTop2 = top2.length ? top2 : predOrder.slice(0, 2)
-  const predAdvancers = [...new Set([...fallbackTop2, ...(thirdPick ? [thirdPick] : [])])]
+// Parameterized context — works for any bettor's predicted order + best-third
+// pick, whether it comes from a saved User or from live, unsaved form edits.
+export function buildContextFromOrder(
+  groupLetter: string,
+  predOrder: string[],
+  thirdPick: string | undefined,
+  settled: PredictionsState,
+): SelfScoreContext {
+  const predAdvancers = [...new Set([...predOrder.slice(0, 2), ...(thirdPick ? [thirdPick] : [])])]
   return { groupLetter, predOrder, predAdvancers, thirdPick, field: buildThirdField(groupLetter, settled) }
+}
+
+export function buildContext(user: User, groupLetter: string, settled: PredictionsState): SelfScoreContext {
+  return buildContextFromOrder(groupLetter, selfPredictedOrder(user, groupLetter), thirdAdvancerPick(user, groupLetter), settled)
+}
+
+// The best-third pick (if any) you bet to advance from this group — exported so
+// callers without a full User (the form view's live edits) can derive it too.
+export function thirdPickFromQualification(user: User, groupLetter: string): string | undefined {
+  return thirdAdvancerPick(user, groupLetter)
 }
 
 export interface GroupScore {
@@ -171,9 +197,41 @@ export function listTeams(teams: string[]): string {
   return teams.map(he).join(' ו')
 }
 
+// How many of your predicted top-2 (the bracket-relevant slots) land in their
+// exact position. Used as a tiebreak so that, among results worth the same
+// points, we prefer the one that seeds the knockout bracket the way you predicted.
+export function topTwoExact(order: string[], predOrder: string[]): number {
+  let n = 0
+  for (let i = 0; i < 2; i++) if (order[i] != null && order[i] === predOrder[i]) n++
+  return n
+}
+
+// Enumerate every scoreline (0..maxGoals each side) for the given match ids.
+// Full scorelines — not just home/draw/away — so the engine can find the exact
+// margin that wins a goal-difference tiebreak for your predicted order, and can
+// land on your own predicted scoreline for the צליפה.
+export function enumerateScores(ids: string[], maxGoals: number): Record<string, MatchScores>[] {
+  if (ids.length === 0) return [{}]
+  const [head, ...tail] = ids
+  const rest = enumerateScores(tail, maxGoals)
+  const out: Record<string, MatchScores>[] = []
+  for (let h = 0; h <= maxGoals; h++)
+    for (let a = 0; a <= maxGoals; a++)
+      for (const r of rest) out.push({ ...r, [head]: { home: h, away: a } })
+  return out
+}
+
+// Cap the goals-per-side so the full enumeration stays well under ~60k states.
+export function boundedMaxGoals(remaining: number, want = 5): number {
+  let g = want
+  while (g > 1 && Math.pow((g + 1) * (g + 1), remaining) > 60000) g--
+  return g
+}
+
 // Score one fully-specified group state (every group match has a scoreline:
 // real where settled, representative where hypothetical) purely on *your* bet.
-export function scoreGroupOutcome(user: User, ctx: SelfScoreContext, state: PredictionsState): GroupScore {
+// Takes your raw match predictions so it works for saved users and live edits alike.
+export function scoreGroupOutcome(predictions: PredictionsState, ctx: SelfScoreContext, state: PredictionsState): GroupScore {
   const { groupLetter, predOrder, predAdvancers, thirdPick, field } = ctx
   const matches = GROUP_MATCHES[groupLetter] ?? []
   const standings = calculateStandings(matches, state).standings
@@ -182,7 +240,7 @@ export function scoreGroupOutcome(user: User, ctx: SelfScoreContext, state: Pred
 
   let matchPoints = 0
   for (const m of matches) {
-    const pred = user.predictions[m.id]
+    const pred = predictions[m.id]
     const actual = state[m.id]
     if (pred && actual && actual.home != null && actual.away != null) {
       matchPoints += singleMatchPoints(m.id, pred, actual)

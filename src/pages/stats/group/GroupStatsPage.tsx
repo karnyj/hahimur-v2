@@ -8,6 +8,8 @@ import { useCurrentUser } from '../../../shared/useCurrentUser'
 import PageLayout from '../../../shared/PageLayout'
 import BestResultCard from '../../../formView/groupStage/BestResultCard'
 import { bestRemainingResult } from '../../../leaderboard/bestResult'
+import { settledState } from './recommendation'
+import { thirdPickFromQualification } from './selfScore'
 import GroupPicker from '../GroupPicker'
 import StandingsTable from '../../../formView/groupStage/StandingsTable'
 import GroupVoteMatrix from '../../group/GroupVoteMatrix'
@@ -58,10 +60,14 @@ export default function GroupStatsPage({ groupLetter }: Props) {
   // The result to root for across this group's remaining matches, from your bet.
   const myGroupTable = currentUser?.groupTables[groupLetter]
   const myOrder = myGroupTable?.map(s => s.team) ?? []
-  const thirdQualifies = !!currentUser?.thirdPlaceQualification.resolved &&
-    currentUser.thirdPlaceQualification.qualifiers.some(t => t.team === myOrder[2])
   const bestResult = currentUser && myGroupTable
-    ? bestRemainingResult(groupLetter, currentUser.predictions, myOrder, scores, { thirdQualifies })
+    ? bestRemainingResult({
+        groupLetter,
+        predictions: currentUser.predictions,
+        predictedOrder: myOrder,
+        thirdPick: thirdPickFromQualification(currentUser, groupLetter),
+        settledAll: settledState(results),
+      })
     : null
 
   const renderRow = (match: Match) => (

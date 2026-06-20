@@ -14,6 +14,7 @@ import {
   slotsWon,
   describeSlots,
   listTeams,
+  MIN_VIABLE_THIRD_POINTS,
   type Want,
   type GroupScore,
 } from './selfScore'
@@ -168,7 +169,7 @@ function buildGroupContext(groupLetter: string, settled: PredictionsState, predO
 // point components: your group scoreline points, your exact standings order
 // (naming the slots that change) and your advancers (incl. an at-risk best-third
 // pick). Only your own picks.
-function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder: string[]): OutcomeReason[] {
+export function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder: string[]): OutcomeReason[] {
   const reasons: OutcomeReason[] = []
 
   const matchD = best.matchPoints - naive.matchPoints
@@ -226,7 +227,12 @@ function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder: strin
     if (best.thirdStatus === 'in') {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
     } else if (best.thirdStatus === 'out') {
-      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — לא יספיק לעלייה.` })
+      reasons.push({
+        good: false,
+        textHe: (best.thirdPoints ?? 0) < MIN_VIABLE_THIRD_POINTS
+          ? `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — ריאלית לא מספיק לעלייה כשלישית (כמעט תמיד צריך 3+ נק').`
+          : `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — לא יספיק לעלייה.`,
+      })
     } else {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — העלייה כשלישית עדיין פתוחה, תלוי בבתים שטרם נסגרו.` })
     }
@@ -239,15 +245,15 @@ function buildGroupReasons(best: GroupScore, naive: GroupScore, predOrder: strin
 // to spell out — so we explain in absolute terms what it secures you: your
 // scoreline points on the matches you predicted, the exact placements it locks in,
 // and the advancers it carries through. Grounded only in your bet.
-function buildGroupWhy(
+export function buildGroupWhy(
   best: GroupScore,
   predOrder: string[],
   remaining: GroupMatch[],
-  user: User,
+  predictions: PredictionsState,
 ): OutcomeReason[] {
   const reasons: OutcomeReason[] = []
 
-  const predictedRemaining = remaining.filter(m => !!dir(user.predictions[m.id]))
+  const predictedRemaining = remaining.filter(m => !!dir(predictions[m.id]))
   if (predictedRemaining.length > 0) {
     reasons.push({
       good: true,
@@ -281,7 +287,12 @@ function buildGroupWhy(
     if (best.thirdStatus === 'in') {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
     } else if (best.thirdStatus === 'out') {
-      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית — לא תעלה כשלישית, אז העלייה שלה כבר לא בתמונה.` })
+      reasons.push({
+        good: false,
+        textHe: (best.thirdPoints ?? 0) < MIN_VIABLE_THIRD_POINTS
+          ? `${teamHe} תסיים שלישית עם ${best.thirdPoints} נק' — ריאלית לא מספיק לעלייה כשלישית, אז העלייה שלה לא בתמונה.`
+          : `${teamHe} תסיים שלישית — לא תעלה כשלישית, אז העלייה שלה כבר לא בתמונה.`,
+      })
     } else {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — שומר לה את הסיכוי לעלות (תלוי בבתים שטרם נסגרו).` })
     }
@@ -325,7 +336,7 @@ export function recommendGroupOutcomes(
   const scoreCombo = (wants: Want[]): GroupScore => {
     const state: PredictionsState = { ...baseGroup }
     remaining.forEach((m, i) => { state[m.id] = repScore(wants[i], user.predictions[m.id]) })
-    return scoreGroupOutcome(user, ctx, state)
+    return scoreGroupOutcome(user.predictions, ctx, state)
   }
 
   const naiveWants: Want[] = remaining.map(m => dir(user.predictions[m.id]) ?? 'home')
@@ -377,7 +388,7 @@ export function recommendGroupOutcomes(
     counterIntuitive,
     reasons: counterIntuitive
       ? buildGroupReasons(bestScore, naiveScore, predOrder)
-      : buildGroupWhy(bestScore, predOrder, remaining, user),
+      : buildGroupWhy(bestScore, predOrder, remaining, user.predictions),
     groupContext,
   }
 }

@@ -462,6 +462,12 @@ export interface SimAgg {
   sumRank: Map<string, number>
   stages: Map<string, Stages>
   champFreq: Map<string, number>
+  // How many simulated tournaments each *team* reaches the knockouts (round of
+  // 32) — i.e. survives the group stage. Read as a survival probability, this is
+  // the model's verdict on whether a team is still realistically in it, which the
+  // group-only realEliminations() can't yet prove mid-group (a 3rd-placed team is
+  // formally out only once the best-third pool is decided). See effectiveEliminations().
+  reachR32: Map<string, number>
   series?: Map<string, number[]>
 }
 
@@ -491,12 +497,22 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
   const sumRank = new Map<string, number>()
   const stages = new Map<string, Stages>()
   const champFreq = new Map<string, number>()
+  const reachR32 = new Map<string, number>()
   const series = collect ? new Map<string, number[]>() : undefined
   for (const u of USERS) { win.set(u.label, 0); top3.set(u.label, 0); top5.set(u.label, 0); sumPts.set(u.label, 0); sumSq.set(u.label, 0); sumRank.set(u.label, 0); stages.set(u.label, zeroStages()); series?.set(u.label, []) }
+  // Seed every group team at 0 so a team that *never* reaches the knockouts still
+  // gets an explicit 0 (a missing key would otherwise hide it from the survival
+  // verdict — exactly the case for a side that's already mathematically doomed).
+  for (const letter of ALL_GROUP_LETTERS)
+    for (const m of GROUP_MATCHES[letter]) { reachR32.set(m.homeTeam, 0); reachR32.set(m.awayTeam, 0) }
 
   for (let i = 0; i < n; i++) {
     const results = simulateTournament(played, realGoals, realGames)
     if (results.champion) champFreq.set(results.champion, (champFreq.get(results.champion) ?? 0) + 1)
+    for (const m of results.knockoutStages.r32) {
+      if (m.home) reachR32.set(m.home, (reachR32.get(m.home) ?? 0) + 1)
+      if (m.away) reachR32.set(m.away, (reachR32.get(m.away) ?? 0) + 1)
+    }
     const scored = USERS.map(u => {
       const b = computeUserPoints(u, results)
       const st = stages.get(u.label)!
@@ -523,7 +539,7 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
       series?.get(s.label)!.push(s.pts)
     }
   }
-  return { win, top3, top5, sumPts, sumSq, sumRank, stages, champFreq, series }
+  return { win, top3, top5, sumPts, sumSq, sumRank, stages, champFreq, reachR32, series }
 }
 
 // Add every tally of `b` into `a` (in place) and return `a`. All aggregate
@@ -538,7 +554,7 @@ export function mergeSimAgg(a: SimAgg, b: SimAgg): SimAgg {
   }
   addMap(a.win, b.win); addMap(a.top3, b.top3); addMap(a.top5, b.top5)
   addMap(a.sumPts, b.sumPts); addMap(a.sumSq, b.sumSq); addMap(a.sumRank, b.sumRank)
-  addMap(a.champFreq, b.champFreq)
+  addMap(a.champFreq, b.champFreq); addMap(a.reachR32, b.reachR32)
   for (const [label, st] of b.stages) {
     const cur = a.stages.get(label)
     if (!cur) { a.stages.set(label, { ...st }); continue }
@@ -691,6 +707,37 @@ export function explainLastMatch(
   return u ? explainMatchForUser(u, home, away, homeScore, awayScore, eliminations, delta) : ''
 }
 
+// When a played match eliminates a team the bettor had backed to advance, this
+// names that pick (the deepest one if both teams were backed) plus how many of
+// the whole field also backed it. The caller uses the share to explain a
+// counter-intuitive card line — "your pick died yet your win% barely moved" —
+// which happens when a near-consensus pick falls: the blow lands on almost
+// everyone, so the *relative* race (finish first among all bettors) hardly shifts.
+export interface EliminatedBackedPick {
+  team: string
+  teamHe: string
+  backers: number
+  total: number
+}
+
+export function eliminatedBackedPickInMatch(
+  label: string,
+  home: string, away: string,
+  exits: Map<string, TeamExit>,
+): EliminatedBackedPick | null {
+  const u = USERS.find(x => x.label === label)
+  if (!u) return null
+  const backed = [home, away]
+    .map(team => ({ team, d: deepestStage(u, team) }))
+    .filter(c => c.d.rank > 0 && exits.has(c.team))
+    .sort((a, b) => b.d.rank - a.d.rank)
+  if (!backed.length) return null
+  const { team } = backed[0]
+  let backers = 0
+  for (const x of USERS) if (deepestStage(x, team).rank > 0) backers++
+  return { team, teamHe: he(team), backers, total: USERS.length }
+}
+
 // ---- bracket survival vs reality ------------------------------------------
 // For each bettor we want: of the teams they backed to reach the knockouts,
 // how many are still actually in the tournament — and which deep pick hurt
@@ -761,6 +808,29 @@ export function realEliminations(results: TournamentResults): Map<string, TeamEx
       const loser = koLoserTeam(m)
       if (loser && !exits.has(loser)) exits.set(loser, KO_EXIT[round])
     }
+  }
+  return exits
+}
+
+// Fuse the *certain* exits (knockout losers, fully-played group non-qualifiers)
+// with the model's verdict: any team whose simulated knockout-reach probability
+// is below `eps` has no realistic path left and is treated as eliminated for the
+// survival count and the per-match explanation — even mid-group, where a team can
+// be mathematically out of the top two yet not *formally* out until the best-third
+// pool is settled (e.g. a side that lost its first two games on a poor goal
+// difference). This keeps the card self-consistent: the same engine that gives a
+// pick ~0% to advance also stops calling it "still alive". `reachByTeam` is keyed
+// by team code (reachR32 / n) exactly like `realEliminations`' exits map.
+export const EFFECTIVE_OUT_EPS = 0.005
+
+export function effectiveEliminations(
+  realExits: Map<string, TeamExit>,
+  reachByTeam: Record<string, number>,
+  eps: number = EFFECTIVE_OUT_EPS,
+): Map<string, TeamExit> {
+  const exits = new Map(realExits)
+  for (const [team, reach] of Object.entries(reachByTeam)) {
+    if (reach < eps && !exits.has(team)) exits.set(team, { rank: 0, label: 'שלב הבתים' })
   }
   return exits
 }

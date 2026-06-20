@@ -11,6 +11,8 @@ import {
   slotsWon,
   describeSlots,
   listTeams,
+  topTwoExact,
+  MIN_VIABLE_THIRD_POINTS,
   type Want,
   type GroupScore,
   type SelfScoreContext,
@@ -176,7 +178,12 @@ function buildReasons(
     if (cur.thirdStatus === 'in') {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — ובטוח עולה כאחת מ‑8 השלישיות הטובות.` })
     } else if (cur.thirdStatus === 'out') {
-      reasons.push({ good: false, textHe: `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — לא יספיק, כבר יש 8 שלישיות עם יותר נקודות.` })
+      reasons.push({
+        good: false,
+        textHe: (cur.thirdPoints ?? 0) < MIN_VIABLE_THIRD_POINTS
+          ? `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — ריאלית לא מספיק לעלייה כשלישית (כמעט תמיד צריך 3+ נק').`
+          : `${teamHe} תסיים שלישית עם ${cur.thirdPoints} נק' — לא יספיק, כבר יש 8 שלישיות עם יותר נקודות.`,
+      })
     } else {
       reasons.push({ good: true, textHe: `${teamHe} תסיים שלישית — העלייה כשלישית עדיין פתוחה, תלוי בבתים שטרם נסגרו.` })
     }
@@ -243,17 +250,20 @@ export function recommendMatchOutcome(
   const scores = new Map<Want, GroupScore>()
   for (const want of wants) {
     const state = groupStateForMatch(user, groupLetter, settled, matchId, want)
-    scores.set(want, scoreGroupOutcome(user, ctx, state))
+    scores.set(want, scoreGroupOutcome(user.predictions, ctx, state))
   }
 
   const naiveW: Want = dir(user.predictions[matchId]) ?? 'home'
   const totalOf = (w: Want) => scores.get(w)!.total
+  const seedOf = (w: Want) => topTwoExact(scores.get(w)!.order, ctx.predOrder)
 
-  // Best = most of *your* points; ties stay on the result you predicted, then
-  // prefer the safer third (more points for an at-risk best-third pick).
+  // Best = most of *your* points. Ties break toward the result that best seeds
+  // the knockout bracket (your predicted top-two in their exact slots), then to
+  // the result you predicted, then to the safer at-risk best-third pick.
   const bestW = [...wants].sort((a, b) => {
     const d = totalOf(b) - totalOf(a)
     if (Math.abs(d) > CAT) return d
+    if (seedOf(b) !== seedOf(a)) return seedOf(b) - seedOf(a)
     if (a === naiveW) return -1
     if (b === naiveW) return 1
     return (scores.get(b)!.thirdPoints ?? 0) - (scores.get(a)!.thirdPoints ?? 0)

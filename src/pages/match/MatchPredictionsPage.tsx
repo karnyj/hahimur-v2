@@ -14,7 +14,10 @@ import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
 import MatchLeaderboard from './MatchLeaderboard'
 import BestResultCard from '../../formView/groupStage/BestResultCard'
+import MatchRecommendation from './MatchRecommendation'
 import { bestRemainingResult } from '../../leaderboard/bestResult'
+import { settledState } from '../stats/group/recommendation'
+import { thirdPickFromQualification } from '../stats/group/selfScore'
 import './MatchPredictionsPage.css'
 
 type Team = { iso: string; he: string }
@@ -70,10 +73,14 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
 
   // The result to root for across this group's remaining matches, from your bet.
   const myOrder = myGroupTable?.map(s => s.team) ?? []
-  const thirdQualifies = !!currentUser?.thirdPlaceQualification.resolved &&
-    currentUser.thirdPlaceQualification.qualifiers.some(t => t.team === myOrder[2])
   const bestResult = currentUser && myGroupTable
-    ? bestRemainingResult(groupLetter, currentUser.predictions, myOrder, liveGroupScores(results, groupLetter), { thirdQualifies })
+    ? bestRemainingResult({
+        groupLetter,
+        predictions: currentUser.predictions,
+        predictedOrder: myOrder,
+        thirdPick: thirdPickFromQualification(currentUser, groupLetter),
+        settledAll: settledState(results),
+      })
     : null
 
   // Step to the chronologically adjacent matches.
@@ -110,11 +117,18 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
           </>
         )}
 
+        <MatchRecommendation
+          matchId={match.id}
+          currentUser={currentUser ?? undefined}
+          results={results}
+          decided={!!realScore}
+        />
+
         {bestResult && (
           <>
             <header className="section-heading" dir="rtl">
               <span className="section-heading__eyebrow">ההמלצה שלך</span>
-              <h2 className="section-heading__title">מה טוב לך?</h2>
+              <h2 className="section-heading__title">הבית כולו</h2>
             </header>
             <BestResultCard result={bestResult} />
           </>

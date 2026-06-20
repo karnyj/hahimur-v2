@@ -83,12 +83,13 @@ export default function FormView({
   )
 
   // What result to root for in the active group's remaining matches — the one
-  // that lands each predicted qualifier in the exact slot it was tipped for
+  // that banks the most of your group points (match + every exact slot +
+  // advancement), with bracket-faithful seeding as the tiebreak.
   const bestResult = useMemo(() => {
     const order = activeStandings.map(s => s.team)
     const quals = user?.thirdPlaceQualification.resolved ? user.thirdPlaceQualification.qualifiers : []
-    const thirdQualifies = quals.some(t => t.team === order[2])
-    return bestRemainingResult(activeGroup, predictions, order, actualScores, { thirdQualifies })
+    const thirdPick = quals.find(t => t.team === order[2])?.team
+    return bestRemainingResult({ groupLetter: activeGroup, predictions, predictedOrder: order, thirdPick, settledAll: actualScores })
   }, [activeGroup, predictions, activeStandings, actualScores, user])
 
   const nextMatchRef = useRef<HTMLDivElement>(null)

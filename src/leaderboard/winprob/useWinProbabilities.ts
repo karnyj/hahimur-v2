@@ -10,6 +10,7 @@ export interface WinProbResult {
   status: WinProbStatus
   rows: Row[]
   deltaByLabel: Record<string, number>
+  reachByTeam: Record<string, number>
 }
 
 const DEFAULT_N = 2500
@@ -18,6 +19,7 @@ const DEFAULT_SEED = 12345
 interface Computed {
   rows: Row[]
   deltaByLabel: Record<string, number>
+  reachByTeam: Record<string, number>
 }
 
 // The engine is fully deterministic for a given (played, goals, n, seed), so every
@@ -47,7 +49,7 @@ export function useWinProbabilities(
     if (!supported || cache.has(key)) return
     const worker = new Worker(new URL('./winProbWorker.ts', import.meta.url), { type: 'module' })
     worker.onmessage = (e: MessageEvent<WinProbResponse>) => {
-      cache.set(key, { rows: e.data.rows, deltaByLabel: e.data.deltaByLabel })
+      cache.set(key, { rows: e.data.rows, deltaByLabel: e.data.deltaByLabel, reachByTeam: e.data.reachByTeam })
       bump(x => x + 1)
     }
     worker.postMessage({ played, lastMatchId, playerGoals, prevPlayerGoals, n, seed } satisfies WinProbRequest)
@@ -56,8 +58,8 @@ export function useWinProbabilities(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, supported])
 
-  if (!supported) return { status: 'unsupported', rows: [], deltaByLabel: {} }
+  if (!supported) return { status: 'unsupported', rows: [], deltaByLabel: {}, reachByTeam: {} }
   const hit = cache.get(key)
-  if (hit) return { status: 'ready', rows: hit.rows, deltaByLabel: hit.deltaByLabel }
-  return { status: 'loading', rows: [], deltaByLabel: {} }
+  if (hit) return { status: 'ready', rows: hit.rows, deltaByLabel: hit.deltaByLabel, reachByTeam: hit.reachByTeam }
+  return { status: 'loading', rows: [], deltaByLabel: {}, reachByTeam: {} }
 }

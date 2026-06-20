@@ -58,21 +58,21 @@ describe('scoreGroupOutcome — hand-computed group A scenario', () => {
   it('computes order with the goal-difference tiebreak (Czech above South Korea)', () => {
     const user = makeUser({ predictions: actual, predOrderA: ['Mexico', 'Czech Republic', 'South Korea', 'South Africa'] })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.order).toEqual(['Mexico', 'Czech Republic', 'South Korea', 'South Africa'])
   })
 
   it('place points: exact predicted order ⇒ 4', () => {
     const user = makeUser({ predictions: actual, predOrderA: ['Mexico', 'Czech Republic', 'South Korea', 'South Africa'] })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.placePoints).toBe(4)
   })
 
   it('place points: predicting 2nd/3rd swapped ⇒ only 2 (1st + 4th right)', () => {
     const user = makeUser({ predictions: actual, predOrderA: ['Mexico', 'South Korea', 'Czech Republic', 'South Africa'] })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.placePoints).toBe(2)
   })
 
@@ -81,7 +81,7 @@ describe('scoreGroupOutcome — hand-computed group A scenario', () => {
     // No other groups settled ⇒ South Korea third outlook is "open" ⇒ still counts.
     const user = makeUser({ predictions: actual, predOrderA: ['Mexico', 'South Korea', 'Czech Republic', 'South Africa'] })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.advPoints).toBe(8)
     expect(new Set(s.advancers)).toEqual(new Set(['Mexico', 'South Korea']))
   })
@@ -99,7 +99,7 @@ describe('scoreGroupOutcome — hand-computed group A scenario', () => {
     }
     const user = makeUser({ predictions, predOrderA: ['Mexico', 'Czech Republic', 'South Korea', 'South Africa'] })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.matchPoints).toBe(16)
     // total = match 16 + place 4 + adv 8 = 28
     expect(s.total).toBe(28)
@@ -112,7 +112,7 @@ describe('scoreGroupOutcome — hand-computed group A scenario', () => {
       thirdPick: 'South Korea',
     })
     const ctx = buildContext(user, 'A', {})
-    const s = scoreGroupOutcome(user, ctx, actual)
+    const s = scoreGroupOutcome(user.predictions, ctx, actual)
     expect(s.thirdPick).toBe('South Korea')
     expect(s.thirdStatus).toBe('open') // no other groups settled yet
   })
@@ -143,6 +143,28 @@ describe('thirdPlaceOutlook — clinch / open / out math (8 best thirds qualify)
     const better: ThirdLine = { points: 9, gd: 9, gf: 9 }
     const field: ThirdField = { otherThirds: Array(3).fill(better), unknownOthers: 4 }
     expect(thirdPlaceOutlook(line, field)).toBe('in')
+  })
+
+  it('open zone but only 2 points ⇒ realistically out (judgement floor)', () => {
+    const weak: ThirdLine = { points: 2, gd: 5, gf: 9 }
+    const field: ThirdField = { otherThirds: [], unknownOthers: 11 }
+    // Mathematically still "open", but a 2-point third is treated as dead.
+    expect(thirdPlaceOutlook(weak, field)).toBe('out')
+  })
+
+  it('open zone with exactly 3 points ⇒ still open (on the bubble, not dropped)', () => {
+    const bubble: ThirdLine = { points: 3, gd: -2, gf: 1 }
+    const field: ThirdField = { otherThirds: [], unknownOthers: 11 }
+    expect(thirdPlaceOutlook(bubble, field)).toBe('open')
+  })
+
+  it('a clinched third on 2 points is NEVER downgraded by the floor', () => {
+    // 7 better + 4 worse, nothing unknown ⇒ 8th best ⇒ mathematically in, even on 2 pts.
+    const better: ThirdLine = { points: 9, gd: 9, gf: 9 }
+    const worse: ThirdLine = { points: 0, gd: 0, gf: 0 }
+    const weak: ThirdLine = { points: 2, gd: 0, gf: 0 }
+    const field: ThirdField = { otherThirds: [...Array(7).fill(better), ...Array(4).fill(worse)], unknownOthers: 0 }
+    expect(thirdPlaceOutlook(weak, field)).toBe('in')
   })
 
   it('respects the points→GD→GF comparison when counting who is ahead', () => {

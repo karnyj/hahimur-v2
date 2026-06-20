@@ -1,3 +1,4 @@
+import { useId, useState } from 'react'
 import { TEAMS } from '../../shared/groups'
 import type { BestResult } from '../../leaderboard/bestResult'
 import './BestResultCard.css'
@@ -5,14 +6,68 @@ import './BestResultCard.css'
 const he = (team: string) => TEAMS[team]?.he ?? team
 
 export default function BestResultCard({ result }: { result: BestResult }) {
-  const cleanPos = new Set(result.slots.filter(s => s.clean).map(s => s.position))
+  const [showPoints, setShowPoints] = useState(false)
+  const panelId = useId()
+  const cleanSlots = result.slots.filter(s => s.clean)
 
   return (
     <div className="best-result">
       <div className="best-result__head">
         <span className="best-result__title">הכי טוב בשבילך</span>
-        <span className="best-result__sub">{result.groupPoints} נק׳ בבית</span>
+        <button
+          type="button"
+          className="best-result__sub best-result__sub--toggle"
+          onClick={() => setShowPoints(v => !v)}
+          aria-expanded={showPoints}
+          aria-controls={panelId}
+        >
+          {result.groupPoints} נק׳ בבית
+          <span className="best-result__caret" aria-hidden>{showPoints ? '▴' : '▾'}</span>
+        </button>
       </div>
+
+      {showPoints && (
+        <div className="best-result__points" id={panelId}>
+          <div className="best-result__points-cat">
+            <span className="best-result__points-name">ניחוש המשחקים (פגיעה/צליפה)</span>
+            <span className="best-result__points-val">{result.matchPoints} נק׳</span>
+          </div>
+          <p className="best-result__points-note">מהתוצאות שניחשת במשחקי הבית.</p>
+
+          <div className="best-result__points-cat">
+            <span className="best-result__points-name">מיקום מדויק</span>
+            <span className="best-result__points-val">{result.placePoints} נק׳</span>
+          </div>
+          {cleanSlots.length > 0 ? (
+            <ul className="best-result__points-list">
+              {cleanSlots.map(s => (
+                <li key={s.position}>{he(s.team)} — מקום {s.position + 1} <span className="best-result__points-each">· 1 נק׳</span></li>
+              ))}
+            </ul>
+          ) : (
+            <p className="best-result__points-note">אין מקום שיוצא בדיוק כמו שניחשת.</p>
+          )}
+
+          <div className="best-result__points-cat">
+            <span className="best-result__points-name">עולות לשלב הבא</span>
+            <span className="best-result__points-val">{result.advancementPoints} נק׳</span>
+          </div>
+          {result.advancers.length > 0 ? (
+            <ul className="best-result__points-list">
+              {result.advancers.map(t => (
+                <li key={t}>{he(t)} <span className="best-result__points-each">· 4 נק׳</span></li>
+              ))}
+            </ul>
+          ) : (
+            <p className="best-result__points-note">אף קבוצה שניחשת לא עולה בתרחיש הזה.</p>
+          )}
+
+          <div className="best-result__points-total">
+            <span>סה״כ</span>
+            <span>{result.groupPoints} נק׳</span>
+          </div>
+        </div>
+      )}
 
       <ul className="best-result__matches">
         {result.ideal.map(m => (
@@ -25,9 +80,9 @@ export default function BestResultCard({ result }: { result: BestResult }) {
       </ul>
 
       <div className="best-result__order">
-        {result.resultingOrder.map((t, i) => (
-          <span key={t} className={`best-result__pos${cleanPos.has(i) ? ' best-result__pos--slot' : ''}`}>
-            {i + 1}. {he(t)}{cleanPos.has(i) ? ' ✓' : ''}
+        {result.slots.map(s => (
+          <span key={s.position} className={`best-result__pos${s.clean ? ' best-result__pos--slot' : ''}`}>
+            {s.position + 1}. {he(result.resultingOrder[s.position])}{s.clean ? ' ✓' : ''}
           </span>
         ))}
       </div>
@@ -38,10 +93,20 @@ export default function BestResultCard({ result }: { result: BestResult }) {
         </div>
       )}
 
-      <div className="best-result__third">
-        {result.thirdShouldAdvance
-          ? `${he(result.thirdTeam)} (ניחשת שתעלה) מסיימת שלישית עם ${result.thirdPoints} נק׳ — חזק מספיק כדי לעלות ממקום שלישי.`
-          : `${he(result.thirdTeam)} (ניחשת שלא תעלה) נשארת חלשה עם ${result.thirdPoints} נק׳ — כדי שלא תדחוף החוצה קבוצה שלישית אחרת שכן ניחשת.`}
+      {result.reasons.length > 0 && (
+        <ul className="best-result__reasons">
+          {result.reasons.map((r, i) => (
+            <li key={i} className={`best-result__reason${r.good ? '' : ' best-result__reason--bad'}`}>
+              <span className="best-result__bullet">{r.good ? '✓' : '−'}</span>
+              <span>{r.textHe}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div className="best-result__foot">
+        מבט על הבית שלך בלבד — הניחוש, הסדר המדויק (כולל מקום 3 ו‑4 שנותנים נקודת מיקום) ומי שעולה.
+        {' '}החישוב מניח ששאר משחקי הבית ייגמרו כפי שניחשת.
       </div>
     </div>
   )
