@@ -13,7 +13,8 @@ import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
 import MatchLeaderboard from './MatchLeaderboard'
-import MatchRecommendation from './MatchRecommendation'
+import BestResultCard from '../../formView/groupStage/BestResultCard'
+import { bestRemainingResult } from '../../leaderboard/bestResult'
 import './MatchPredictionsPage.css'
 
 type Team = { iso: string; he: string }
@@ -67,6 +68,14 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
   // live one so they can compare their call to how it's actually unfolding.
   const myGroupTable = currentUser?.groupTables[groupLetter]
 
+  // The result to root for across this group's remaining matches, from your bet.
+  const myOrder = myGroupTable?.map(s => s.team) ?? []
+  const thirdQualifies = !!currentUser?.thirdPlaceQualification.resolved &&
+    currentUser.thirdPlaceQualification.qualifiers.some(t => t.team === myOrder[2])
+  const bestResult = currentUser && myGroupTable
+    ? bestRemainingResult(groupLetter, currentUser.predictions, myOrder, liveGroupScores(results, groupLetter), { thirdQualifies })
+    : null
+
   // Step to the chronologically adjacent matches.
   const { prev, next } = adjacentMatches(match.id)
 
@@ -101,12 +110,15 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
           </>
         )}
 
-        <MatchRecommendation
-          matchId={match.id}
-          currentUser={currentUser}
-          results={results}
-          decided={!!realScore && !liveScore}
-        />
+        {bestResult && (
+          <>
+            <header className="section-heading" dir="rtl">
+              <span className="section-heading__eyebrow">ההמלצה שלך</span>
+              <h2 className="section-heading__title">מה טוב לך?</h2>
+            </header>
+            <BestResultCard result={bestResult} />
+          </>
+        )}
 
         <header className="section-heading" dir="rtl">
           <span className="section-heading__eyebrow">בית {GROUP_HEBREW[groupLetter]}</span>

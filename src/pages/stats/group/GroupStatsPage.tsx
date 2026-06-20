@@ -6,7 +6,8 @@ import { USERS } from '../../../users/index'
 import { useLiveResults } from '../../../shared/useLiveResults'
 import { useCurrentUser } from '../../../shared/useCurrentUser'
 import PageLayout from '../../../shared/PageLayout'
-import GroupRecommendation from './GroupRecommendation'
+import BestResultCard from '../../../formView/groupStage/BestResultCard'
+import { bestRemainingResult } from '../../../leaderboard/bestResult'
 import GroupPicker from '../GroupPicker'
 import StandingsTable from '../../../formView/groupStage/StandingsTable'
 import GroupVoteMatrix from '../../group/GroupVoteMatrix'
@@ -53,6 +54,15 @@ export default function GroupStatsPage({ groupLetter }: Props) {
   const pickers = computeGroupVotePickers(USERS, groupLetter)
   const r32Pickers = computeGroupR32Pickers(USERS, groupLetter)
   const { remaining, finished } = splitByFinished(matches, scores)
+
+  // The result to root for across this group's remaining matches, from your bet.
+  const myGroupTable = currentUser?.groupTables[groupLetter]
+  const myOrder = myGroupTable?.map(s => s.team) ?? []
+  const thirdQualifies = !!currentUser?.thirdPlaceQualification.resolved &&
+    currentUser.thirdPlaceQualification.qualifiers.some(t => t.team === myOrder[2])
+  const bestResult = currentUser && myGroupTable
+    ? bestRemainingResult(groupLetter, currentUser.predictions, myOrder, scores, { thirdQualifies })
+    : null
 
   const renderRow = (match: Match) => (
     <MatchRow
@@ -103,7 +113,12 @@ export default function GroupStatsPage({ groupLetter }: Props) {
           )}
         </section>
 
-        <GroupRecommendation groupLetter={groupLetter} currentUser={currentUser} results={results} />
+        {bestResult && (
+          <section>
+            <h2>מה הכי טוב לך?</h2>
+            <BestResultCard result={bestResult} />
+          </section>
+        )}
       </main>
     </PageLayout>
   )
