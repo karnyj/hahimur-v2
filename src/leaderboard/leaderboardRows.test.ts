@@ -2,7 +2,7 @@
 import { expect, test } from 'vitest'
 import type { GroupMatch, Standing, ThirdPlaceStanding, TournamentResults } from '../shared/types'
 import { buildGroupScopeRows, buildRangeRows, rangePlaceMovement, rankTrajectories, GROUP_SORTERS } from './leaderboardRows'
-import { OLEH_POINTS } from './points'
+import { OLEH_POINTS, PLACE_POINT } from './points'
 import type { GroupScopeRow } from './leaderboardRows'
 import { EMPTY_RESULTS, makeUser } from './testFixtures'
 
@@ -159,6 +159,39 @@ test('buildRangeRows scores only the chosen stretch of games', () => {
     { label: 'Dana', tzelifaCount: 1, pgiyaCount: 1, matchPoints: 6, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 6, tournamentTotal: 6 },
     { label: 'Yossi', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 2, tournamentTotal: 2 },
   ])
+})
+
+test('buildRangeRows credits a group\'s advancement and place points to the range with its completing match', () => {
+  const results: TournamentResults = {
+    ...EMPTY_RESULTS,
+    groupMatches: {
+      A: [
+        datedMatch('a1', '11 ביוני', '22:00', { home: 1, away: 0 }),
+        datedMatch('a2', '12 ביוני', '19:00', { home: 2, away: 0 }),
+        datedMatch('a3', '13 ביוני', '19:00', { home: 3, away: 0 }), // chronologically completes group A
+      ],
+    },
+    groupTables: {
+      A: [grpRow('Brazil', 0), grpRow('France', 1), grpRow('Germany', 2), grpRow('Spain', 3)],
+    },
+  }
+  // Dana predicts the final table exactly: 2 correct advancers + 4 correct positions
+  const dana = makeUser({
+    label: 'Dana',
+    groupMatches: { A: [grpMatch('a1', 1, 0), grpMatch('a2', 2, 0), grpMatch('a3', 3, 0)] },
+    groupTables: { A: [grpRow('Brazil', 0), grpRow('France', 1), grpRow('Germany', 2), grpRow('Spain', 3)] },
+  })
+
+  // A range that ends before the group is decided carries no advancement/place yet
+  const [beforeComplete] = buildRangeRows([dana], results, 1, 2)
+  expect(beforeComplete.advancementPoints).toBe(0)
+  expect(beforeComplete.placePoints).toBe(0)
+
+  // The range holding the completing match (a3) is where they land
+  const [atComplete] = buildRangeRows([dana], results, 3, 3)
+  expect(atComplete.advancementPoints).toBe(2 * OLEH_POINTS.group)
+  expect(atComplete.placePoints).toBe(4 * PLACE_POINT)
+  expect(atComplete.total).toBe(atComplete.matchPoints + atComplete.advancementPoints + atComplete.placePoints + atComplete.goalsPoints)
 })
 
 test('rangePlaceMovement reports how many places each bettor moved over the stretch', () => {

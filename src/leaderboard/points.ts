@@ -146,6 +146,12 @@ function roundReady(matches: KnockoutMatch[]): boolean {
   return matches.length > 0 && matches.every(m => m.home && m.away)
 }
 
+// A group counts as complete once every team in the official table has played
+// all its matches — the rule that gates place/advancement points.
+export function isGroupComplete(table: { played: number }[]): boolean {
+  return table.length >= 2 && table.every(s => s.played === table.length - 1)
+}
+
 export function computeGroupBreakdown(user: User, results: TournamentResults): GroupBreakdown {
   let matchPoints = 0
 
@@ -173,8 +179,7 @@ export function computeGroupBreakdown(user: User, results: TournamentResults): G
   let placePoints = 0
   for (const groupId of Object.keys(results.groupTables)) {
     const actualTable = results.groupTables[groupId]
-    const groupComplete = actualTable.length >= 2 && actualTable.every(s => s.played === actualTable.length - 1)
-    if (groupComplete) {
+    if (isGroupComplete(actualTable)) {
       actualTable.slice(0, 2).forEach(s => actualR32Set.add(s.team))
       const userTable = user.groupTables[groupId] ?? []
       actualTable.forEach((s, i) => {

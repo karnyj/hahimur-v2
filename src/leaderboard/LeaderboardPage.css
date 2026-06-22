@@ -1251,18 +1251,33 @@
   text-align: center;
 }
 
+/* Slim chip: a tight lozenge that stays on one line no matter how narrow the
+   column gets — caret + number never wrap into a circular blob. */
 .lb-move {
   display: inline-flex;
-  align-items: baseline;
-  gap: 3px;
-  min-width: 34px;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 2px;
+  min-width: 26px;
   justify-content: center;
-  padding: 2px 8px;
+  padding: 1px 6px;
   border-radius: 999px;
   font-family: 'Bebas Neue', sans-serif;
   font-size: 14px;
-  letter-spacing: 0.04em;
+  line-height: 1.35;
+  letter-spacing: 0.03em;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.lb-move-caret {
+  font-size: 0.7em;
+  line-height: 1;
+  transform: translateY(-0.5px);
+}
+
+.lb-move-num {
+  line-height: 1;
 }
 
 .lb-move--up {

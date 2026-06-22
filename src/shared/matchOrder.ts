@@ -13,6 +13,14 @@ export function matchSortKey(matchDate: string | undefined, kickoffIST: string |
   return ((month * 100 + day) * 100 + hh) * 100 + mm
 }
 
+// The chronologically-last match in a list, or null when empty. Ties break to
+// the later-listed match: a group's final two matches kick off simultaneously,
+// and the group is decided at its last listed match (e.g. A6, not A5).
+export function latestBySortKey<T extends { matchDate?: string; kickoffIST?: string }>(matches: T[]): T | null {
+  return matches.reduce<T | null>((latest, m) =>
+    !latest || matchSortKey(m.matchDate, m.kickoffIST) >= matchSortKey(latest.matchDate, latest.kickoffIST) ? m : latest, null)
+}
+
 // How long after kickoff a match is considered in progress when no final
 // score has been recorded yet (covers stoppage time and halftime).
 export const MATCH_WINDOW_MS = 3 * 60 * 60 * 1000

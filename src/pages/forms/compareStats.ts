@@ -4,6 +4,7 @@ import {
   singleMatchOutcome,
   singleMatchPoints,
   computeUserPoints,
+  isGroupComplete,
   type MatchOutcome,
   type PointsBreakdown,
 } from '../../leaderboard/points'
@@ -310,12 +311,6 @@ export interface GroupStandingDiff {
   bPlacePoints: number
 }
 
-/** A group counts as finished once every team in the official table has played
- *  all its matches — mirrors the place-point rule in computeGroupBreakdown. */
-function groupFinished(actualTable: { played: number }[]): boolean {
-  return actualTable.length >= 2 && actualTable.every(s => s.played === actualTable.length - 1)
-}
-
 /** Both players' predicted group orderings side-by-side. Flags slots where they
  *  agree and, once a group is decided, who placed each team correctly. */
 export function buildGroupStandingsDiff(userA: User, userB: User, results: TournamentResults): GroupStandingDiff[] {
@@ -325,7 +320,7 @@ export function buildGroupStandingsDiff(userA: User, userB: User, results: Tourn
     const bTable = userB.groupTables[letter] ?? []
     if (aTable.length === 0 && bTable.length === 0) continue
     const actualTable = results.groupTables[letter] ?? []
-    const finished = groupFinished(actualTable)
+    const finished = isGroupComplete(actualTable)
     const positions = Math.max(aTable.length, bTable.length, finished ? actualTable.length : 0)
     const slots: GroupStandingSlot[] = []
     let aPlacePoints = 0

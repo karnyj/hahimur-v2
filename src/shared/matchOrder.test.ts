@@ -1,4 +1,25 @@
-import { kickoffDate, isLive } from './matchOrder'
+import { kickoffDate, isLive, latestBySortKey } from './matchOrder'
+
+describe('latestBySortKey', () => {
+  test('returns the chronologically last match', () => {
+    const a = { id: 'a', matchDate: '11 ביוני', kickoffIST: '22:00' }
+    const b = { id: 'b', matchDate: '12 ביוני', kickoffIST: '19:00' }
+    expect(latestBySortKey([a, b])).toBe(b)
+    expect(latestBySortKey([b, a])).toBe(b)
+  })
+
+  test('on a kickoff tie, prefers the later-listed match', () => {
+    // Each group\'s final two matches kick off simultaneously; the group is
+    // decided at its last listed match (e.g. A6, not A5), so the tie breaks last.
+    const a5 = { id: 'A5', matchDate: '25 ביוני', kickoffIST: '04:00' }
+    const a6 = { id: 'A6', matchDate: '25 ביוני', kickoffIST: '04:00' }
+    expect(latestBySortKey([a5, a6])).toBe(a6)
+  })
+
+  test('returns null for an empty list', () => {
+    expect(latestBySortKey([])).toBeNull()
+  })
+})
 
 test('kickoffDate converts Israel daylight time to UTC', () => {
   expect(kickoffDate('11 ביוני', '22:00')!.toISOString()).toBe('2026-06-11T19:00:00.000Z')

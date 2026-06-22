@@ -20,18 +20,23 @@ const HIT_COLS: Col[] = [
   { key: 'combined', label: 'ביחד',   value: r => r.pgiyaCount + r.tzelifaCount, zone: 'hits' },
 ]
 
-const POINT_COLS: Col[] = [
+// Shared leading point columns — match / advancement (עולות) / place (מיקומים).
+const MATCH_ADV_PLACE_COLS: Col[] = [
   { key: 'matchPoints',       label: 'משחקים',  value: r => r.matchPoints,       zone: 'points', zoneEdge: true },
   { key: 'advancementPoints', label: 'עולות',   value: r => r.advancementPoints, zone: 'points' },
   { key: 'placePoints',       label: 'מיקומים', value: r => r.placePoints,       zone: 'points' },
+]
+
+const POINT_COLS: Col[] = [
+  ...MATCH_ADV_PLACE_COLS,
   { key: 'total',             label: 'סה"כ',    value: r => r.total,             zone: 'points' },
 ]
 
 const LASTX_POINT_COLS: Col[] = [
-  { key: 'matchPoints',     label: 'משחקים',  value: r => r.matchPoints,      zone: 'points', zoneEdge: true },
-  { key: 'goalsPoints',     label: 'שערים',   value: r => r.goalsPoints,      zone: 'points' },
-  { key: 'total',           label: 'בטווח',   value: r => r.total,            zone: 'points' },
-  { key: 'tournamentTotal', label: 'בטורניר', value: r => r.tournamentTotal,  zone: 'points' },
+  ...MATCH_ADV_PLACE_COLS,
+  { key: 'goalsPoints',       label: 'שערים',   value: r => r.goalsPoints,       zone: 'points' },
+  { key: 'total',             label: 'בטווח',   value: r => r.total,             zone: 'points' },
+  { key: 'tournamentTotal',   label: 'בטורניר', value: r => r.tournamentTotal,   zone: 'points' },
 ]
 
 function makeVariant(pointCols: Col[], defaultSort: GroupSortBy, mobilePointCols: Col[]) {
@@ -103,7 +108,8 @@ function MoveCell({ delta }: { delta: number | null | undefined }) {
   return (
     <td className="lb-td lb-td--move">
       <span className={`lb-move ${up ? 'lb-move--up' : 'lb-move--down'}`}>
-        {up ? '▲' : '▼'} {Math.abs(delta)}
+        <span className="lb-move-caret">{up ? '▲' : '▼'}</span>
+        <span className="lb-move-num">{Math.abs(delta)}</span>
       </span>
     </td>
   )

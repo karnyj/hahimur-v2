@@ -1,8 +1,8 @@
-import { computeUserPoints, computeGroupBreakdown, singleMatchOutcome, singleMatchPoints, POINTS_PER_GOAL } from './points'
+import { computeUserPoints, computeGroupBreakdown, isGroupComplete, singleMatchOutcome, singleMatchPoints, POINTS_PER_GOAL } from './points'
 import type { GroupLetter } from '../shared/groups'
 import { isUnpredicted } from '../shared/types'
 import type { GroupMatch, MatchScores, ThirdPlaceQualification, ThirdPlaceStanding, TournamentResults } from '../shared/types'
-import { matchSortKey } from '../shared/matchOrder'
+import { matchSortKey, latestBySortKey } from '../shared/matchOrder'
 import { competitionRanks } from './rank'
 import type { User } from '../users'
 
@@ -62,10 +62,46 @@ export function playedGroupMatchesChrono(results: TournamentResults): GroupMatch
     .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
 }
 
+// The match that decides a group: its chronologically-last played match, but
+// only once the group's table is complete. Advancement/place points are awarded
+// at this moment, so a range "owns" them iff it contains this match. Null while
+// the group is still in progress.
+function groupCompletingMatch(results: TournamentResults, group: GroupLetter | string): GroupMatch | null {
+  const table = results.groupTables?.[group]
+  if (!table || !isGroupComplete(table)) return null
+  const played = (results.groupMatches?.[group] ?? []).filter(m => m.scores && !isUnpredicted(m.scores))
+  return latestBySortKey(played)
+}
+
+// Results scoped to the group-completion events that fall inside `matches`, so
+// computeGroupBreakdown attributes advancement/place to exactly one range each:
+// a group's points land in the range with its completing match, and third-place
+// qualifier points in the range where the last group completes (when it resolves).
+// Returns null when no completion lands in the slice — the common case for a
+// partial range or an early cumulative snapshot — so callers skip the breakdown.
+function completionScopedResults(results: TournamentResults, sliceIds: Set<string>): TournamentResults | null {
+  const completing: Record<string, GroupMatch> = {}
+  for (const group of Object.keys(results.groupTables ?? {})) {
+    const m = groupCompletingMatch(results, group)
+    if (m) completing[group] = m
+  }
+  const groupsInSlice = Object.keys(completing).filter(g => sliceIds.has(completing[g].id))
+  const resolveMatch = latestBySortKey(Object.values(completing))
+  const thirdInSlice = !!results.thirdPlaceQualification?.resolved && !!resolveMatch && sliceIds.has(resolveMatch.id)
+  if (groupsInSlice.length === 0 && !thirdInSlice) return null
+  return {
+    ...results,
+    groupMatches: Object.fromEntries(groupsInSlice.map(g => [g, results.groupMatches[g] ?? []])),
+    groupTables: Object.fromEntries(groupsInSlice.map(g => [g, results.groupTables[g] ?? []])),
+    thirdPlaceQualification: thirdInSlice ? results.thirdPlaceQualification : { resolved: false, all: [], tied: [] },
+  }
+}
+
 // `withTournamentTotal` defaults on for display tables; ranking-only callers
 // (ranksAsOf) pass false to skip the full-tournament computeUserPoints, which
 // they never read — that recompute dominates the trajectory cost otherwise.
 export function rowsForMatches(users: User[], results: TournamentResults, matches: GroupMatch[], withTournamentTotal = true): GroupScopeRow[] {
+  const scoped = completionScopedResults(results, new Set(matches.map(m => m.id)))
   return users.map(user => {
     const predictionById: Record<string, MatchScores> = {}
     for (const m of Object.values(user.groupMatches).flat()) {
@@ -83,7 +119,11 @@ export function rowsForMatches(users: User[], results: TournamentResults, matche
     }
     const goalsByMatch = results.playerMatchGoals?.[user.topGoalscorer]
     const goalsPoints = matches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
-    return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints: 0, placePoints: 0, goalsPoints, total: matchPoints + goalsPoints, tournamentTotal: withTournamentTotal ? computeUserPoints(user, results).total : 0 }
+    const { advancementPoints, placePoints } = scoped
+      ? computeGroupBreakdown(user, scoped)
+      : { advancementPoints: 0, placePoints: 0 }
+    const total = matchPoints + advancementPoints + placePoints + goalsPoints
+    return { label: user.label, tzelifaCount, pgiyaCount, matchPoints, advancementPoints, placePoints, goalsPoints, total, tournamentTotal: withTournamentTotal ? computeUserPoints(user, results).total : 0 }
   })
 }
 

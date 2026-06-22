@@ -56,6 +56,21 @@ test('window variant breaks points into משחקים, שערים and בטווח,
   expect(rowNames()).toEqual(['Dana', 'Yossi'])
 })
 
+test('window variant shows עולות and מיקומים columns, sortable by each', async () => {
+  // Gil earns advancement + place points in-range; Tal earns more in match points
+  const rows = [
+    { label: 'Gil', tzelifaCount: 0, pgiyaCount: 1, matchPoints: 2, advancementPoints: 8, placePoints: 2, goalsPoints: 0, total: 12, tournamentTotal: 12 },
+    { label: 'Tal', tzelifaCount: 1, pgiyaCount: 0, matchPoints: 4, advancementPoints: 0, placePoints: 0, goalsPoints: 0, total: 4, tournamentTotal: 4 },
+  ]
+  render(<GroupScopeTable variant="window" rows={rows} />)
+  await userEvent.click(within(desktopTable()).getByRole('button', { name: 'עולות' }))
+  expect(rowNames()).toEqual(['Gil', 'Tal'])
+  await userEvent.click(within(desktopTable()).getByRole('button', { name: 'מיקומים' }))
+  expect(rowNames()).toEqual(['Gil', 'Tal'])
+  await userEvent.click(within(desktopTable()).getByRole('button', { name: 'משחקים' }))
+  expect(rowNames()).toEqual(['Tal', 'Gil'])
+})
+
 test('window variant adds a בטורניר column sorting by full-tournament total', async () => {
   render(<GroupScopeTable variant="window" rows={LASTX_ROWS} />)
   expect(rowNames()).toEqual(['Dana', 'Yossi']) // default: בטווח keeps Dana on top
