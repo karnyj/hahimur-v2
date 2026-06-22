@@ -1048,6 +1048,29 @@
   border-color: var(--navy);
 }
 
+/* "סיכום" is a word, not a single letter — give it room and shove it to the
+   far left, set apart from the A–H boxes (margin-inline-start = right in RTL,
+   so an auto margin there banks the free space on the right and parks the
+   button on the left edge). */
+.lb-scope-summary {
+  width: auto;
+  padding-inline: 12px;
+  margin-inline-start: auto;
+}
+
+/* Mobile: the 12 group letters wrap to two rows, so an auto-margin would
+   strand "סיכום" alone on the far left with a dead gap beside it. Give it its
+   own full-width row under the grid instead — reads as a deliberate
+   "all groups together" view rather than a floating leftover. */
+@media (max-width: 639px) {
+  .lb-scope-summary {
+    flex-basis: 100%;
+    width: 100%;
+    margin-inline-start: 0;
+    margin-top: 4px;
+  }
+}
+
 .lb-lastx-caption {
   font-family: 'Heebo', sans-serif;
   font-size: 0.78rem;

@@ -57,12 +57,6 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, rangeFrom, r
 
       {mode === 'group' && (
         <div className="lb-scope-row">
-          <button
-            type="button"
-            className={`lb-scope-group${scope === 'summary' ? ' lb-scope-group--active' : ''}`}
-            aria-pressed={scope === 'summary'}
-            onClick={() => onScopeChange('summary')}
-          >סיכום</button>
           {ALL_GROUP_LETTERS.map(letter => (
             <button
               key={letter}
@@ -72,6 +66,12 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, rangeFrom, r
               onClick={() => { setLastGroup(letter); onScopeChange(letter) }}
             >{GROUPS[letter].he}</button>
           ))}
+          <button
+            type="button"
+            className={`lb-scope-group lb-scope-summary${scope === 'summary' ? ' lb-scope-group--active' : ''}`}
+            aria-pressed={scope === 'summary'}
+            onClick={() => onScopeChange('summary')}
+          >סיכום</button>
         </div>
       )}
 
