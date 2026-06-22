@@ -42,6 +42,7 @@ const groupScores: Record<string, MatchScores> = {
   H3: { home: 4, away: 0 },
   G3: { home: 0, away: 0 },
   H4: { home: 2, away: 2 },
+  G4: { home: 1, away: 3 },
 }
 
 // Real goals by picked players: player → match ID → goals in that match.
