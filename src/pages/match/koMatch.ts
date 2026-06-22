@@ -8,7 +8,7 @@ import type { KnockoutMatch, PredictionsState } from '../../shared/types'
 export function realGroupScores(): PredictionsState {
   const scores: PredictionsState = {}
   for (const matches of Object.values(tournamentResults.groupMatches))
-    for (const m of matches) scores[m.id] = m.scores
+    for (const m of matches) if (m.scores) scores[m.id] = m.scores
   return scores
 }
 
