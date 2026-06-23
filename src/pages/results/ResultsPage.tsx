@@ -21,7 +21,7 @@ import { GROUPS, ALL_GROUP_LETTERS, TEAMS } from '../../shared/groups'
 import type { PredictionsState, MatchScores, TournamentResults } from '../../shared/types'
 import { GROUP_MATCHES_BY_DATE, nextUnplayedMatchId } from '../../shared/matchesByDate'
 import { tournamentResults as realTournamentResults } from '../../tournament-results'
-import { getLockedMatchIds } from './resultsUtils'
+import { getLockedMatchIds, bestCaseResults } from './resultsUtils'
 import { TEAM_STRENGTH } from './teamStrength'
 import '../../leaderboard/LeaderboardPage.css'
 import '../../pages/form/FormPage.css'
@@ -118,6 +118,7 @@ export default function ResultsPage({ users }: { users: User[] }) {
   )
 
   const players = predictedPlayers(users)
+  const myUser = useMemo(() => users.find(u => u.label === me), [users, me])
 
   const nextMatchRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
@@ -178,6 +179,21 @@ export default function ResultsPage({ users }: { users: User[] }) {
         return [id, { home, away, ...(drawWinner ? { drawWinner } : {}) }]
       }))
     )
+  }
+
+  // "Your best case": paint every unplayed match with your own prediction, so
+  // your predicted bracket plays out and you bank every point your bet can earn.
+  const showBestCase = () => {
+    reportUsage('/api/bestcase-click')
+    if (!myUser) return
+    setEditedResults(prev => {
+      const next = bestCaseResults(prev, myUser.predictions, LOCKED_MATCH_IDS)
+      // A best-case score is the user's choice — keep the live feed from overwriting it.
+      for (const id of Object.keys(next)) {
+        if (!LOCKED_MATCH_IDS.has(id)) userEditedIds.current.add(id)
+      }
+      return next
+    })
   }
 
   const reset = () => {
@@ -276,12 +292,16 @@ export default function ResultsPage({ users }: { users: User[] }) {
           <span className="pg-sim-note-label">סימולטור תוצאות</span>
           <p className="pg-sim-note-body">
             ערכו תוצאות ידנית בכל שלב — הניקוד מתעדכן בזמן אמת.
-            לחצו <strong>סימלוץ</strong> לתוצאות אקראיות, או <strong>איפוס</strong> לחזרה לתוצאות האמיתיות.
+            לחצו <strong>התרחיש הטוב ביותר שלי</strong> כדי למלא את כל המשחקים בתוצאות שמזכות אתכם במקסימום נקודות,
+            <strong>סימלוץ</strong> לתוצאות אקראיות, או <strong>איפוס</strong> לחזרה לתוצאות האמיתיות.
           </p>
         </aside>
 
         {/* Simulation actions — always visible, affect all stages */}
         <div className="pg-sim-actions">
+          {myUser && (
+            <button type="button" className="pg-bestcase-btn" onClick={showBestCase}>התרחיש הטוב ביותר שלי</button>
+          )}
           <button type="button" className="pg-random-btn" onClick={randomize}>סימלוץ</button>
           <button type="button" className="pg-reset-btn" onClick={reset}>איפוס</button>
         </div>

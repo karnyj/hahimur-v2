@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
-import { clampGoals, getLockedMatchIds } from './resultsUtils'
-import type { TournamentResults } from '../../shared/types'
+import { clampGoals, getLockedMatchIds, bestCaseResults } from './resultsUtils'
+import type { TournamentResults, PredictionsState } from '../../shared/types'
 
 const EMPTY_RESULTS: TournamentResults = {
   groupMatches: {},
@@ -73,5 +73,36 @@ describe('getLockedMatchIds', () => {
       },
     }
     expect(getLockedMatchIds(results).has('73')).toBe(false)
+  })
+})
+
+describe('bestCaseResults', () => {
+  test('an unplayed match takes my predicted score', () => {
+    const base: PredictionsState = { A1: { home: null, away: null } }
+    const mine: PredictionsState = { A1: { home: 3, away: 0 } }
+    expect(bestCaseResults(base, mine, new Set())).toEqual({ A1: { home: 3, away: 0 } })
+  })
+
+  test('an unplayed knockout match also takes my predicted score', () => {
+    const base: PredictionsState = { '73': { home: null, away: null } }
+    const mine: PredictionsState = { '73': { home: 2, away: 1 } }
+    expect(bestCaseResults(base, mine, new Set())).toEqual({ '73': { home: 2, away: 1 } })
+  })
+
+  test('a played (locked) match keeps reality even when my prediction differs', () => {
+    const base: PredictionsState = { A1: { home: 1, away: 1 } }
+    const mine: PredictionsState = { A1: { home: 3, away: 0 } }
+    expect(bestCaseResults(base, mine, new Set(['A1']))).toEqual({ A1: { home: 1, away: 1 } })
+  })
+
+  test('an unplayed match with no prediction of mine keeps its current value', () => {
+    const base: PredictionsState = { A1: { home: null, away: null } }
+    expect(bestCaseResults(base, {}, new Set())).toEqual({ A1: { home: null, away: null } })
+  })
+
+  test('only matches present in base are returned (stray predictions ignored)', () => {
+    const base: PredictionsState = { A1: { home: null, away: null } }
+    const mine: PredictionsState = { A1: { home: 2, away: 1 }, B1: { home: 5, away: 0 } }
+    expect(bestCaseResults(base, mine, new Set())).toEqual({ A1: { home: 2, away: 1 } })
   })
 })

@@ -193,6 +193,30 @@
   background: rgba(11, 34, 68, 0.05);
 }
 
+.pg-bestcase-btn {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.14em;
+  padding: 7px 22px 6px;
+  background: var(--gold);
+  border: 1.5px solid var(--gold);
+  color: var(--navy);
+  cursor: pointer;
+  white-space: nowrap;
+  box-shadow: 3px 3px 0 var(--navy);
+  transition: box-shadow 0.1s ease, transform 0.1s ease;
+}
+
+.pg-bestcase-btn:hover {
+  box-shadow: 4px 4px 0 var(--navy);
+  transform: translate(-1px, -1px);
+}
+
+.pg-bestcase-btn:active {
+  box-shadow: 0 0 0 var(--navy);
+  transform: translate(3px, 3px);
+}
+
 /* ── Simulation note ─────────────────────────────────────────── */
 
 .pg-sim-note {
