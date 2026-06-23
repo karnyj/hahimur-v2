@@ -1,15 +1,18 @@
 import PageLayout from '../../shared/PageLayout'
 import type { User } from '../../users/index'
+import { TEAMS } from '../../shared/groups'
 import { findKnockoutMatch, roundLabel } from './koMatch'
-import KnockoutScoreFrequencyTable from './KnockoutScoreFrequencyTable'
+import KnockoutParticipantsList from './KnockoutParticipantsList'
 import './MatchPredictionsPage.css'
 
-// One team slot. While unresolved it's a descriptor string ("סגנית א") with
-// no flag. (Real name + flag for resolved slots lands in a later slice.)
+// One team slot. A resolved slot is a real team name → its flag + Hebrew name;
+// an unresolved slot is a descriptor string ("סגנית א"), shown as-is with no flag.
 function TeamSlot({ slot }: { slot: string }) {
+  const team = TEAMS[slot]
   return (
     <div className="match-team">
-      <span className="match-team__name">{slot}</span>
+      {team && <span className={`fi fi-${team.iso} match-team__flag`} />}
+      <span className="match-team__name">{team ? team.he : slot}</span>
     </div>
   )
 }
@@ -50,10 +53,10 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
       {match.resolved && (
         <div className="match-predictions">
           <header className="section-heading" dir="rtl">
-            <span className="section-heading__eyebrow">סטטיסטיקה</span>
-            <h2 className="section-heading__title">התפלגות תוצאות</h2>
+            <span className="section-heading__eyebrow">משתתפים</span>
+            <h2 className="section-heading__title">מי ניחש את המשחק</h2>
           </header>
-          <KnockoutScoreFrequencyTable actualMatch={match} users={users} />
+          <KnockoutParticipantsList actualMatch={match} users={users} />
         </div>
       )}
     </PageLayout>

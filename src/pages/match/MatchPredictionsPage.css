@@ -418,6 +418,157 @@
   letter-spacing: 0.04em;
 }
 
+/* ── Participants ledger ─────────────────────────────────────────────────────
+   Each bettor who sent both real teams through gets a row: a ticket stub (their
+   name, gold-pinned on the reading edge) facing a recessed scoreboard chip with
+   the score they called, oriented to the real home/away. Same dark gilt card as
+   the survivor ledger so the two read as a set. */
+.match-participants {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: participant;
+  background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
+  border-radius: 6px;
+  overflow: hidden;
+  border-top: 2px solid rgba(212, 160, 22, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(212, 160, 22, 0.12),
+    0 8px 28px rgba(0, 0, 0, 0.28);
+  position: relative;
+}
+
+.match-participants::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+.match-participants__row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.62rem 1.05rem 0.62rem 0.85rem;
+  border-bottom: 1px solid rgba(212, 160, 22, 0.08);
+  /* staggered reveal on first paint, row by row */
+  opacity: 0;
+  transform: translateY(6px);
+  animation: ko-row-in 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay: calc(var(--i, 0) * 35ms);
+  transition: background 0.18s ease;
+}
+
+.match-participants__row:nth-child(even) { background: rgba(255, 255, 255, 0.02); }
+.match-participants__row:last-child { border-bottom: none; }
+.match-participants__row:hover { background: rgba(212, 160, 22, 0.06); }
+
+/* the bettor — a ghosted scoreboard numeral counts the entries, then the name
+   anchored to the reading edge with a thin gold ticket stub */
+.match-participants__name {
+  position: relative;
+  min-width: 0;
+  padding-inline-start: 0.65rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: rgba(239, 228, 184, 0.92);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.match-participants__name::before {
+  content: '';
+  position: absolute;
+  inset-inline-start: 0;
+  top: 50%;
+  width: 3px;
+  height: 0.95em;
+  transform: translateY(-50%);
+  border-radius: 2px;
+  background: rgba(212, 160, 22, 0.55);
+}
+
+.match-participants__name::after {
+  counter-increment: participant;
+  content: counter(participant);
+  margin-inline-start: 0.55rem;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.04em;
+  color: rgba(239, 228, 184, 0.22);
+}
+
+/* the called result — chip with the penalty note tucked beneath it */
+.match-participants__result {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+/* recessed scoreboard chip: home team · score · away team, a miniature of the
+   match-header scoreline */
+.match-participants__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3px 10px;
+  border-radius: 5px;
+  background: rgba(0, 5, 18, 0.5);
+  border: 1px solid rgba(212, 160, 22, 0.22);
+  box-shadow: inset 0 2px 7px rgba(0, 0, 0, 0.5);
+  /* a scoreline reads left→right (home · score · away) so each team sits beside
+     its own digit — without this the RTL row flips team↔digit adjacency */
+  direction: ltr;
+}
+
+.match-participants__team {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.32rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(239, 228, 184, 0.62);
+  white-space: nowrap;
+}
+
+.match-participants__flag {
+  width: 18px;
+  height: 12px;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  flex: 0 0 auto;
+}
+
+.match-participants__score {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.4rem;
+  line-height: 1;
+  letter-spacing: 0.06em;
+  direction: ltr;
+  color: #ffe9b0;
+  text-shadow: 0 0 16px rgba(212, 160, 22, 0.35);
+}
+
+.match-participants__pens {
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: rgba(212, 160, 22, 0.78);
+}
+
 /* ── Prediction Summary ─────────────────────────────────────── */
 
 .pred-summary {
