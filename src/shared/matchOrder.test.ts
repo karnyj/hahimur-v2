@@ -44,11 +44,11 @@ describe('isLive', () => {
   })
 
   test('true late in the match window', () => {
-    expect(isLive(match, new Date('2026-06-11T21:59:00Z'))).toBe(true)
+    expect(isLive(match, new Date('2026-06-12T00:30:00Z'))).toBe(true) // 5.5h in, e.g. a long delay
   })
 
   test('false after the match window ends', () => {
-    expect(isLive(match, new Date('2026-06-11T22:00:00Z'))).toBe(false)
+    expect(isLive(match, new Date('2026-06-12T01:00:00Z'))).toBe(false) // 6h after kickoff
   })
 
   test('false when kickoff is unknown', () => {

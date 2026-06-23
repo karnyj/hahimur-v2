@@ -22,8 +22,10 @@ export function latestBySortKey<T extends { matchDate?: string; kickoffIST?: str
 }
 
 // How long after kickoff a match is considered in progress when no final
-// score has been recorded yet (covers stoppage time and halftime).
-export const MATCH_WINDOW_MS = 3 * 60 * 60 * 1000
+// score has been recorded yet. Covers stoppage time and halftime, with enough
+// slack that a weather-delayed match (which can run hours past its scheduled
+// kickoff) still counts as live instead of vanishing from the home page.
+export const MATCH_WINDOW_MS = 6 * 60 * 60 * 1000
 
 // Kickoff times are stored as Israel daylight time, and the whole tournament
 // (June–July 2026) falls inside IDT, so a fixed UTC+3 offset and year are enough.

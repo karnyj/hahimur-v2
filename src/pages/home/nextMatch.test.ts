@@ -50,8 +50,13 @@ test('nextMatches drops a started match once it has a final score', () => {
   expect(nextMatches(matches, now)[0].id).toBe('A2')
 })
 
-test('nextMatches gives up on a scoreless match three hours after kickoff', () => {
-  const now = new Date('2026-06-11T22:30:00Z') // A1 kicked off at 19:00Z, fetcher never delivered
+test('nextMatches keeps a scoreless match through a long delay (still inside the window)', () => {
+  const now = new Date('2026-06-11T23:30:00Z') // A1 kicked off at 19:00Z, 4.5h ago and rain-delayed
+  expect(nextMatches(MATCHES, now)[0].id).toBe('A1')
+})
+
+test('nextMatches gives up on a scoreless match once the window has passed', () => {
+  const now = new Date('2026-06-12T01:30:00Z') // A1 kicked off at 19:00Z, 6.5h ago, fetcher never delivered
   expect(nextMatches(MATCHES, now)[0].id).toBe('A2')
 })
 
