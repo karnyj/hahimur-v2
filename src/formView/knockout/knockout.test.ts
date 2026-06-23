@@ -205,7 +205,7 @@ describe('resolveRound32', () => {
     expect(m79.home).toMatch(/מנצח/)
   })
 
-  it('shows placeholder for allocation slots when third-place is unresolved', () => {
+  it('lists the possible source groups for allocation slots when third-place is unresolved', () => {
     const unresolved: ThirdPlaceQualification = {
       resolved: false,
       all: [],
@@ -213,11 +213,22 @@ describe('resolveRound32', () => {
     }
     const result = resolveRound32(ALL_GROUPS, unresolved)
 
-    const allocMatches = [74, 77, 79, 80, 81, 82, 85, 87]
-    for (const num of allocMatches) {
-      const m = result.find(r => r.matchNum === num)!
+    // Each allocation slot narrows to a fixed set of 5 source groups (the union
+    // across all 495 scenarios), shown as "שלישית …".
+    const expectedAway: Record<number, string> = {
+      74: 'שלישית א/ב/ג/ד/ו',
+      77: 'שלישית ג/ד/ו/ז/ח',
+      79: 'שלישית ג/ה/ו/ח/ט',
+      80: 'שלישית ה/ח/ט/י/י"א',
+      81: 'שלישית ב/ה/ו/ט/י',
+      82: 'שלישית א/ה/ח/ט/י',
+      85: 'שלישית ה/ו/ז/ט/י',
+      87: 'שלישית ד/ה/ט/י/י"ב',
+    }
+    for (const [num, away] of Object.entries(expectedAway)) {
+      const m = result.find(r => r.matchNum === Number(num))!
       expect(m.resolved).toBe(false)
-      expect(m.away).toBe('?')
+      expect(m.away).toBe(away)
     }
 
     const m73 = result.find(m => m.matchNum === 73)!

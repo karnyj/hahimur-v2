@@ -6,7 +6,8 @@ import KnockoutParticipantsList from './KnockoutParticipantsList'
 import './MatchPredictionsPage.css'
 
 // One team slot. A resolved slot is a real team name → its flag + Hebrew name;
-// an unresolved slot is a descriptor string ("סגנית א"), shown as-is with no flag.
+// an unresolved slot is a descriptor string ("סגנית א", "שלישית א/ב/ג/ד/ו"), shown
+// as-is with no flag.
 function TeamSlot({ slot }: { slot: string }) {
   const team = TEAMS[slot]
   return (

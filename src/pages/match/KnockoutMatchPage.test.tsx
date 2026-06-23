@@ -25,6 +25,15 @@ test('shows descriptors for both unresolved slots of match 73', () => {
   expect(document.querySelector('.fi')).toBeNull()
 })
 
+// Match 74's away slot is a 3rd-place/allocation slot: before the qualification
+// resolves we can't name the single source group, but the matrix narrows it to a
+// fixed set of 5, so we list them instead of a bare placeholder.
+test('lists the possible source groups for an unresolved third-place slot', () => {
+  render(<KnockoutMatchPage matchNum={74} />)
+  expect(screen.getByText('מנצח ה')).toBeInTheDocument()
+  expect(screen.getByText('שלישית א/ב/ג/ד/ו')).toBeInTheDocument()
+})
+
 // Once the slots resolve to real teams, the header shows Hebrew names with flags.
 test('shows Hebrew team names and flags for a resolved match', () => {
   vi.mocked(findKnockoutMatch).mockReturnValueOnce({
