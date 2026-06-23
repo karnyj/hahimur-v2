@@ -1,8 +1,9 @@
 import PageLayout from '../../shared/PageLayout'
 import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
-import { findKnockoutMatch, roundLabel } from './koMatch'
+import { findKnockoutMatch, mockEnabled, roundLabel } from './koMatch'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
+import RoundOf16Venn from './RoundOf16Venn'
 import './MatchPredictionsPage.css'
 
 // One team slot. A resolved slot is a real team name → its flag + Hebrew name;
@@ -58,6 +59,16 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
             <h2 className="section-heading__title">מי ניחש את המשחק</h2>
           </header>
           <KnockoutParticipantsList actualMatch={match} users={users} />
+        </div>
+      )}
+
+      {matchNum === 73 && mockEnabled() && (
+        <div className="match-predictions">
+          <header className="section-heading" dir="rtl">
+            <span className="section-heading__eyebrow">שמינית גמר</span>
+            <h2 className="section-heading__title">מי ניחש את קוריאה ואת קנדה</h2>
+          </header>
+          <RoundOf16Venn teamA={match.home} teamB={match.away} users={users} />
         </div>
       )}
     </PageLayout>

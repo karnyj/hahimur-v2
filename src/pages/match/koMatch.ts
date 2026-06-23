@@ -35,7 +35,7 @@ const MOCK_KO: Record<number, KnockoutMatch> = {
   88: { matchNum: 88, home: 'Turkey', away: 'Egypt', resolved: true, scores: { home: 0, away: 1 }, matchDate: '3 ביולי', kickoffIST: '21:00' },
 }
 
-function mockEnabled(): boolean {
+export function mockEnabled(): boolean {
   return import.meta.env.DEV
     && typeof window !== 'undefined'
     && new URLSearchParams(window.location.search).has('mockko')

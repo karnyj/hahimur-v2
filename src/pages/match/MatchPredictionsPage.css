@@ -569,6 +569,240 @@
   color: rgba(212, 160, 22, 0.78);
 }
 
+/* ── Round-of-16 Venn ────────────────────────────────────────────────────────
+   Two overlapping team lobes replace three flat lists: teamA-only (right lobe),
+   both (the bright lens), teamB-only (left lobe). Gold = teamA, red = teamB —
+   the home/away palette used across the match pages — and the membranes blend
+   where they cross, so the lens lights up exactly where the two sets meet. */
+.venn {
+  position: relative;
+  background: linear-gradient(180deg, #0d2550 0%, var(--navy) 100%);
+  border-radius: 6px;
+  border-top: 2px solid rgba(212, 160, 22, 0.65);
+  box-shadow:
+    0 0 0 1px rgba(212, 160, 22, 0.12),
+    0 8px 28px rgba(0, 0, 0, 0.28);
+  padding: 1.1rem 1rem 1.5rem;
+  overflow: hidden;
+}
+
+.venn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* the two team headers, each gilded in its lobe's colour, pinned to the edges */
+.venn__legend {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.venn__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.venn__legend-item--a { color: var(--gold); }
+.venn__legend-item--b { color: #e2606a; }
+
+/* the team total (incl. the overlap) — a quiet Bebas count beside each header */
+.venn__legend-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  opacity: 0.85;
+}
+
+.venn__flag {
+  width: 22px;
+  height: 15px;
+  border-radius: 2px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  flex: 0 0 auto;
+}
+
+.venn__stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 2;
+}
+
+/* the lobes: a radial wash fading to a ringed edge. `screen` blending lets the
+   right and left fills add where they overlap, brightening the lens. */
+.venn__circle {
+  position: absolute;
+  top: 50%;
+  /* width + left are set inline, proportional to each lobe's membership */
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  border: 1.5px solid;
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: translateY(-50%) scale(0.7);
+  animation: venn-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* lobes are sized + placed by inline width/left (membership-proportional); only
+   the look lives here */
+.venn__circle--a {
+  background: radial-gradient(circle at 50% 50%, rgba(212, 160, 22, 0.36), rgba(212, 160, 22, 0.05) 70%);
+  border-color: rgba(212, 160, 22, 0.55);
+}
+
+.venn__circle--b {
+  background: radial-gradient(circle at 50% 50%, rgba(192, 39, 45, 0.42), rgba(192, 39, 45, 0.07) 70%);
+  border-color: rgba(226, 96, 106, 0.55);
+  animation-delay: 0.09s;
+}
+
+@keyframes venn-pop {
+  to { opacity: 1; transform: translateY(-50%) scale(1); }
+}
+
+/* the three region tallies, floated over the diagram. `left` is set inline (it
+   tracks each lobe's width); the rest is shared. A lit Bebas numeral per region,
+   tinted to its lobe. */
+.venn__tally {
+  position: absolute;
+  top: 47%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  text-align: center;
+  user-select: none;
+  opacity: 0;
+  animation: summary-in 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+}
+
+.venn__tally--a {
+  color: var(--gold);
+  text-shadow: 0 0 16px rgba(212, 160, 22, 0.55);
+}
+
+.venn__tally--b {
+  color: #e2606a;
+  text-shadow: 0 0 16px rgba(192, 39, 45, 0.5);
+}
+
+/* the lens — the brightest tally, the warm meeting point of the two sets. Its
+   `left` is set inline at the overlap's midpoint, like the crescent tallies. */
+.venn__tally--both {
+  color: #fff6e2;
+  text-shadow: 0 0 18px rgba(212, 160, 22, 0.65);
+}
+
+/* floated above the number so the lens "4" centres on the same line as the
+   crescent numbers instead of being pushed down by the label */
+.venn__tally-label {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 3px;
+  white-space: nowrap;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(255, 233, 176, 0.9);
+  text-shadow: 0 0 10px rgba(212, 160, 22, 0.5);
+}
+
+/* ── the full name lists, beneath the diagram ─────────────────────────────────
+   one labelled group per region; names wrap as a middot-separated run so even a
+   25-strong lobe stays compact. */
+.venn__lists {
+  position: relative;
+  z-index: 1;
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.venn__list {
+  opacity: 0;
+  animation: summary-in 0.4s ease 0.35s both;
+}
+
+.venn__list-head {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.3rem;
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.74rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.venn__list--a .venn__list-label    { color: var(--gold); }
+.venn__list--b .venn__list-label    { color: #e2606a; }
+.venn__list--both .venn__list-label { color: #fff6e2; }
+
+/* count pill on the reading edge of each group header */
+.venn__list-count {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 0.95rem;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  color: var(--navy);
+  background: rgba(239, 228, 184, 0.78);
+  border-radius: 999px;
+  padding: 2px 8px 1px;
+}
+
+.venn__list--a .venn__list-count    { background: var(--gold); }
+.venn__list--b .venn__list-count    { background: #e2606a; color: #fff; }
+
+.venn__list-names {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.15rem 0.5rem;
+  /* a hairline gold rail down the reading edge ties the run to its header */
+  padding-inline-start: 0.6rem;
+  border-inline-start: 2px solid rgba(212, 160, 22, 0.25);
+}
+
+.venn__list-name {
+  font-family: 'Heebo', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: rgba(239, 228, 184, 0.85);
+  white-space: nowrap;
+}
+
+.venn__list-name:not(:last-child)::after {
+  content: '·';
+  margin-inline-start: 0.5rem;
+  color: rgba(212, 160, 22, 0.4);
+}
+
 /* ── Prediction Summary ─────────────────────────────────────── */
 
 .pred-summary {
