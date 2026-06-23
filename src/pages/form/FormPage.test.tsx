@@ -67,31 +67,18 @@ const tiedPredictions = {
   A6: { home: 1, away: 1 },
 }
 
+// Which groups are tied/complete is decided by deriveGroupStatus and covered in
+// groupStatus.test.ts. These page tests only check that those flags reach the UI:
+// the error/complete classes on the group button and the tied-teams banner.
 describe('Tie detection', () => {
-  test('group button gets group-cell--error class when teams are unresolvably tied', () => {
+  test('a tied group gets the error class and a banner naming the tied teams', () => {
     localStorage.setItem('predictions', JSON.stringify(tiedPredictions))
     render(<FormPage />)
     expect(screen.getByRole('button', { name: 'א' })).toHaveClass('group-cell--error')
-  })
-
-  test('group button has no error class when there is no tie', () => {
-    render(<FormPage />)
-    expect(screen.getByRole('button', { name: 'א' })).not.toHaveClass('group-cell--error')
-  })
-
-  test('warning banner appears above matches listing the tied teams', () => {
-    localStorage.setItem('predictions', JSON.stringify(tiedPredictions))
-    render(<FormPage />)
     const banner = screen.getByRole('alert')
-    expect(banner).toBeInTheDocument()
     expect(banner).toHaveTextContent('מקסיקו')
     expect(banner).toHaveTextContent('דרום קוריאה')
     expect(banner).toHaveTextContent('צ׳כיה')
-  })
-
-  test('no warning banner when there is no tie', () => {
-    render(<FormPage />)
-    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 })
 
@@ -105,29 +92,10 @@ describe('Group completion indicator', () => {
     A6: { home: 2, away: 2 },
   }
 
-  test('group button gets group-cell--complete when all 6 predictions are filled with no ties', () => {
+  test('a fully-filled, untied group gets the complete class', () => {
     localStorage.setItem('predictions', JSON.stringify(completePredictionsA))
     render(<FormPage />)
     expect(screen.getByRole('button', { name: 'א' })).toHaveClass('group-cell--complete')
-  })
-
-  test('group button has no complete class when predictions are partially filled', () => {
-    localStorage.setItem('predictions', JSON.stringify({ A1: { home: 2, away: 1 } }))
-    render(<FormPage />)
-    expect(screen.getByRole('button', { name: 'א' })).not.toHaveClass('group-cell--complete')
-  })
-
-  test('group button has no complete class with no predictions', () => {
-    render(<FormPage />)
-    expect(screen.getByRole('button', { name: 'א' })).not.toHaveClass('group-cell--complete')
-  })
-
-  test('group with all predictions filled but a tie is NOT complete', () => {
-    localStorage.setItem('predictions', JSON.stringify(tiedPredictions))
-    render(<FormPage />)
-    const button = screen.getByRole('button', { name: 'א' })
-    expect(button).toHaveClass('group-cell--error')
-    expect(button).not.toHaveClass('group-cell--complete')
   })
 })
 

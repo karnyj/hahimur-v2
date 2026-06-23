@@ -1,33 +1,14 @@
 import { useMemo } from 'react'
 import type { PredictionsState } from './types'
-import { GROUP_MATCHES, ALL_GROUP_LETTERS } from './groups'
-import { calculateStandings } from './standings'
+import { deriveGroupStatus } from './groupStatus'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../formView/thirdPlace/thirdPlace'
 import { resolveRound32, resolveKnockout } from '../formView/knockout/knockout'
 
 export function useTournament(predictions: PredictionsState) {
   return useMemo(() => {
-    const allGroupData = ALL_GROUP_LETTERS
-      .filter(l => l in GROUP_MATCHES)
-      .map(l => {
-        const matches = GROUP_MATCHES[l] ?? []
-        const { standings, tiedTeams } = calculateStandings(matches, predictions)
-        const allFilled = matches.length > 0 && matches.every(m => {
-          const s = predictions[m.id]
-          return s && s.home !== null && s.away !== null
-        })
-        return { group: l as string, standings, tiedTeams, allFilled, isComplete: allFilled && tiedTeams.size === 0 }
-      })
-
-    const groupsWithTies = new Set<string>()
-    const completedGroups = new Set<string>()
-    for (const d of allGroupData) {
-      if (d.allFilled && d.tiedTeams.size > 0) groupsWithTies.add(d.group)
-      if (d.isComplete) completedGroups.add(d.group)
-    }
+    const { allGroupData, groupsWithTies, completedGroups, allGroupsFilled } = deriveGroupStatus(predictions)
 
     const thirdPlaceTeams = getThirdPlaceTeams(allGroupData)
-    const allGroupsFilled = allGroupData.every(d => d.allFilled)
     const thirdPlaceQual = allGroupsFilled
       ? qualifyBestThirdPlace(thirdPlaceTeams)
       : { resolved: false as const, all: thirdPlaceTeams, tied: [] as typeof thirdPlaceTeams }
