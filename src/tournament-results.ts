@@ -44,6 +44,7 @@ const groupScores: Record<string, MatchScores> = {
   H4: { home: 2, away: 2 },
   G4: { home: 1, away: 3 },
   J3: { home: 2, away: 0 },
+  I3: { home: 3, away: 0 },
 }
 
 // Real goals by picked players: player → match ID → goals in that match.
@@ -51,7 +52,7 @@ const groupScores: Record<string, MatchScores> = {
 const realGoals: Record<string, Record<string, number>> = {
   'ויניסיוס ג׳וניור': { C1: 1, C4: 1 },
   'קאי האברץ': { E1: 2 },
-  'קיליאן אמבפה': { I1: 2 },
+  'קיליאן אמבפה': { I1: 2, I3: 2 },
   'הארי קיין': { L1: 2 },
   'לאמין ימאל': { H3: 1 },
 }
