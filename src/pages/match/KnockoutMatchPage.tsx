@@ -3,8 +3,11 @@ import PageLayout from '../../shared/PageLayout'
 import type { Score } from '../../shared/types'
 import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
+import { useLiveResults } from '../../shared/useLiveResults'
+import { useCurrentUser } from '../../shared/useCurrentUser'
 import { findKnockoutMatch, mockEnabled, roundLabel } from './koMatch'
 import MatchHeader from './MatchHeader'
+import KnockoutMatchLeaderboard from './KnockoutMatchLeaderboard'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import RoundOf16Venn from './RoundOf16Venn'
@@ -23,6 +26,8 @@ function teamForSlot(slot: string): { iso?: string; he: string } {
 
 export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: number; users?: User[] }) {
   const match = findKnockoutMatch(matchNum)
+  const results = useLiveResults()
+  const { me } = useCurrentUser()
   const [homeScore, setHomeScore] = useState<Score>(null)
   const [awayScore, setAwayScore] = useState<Score>(null)
 
@@ -56,6 +61,16 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
 
       {match.resolved && (
         <div className="match-predictions">
+          {users.length > 0 && (
+            <>
+              <header className="section-heading" dir="rtl">
+                <span className="section-heading__eyebrow">דירוג</span>
+                <h2 className="section-heading__title">טבלת המנחשים</h2>
+              </header>
+              <KnockoutMatchLeaderboard match={match} users={users} results={results} me={me} />
+            </>
+          )}
+
           <header className="section-heading" dir="rtl">
             <span className="section-heading__eyebrow">משתתפים</span>
             <h2 className="section-heading__title">מי ניחש את המשחק</h2>

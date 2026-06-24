@@ -1,10 +1,19 @@
-import { render, screen } from '@testing-library/react'
+import { render, screen, within } from '@testing-library/react'
 import { vi } from 'vitest'
 import KnockoutMatchPage from './KnockoutMatchPage'
 import { findKnockoutMatch } from './koMatch'
+import type { KnockoutMatch } from '../../shared/types'
+import type { User } from '../../users/index'
 
 // Nav renders a participant picker we don't care about here.
 vi.mock('../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
+
+// Pin the baked results to empty so the knockout points table reflects only the
+// bettors' knockout predictions, not whatever live group scores happen to exist.
+vi.mock('../../tournament-results', () => ({
+  tournamentResults: { groupMatches: {}, groupTables: {}, playerMatchGoals: {}, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] }, thirdPlaceQualification: { resolved: false, all: [], tied: [] } },
+  derivePlayerGoals: () => ({}),
+}))
 
 // Keep the real bracket/labels, but make findKnockoutMatch swappable so a test
 // can stand in a resolved fixture without the dev-only ?mockko path.
@@ -81,4 +90,30 @@ test('omits the previous chevron on the first knockout match', () => {
   render(<KnockoutMatchPage matchNum={73} />)
   expect(screen.queryByLabelText('המשחק הקודם')).not.toBeInTheDocument()
   expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/74')
+})
+
+// The points table mirrors the group match page: each bettor's predicted score
+// for the fixture and the points it earned them.
+const koUser = (label: string, r32: KnockoutMatch[]): User => ({
+  label, predictions: {}, topGoalscorer: '',
+  groupMatches: {}, groupTables: {}, thirdPlaceQualification: { resolved: false, all: [], tied: [] },
+  knockoutStages: { r32, r16: [], qf: [], sf: [], thirdPlace: [], final: [] },
+})
+
+test('shows a points table for the bettors on a resolved knockout match', () => {
+  const resolved: KnockoutMatch = {
+    matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true,
+    scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  }
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce(resolved)
+  const users = [
+    koUser('Alice', [{ matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true, scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00' }]),
+    koUser('Bob', []),
+  ]
+  render(<KnockoutMatchPage matchNum={73} users={users} />)
+  const lb = screen.getByTestId('match-leaderboard')
+  const aliceRow = within(lb).getAllByTestId('match-lb-row').find(r => within(r).queryByText('Alice'))!
+  // Exact R32 score → tzelifa, 7 points; away score shown first (0–1).
+  expect(within(aliceRow).getByText('0–1')).toBeInTheDocument()
+  expect(aliceRow.querySelector('.match-lb__pts')!.textContent).toBe('7')
 })
