@@ -1,0 +1,27 @@
+---
+description: Sync with git (check local changes + pull remote) before reviewing or changing the app
+alwaysApply: true
+---
+
+# Sync with git before working on the app
+
+This repo has multiple contributors and an auto-updater that commits live match
+scores. Working on a stale local copy means reviewing the wrong tournament state
+and risking an ugly merge later. So **before starting any review or feature work**:
+
+1. `git status` — see what's uncommitted locally.
+2. `git fetch` — then compare against the remote (`git log --oneline HEAD..origin/master`
+   and `git rev-list --count HEAD..origin/master`).
+3. Integrate the latest: commit (or stash) local work, then `git merge origin/master`.
+   Resolve any conflicts before continuing.
+4. After the merge, run `npx vitest run` and `npm run build` to confirm nothing broke.
+5. Only then start the review/work, so it's against the current tournament data.
+
+When pushing your own work back, merge remote first and re-run tests/build to make
+sure the merge didn't break anything existing. Never force-push to `master`.
+
+## PowerShell notes (this is a Windows + PowerShell shell)
+
+- Chain commands with `;`, not `&&`.
+- Don't use `@{u}` / `@{upstream}` — PowerShell parses `@{...}` as a hashtable.
+  Use the explicit ref instead, e.g. `origin/master`.
