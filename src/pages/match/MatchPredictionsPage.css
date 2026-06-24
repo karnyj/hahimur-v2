@@ -401,6 +401,22 @@
   letter-spacing: 0.01em;
 }
 
+.match-survivors__count {
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* The known team's flag + name sits inline inside the survivors heading. */
+.section-heading__title .match-participants__team {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35em;
+  font-weight: 700;
+}
+
 /* ── Predictions ────────────────────────────────────────────── */
 
 .match-predictions {

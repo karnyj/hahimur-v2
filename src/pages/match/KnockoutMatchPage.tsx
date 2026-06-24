@@ -3,6 +3,7 @@ import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
 import { findKnockoutMatch, mockEnabled, roundLabel } from './koMatch'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
+import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import RoundOf16Venn from './RoundOf16Venn'
 import './MatchPredictionsPage.css'
 
@@ -51,6 +52,8 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
           </div>
         )}
       </div>
+
+      {!match.resolved && <KnockoutSurvivorsList actualMatch={match} users={users} />}
 
       {match.resolved && (
         <div className="match-predictions">
