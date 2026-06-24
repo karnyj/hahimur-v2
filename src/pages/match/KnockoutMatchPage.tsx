@@ -5,12 +5,12 @@ import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
 import { useLiveResults } from '../../shared/useLiveResults'
 import { useCurrentUser } from '../../shared/useCurrentUser'
-import { findKnockoutMatch, mockEnabled, roundLabel } from './koMatch'
+import { findKnockoutMatch, roundLabel, vennStage } from './koMatch'
 import MatchHeader from './MatchHeader'
 import KnockoutMatchLeaderboard from './KnockoutMatchLeaderboard'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
-import RoundOf16Venn from './RoundOf16Venn'
+import KnockoutVenn from './KnockoutVenn'
 import './MatchPredictionsPage.css'
 
 // The knockout matches are numbered 73–104, in kickoff order.
@@ -42,6 +42,9 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
   const realScore = match.resolved && match.scores && match.scores.home !== null && match.scores.away !== null
     ? match.scores
     : null
+
+  // Which "who predicted each team this far" Venn this match feeds, if any.
+  const venn = vennStage(matchNum)
 
   return (
     <PageLayout title="ההימור 2026">
@@ -76,16 +79,18 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
             <h2 className="section-heading__title">מי ניחש את המשחק</h2>
           </header>
           <KnockoutParticipantsList actualMatch={match} users={users} />
-        </div>
-      )}
 
-      {matchNum === 73 && mockEnabled() && (
-        <div className="match-predictions">
-          <header className="section-heading" dir="rtl">
-            <span className="section-heading__eyebrow">שמינית גמר</span>
-            <h2 className="section-heading__title">מי ניחש את קוריאה ואת קנדה</h2>
-          </header>
-          <RoundOf16Venn teamA={match.home} teamB={match.away} users={users} />
+          {users.length > 0 && venn && (
+            <>
+              <header className="section-heading" dir="rtl">
+                <span className="section-heading__eyebrow">{venn.label}</span>
+                <h2 className="section-heading__title">
+                  מי ניחש את {teamForSlot(match.home).he} ואת {teamForSlot(match.away).he}
+                </h2>
+              </header>
+              <KnockoutVenn teamA={match.home} teamB={match.away} stage={venn.stage} users={users} />
+            </>
+          )}
         </div>
       )}
     </PageLayout>
