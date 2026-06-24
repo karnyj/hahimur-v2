@@ -1,5 +1,5 @@
 import type { Standing, ThirdPlaceQualification, KnockoutMatch, PredictionsState } from '../../shared/types'
-import { ALLOCATION_MATRIX } from './allocationMatrix.ts'
+import { ALLOCATION_MATRIX, THIRD_PLACE_SOURCE_GROUPS } from './allocationMatrix.ts'
 import { GROUP_HEBREW, GROUP_MATCHES, ALL_GROUP_LETTERS } from '../../shared/groups.ts'
 import { calculateStandings } from '../../shared/standings.ts'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../thirdPlace/thirdPlace.ts'
@@ -77,14 +77,27 @@ export function resolveRound32(
 ): KnockoutMatch[] {
   const byGroup = Object.fromEntries(allGroupData.map(d => [d.group, d]))
 
+  // The matrix only pins a slot to a single source group once it's trustworthy —
+  // i.e. every group has finished, since any remaining result can reshuffle which
+  // 3rd places qualify and reassign the whole matrix. A mid-tournament "resolved"
+  // qualification off partial standings isn't binding.
+  const allGroupsFinished = allGroupData.every(d => d.allFilled)
+
   let allocAssignment: Record<string, string> | undefined
-  if (thirdPlaceQual.resolved) {
+  if (allGroupsFinished && thirdPlaceQual.resolved) {
     const key = thirdPlaceQual.qualifiers.map(t => t.group).sort().join('')
     allocAssignment = ALLOCATION_MATRIX[key]
   }
 
+  // Until the allocation is binding we don't know which single group feeds this
+  // slot, but the matrix narrows it to a fixed set of 5 groups, so show them all:
+  // "שלישית א/ב/ג/ד/ו". Once binding, defer to the specific source group.
   function alloc(winnerPos: string): Slot {
-    if (!allocAssignment) return { team: '?', resolved: false }
+    if (!allocAssignment) {
+      const groups = THIRD_PLACE_SOURCE_GROUPS[winnerPos] ?? []
+      const he = groups.map(g => GROUP_HEBREW[g] ?? g).join('/')
+      return { team: `שלישית ${he}`, resolved: false }
+    }
     const slot = allocAssignment[winnerPos]
     if (!slot) return { team: '?', resolved: false }
     const srcGroup = slot.slice(1) // matrix values are '3X' — strip the '3' to get group letter

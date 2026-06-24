@@ -4,6 +4,7 @@ import App from './App'
 
 vi.mock('./users/index', () => ({
   get USERS() { return [] },
+  get USERS_SORTED() { return [] },
 }))
 
 // Global chrome is covered by Nav.test; stub it so page assertions aren't
@@ -20,4 +21,13 @@ test('renders MatchPredictionsPage at /matches/b1 with correct teams', () => {
   vi.stubGlobal('location', { pathname: '/matches/b1', search: '' })
   render(<App />)
   expect(screen.getAllByText('קנדה').length).toBeGreaterThan(0)
+})
+
+test('routes every round-of-32 numeric id to the knockout match page', () => {
+  for (let num = 73; num <= 88; num++) {
+    vi.stubGlobal('location', { pathname: `/matches/${num}`, search: '' })
+    const { unmount } = render(<App />)
+    expect(screen.getByTestId('knockout-match-page')).toBeInTheDocument()
+    unmount()
+  }
 })

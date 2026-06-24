@@ -514,3 +514,16 @@ export const ALLOCATION_MATRIX: Record<string, Record<string, string>> = (() => 
   }
   return result
 })()
+
+// For each group-winner slot, the set of group letters whose 3rd-place team can
+// land opposite it — the union of source groups across all 495 scenarios. This is
+// fixed regardless of results, so before the 3rd-place qualification resolves we
+// can still show which groups could feed a slot (each is exactly 5 groups). Mirrors
+// the "3rd (…)" ranges in FIFA_WC_2026_MATCHES.md, derived from the same matrix.
+export const THIRD_PLACE_SOURCE_GROUPS: Record<string, string[]> = Object.fromEntries(
+  ['1A', '1B', '1D', '1E', '1G', '1I', '1K', '1L'].map(col => [
+    col,
+    // matrix values are '3X' — strip the '3' to get the source group letter
+    [...new Set(Object.values(ALLOCATION_MATRIX).map(a => a[col].slice(1)))].sort(),
+  ]),
+)

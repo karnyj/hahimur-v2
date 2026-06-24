@@ -1,9 +1,17 @@
 import { render, screen } from '@testing-library/react'
 import { vi } from 'vitest'
 import KnockoutMatchPage from './KnockoutMatchPage'
+import { findKnockoutMatch } from './koMatch'
 
 // Nav renders a participant picker we don't care about here.
 vi.mock('../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStorageUpdated' }))
+
+// Keep the real bracket/labels, but make findKnockoutMatch swappable so a test
+// can stand in a resolved fixture without the dev-only ?mockko path.
+vi.mock('./koMatch', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./koMatch')>()
+  return { ...actual, findKnockoutMatch: vi.fn(actual.findKnockoutMatch) }
+})
 
 // Groups A and B aren't complete yet, so match 73's two slots are both
 // unresolved: we show the descriptors ("סגנית א" / "סגנית ב") rather than
@@ -15,4 +23,26 @@ test('shows descriptors for both unresolved slots of match 73', () => {
   expect(screen.getByText(/שלב ה-32/)).toBeInTheDocument()
   expect(screen.getByText('28 ביוני')).toBeInTheDocument()
   expect(document.querySelector('.fi')).toBeNull()
+})
+
+// Match 74's away slot is a 3rd-place/allocation slot: before the qualification
+// resolves we can't name the single source group, but the matrix narrows it to a
+// fixed set of 5, so we list them instead of a bare placeholder.
+test('lists the possible source groups for an unresolved third-place slot', () => {
+  render(<KnockoutMatchPage matchNum={74} />)
+  expect(screen.getByText('מנצח ה')).toBeInTheDocument()
+  expect(screen.getByText('שלישית א/ב/ג/ד/ו')).toBeInTheDocument()
+})
+
+// Once the slots resolve to real teams, the header shows Hebrew names with flags.
+test('shows Hebrew team names and flags for a resolved match', () => {
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce({
+    matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true,
+    scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  })
+  render(<KnockoutMatchPage matchNum={73} />)
+  expect(screen.getByText('דרום קוריאה')).toBeInTheDocument()
+  expect(screen.getByText('קנדה')).toBeInTheDocument()
+  expect(document.querySelector('.fi-kr')).toBeInTheDocument()
+  expect(document.querySelector('.fi-ca')).toBeInTheDocument()
 })

@@ -25,8 +25,10 @@ export default function App() {
   const interval = new URLSearchParams(window.location.search).has('fastCheck') ? FAST_CHECK : FIVE_MINUTES
   const { updateAvailable } = useUpdateCheck(interval)
   const matchId = pathname.startsWith('/matches/') ? pathname.slice('/matches/'.length).toUpperCase() : null
-  // Just match 73 for now — the first knockout page. More follow in later slices.
-  const koMatchNum = matchId === '73' ? 73 : null
+  // Group matches carry letter ids (A1, B2…); knockout matches are numbered, so a
+  // purely numeric id routes to the knockout page. Unready slots render gracefully
+  // (descriptors, no participants) until their feeding groups resolve.
+  const koMatchNum = matchId && /^\d+$/.test(matchId) ? Number(matchId) : null
   const groupStatsMatch = GROUP_STATS_RE.exec(pathname)
   const groupStatsLetter = groupStatsMatch ? (groupStatsMatch[1].toUpperCase() as GroupLetter) : null
 
