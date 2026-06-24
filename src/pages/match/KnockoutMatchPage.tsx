@@ -1,27 +1,30 @@
+import { useState } from 'react'
 import PageLayout from '../../shared/PageLayout'
+import type { Score } from '../../shared/types'
 import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
 import { findKnockoutMatch, mockEnabled, roundLabel } from './koMatch'
+import MatchHeader from './MatchHeader'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import RoundOf16Venn from './RoundOf16Venn'
 import './MatchPredictionsPage.css'
 
-// One team slot. A resolved slot is a real team name → its flag + Hebrew name;
-// an unresolved slot is a descriptor string ("סגנית א", "שלישית א/ב/ג/ד/ו"), shown
-// as-is with no flag.
-function TeamSlot({ slot }: { slot: string }) {
+// The knockout matches are numbered 73–104, in kickoff order.
+const FIRST_KO = 73
+const LAST_KO = 104
+
+// A resolved slot is a real team → flag + Hebrew name; an unresolved slot is a
+// descriptor string ("סגנית א", "שלישית א/ב/ג/ד/ו"), shown as-is with no flag.
+function teamForSlot(slot: string): { iso?: string; he: string } {
   const team = TEAMS[slot]
-  return (
-    <div className="match-team">
-      {team && <span className={`fi fi-${team.iso} match-team__flag`} />}
-      <span className="match-team__name">{team ? team.he : slot}</span>
-    </div>
-  )
+  return team ? { iso: team.iso, he: team.he } : { he: slot }
 }
 
 export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: number; users?: User[] }) {
   const match = findKnockoutMatch(matchNum)
+  const [homeScore, setHomeScore] = useState<Score>(null)
+  const [awayScore, setAwayScore] = useState<Score>(null)
 
   if (!match) {
     return (
@@ -31,26 +34,22 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
     )
   }
 
+  const realScore = match.resolved && match.scores && match.scores.home !== null && match.scores.away !== null
+    ? match.scores
+    : null
+
   return (
     <PageLayout title="ההימור 2026">
-      <div className="match-header" data-testid="knockout-match-page">
-        <span className="match-header__group-badge" dir="rtl">{roundLabel(matchNum)} · משחק {matchNum}</span>
-
-        <div className="match-header__teams">
-          <TeamSlot slot={match.away} />
-          <div className="match-header__vs"><span className="match-header__vs-text">–</span></div>
-          <TeamSlot slot={match.home} />
-        </div>
-
-        {match.matchDate && (
-          <div className="match-header__meta">
-            <span>{match.matchDate}</span>
-            <span className="match-header__meta-dot" />
-            <span>{match.kickoffIST}</span>
-            <span className="match-header__meta-dot" />
-            <span>שעון ישראל</span>
-          </div>
-        )}
+      <div data-testid="knockout-match-page">
+        <MatchHeader
+          match={{ id: String(matchNum), matchDate: match.matchDate, kickoffIST: match.kickoffIST }}
+          home={teamForSlot(match.home)} away={teamForSlot(match.away)}
+          homeScore={homeScore} awayScore={awayScore} onHomeScore={setHomeScore} onAwayScore={setAwayScore}
+          realScore={realScore}
+          badge={{ label: `${roundLabel(matchNum)} · משחק ${matchNum}` }}
+          prevId={matchNum > FIRST_KO ? String(matchNum - 1) : null}
+          nextId={matchNum < LAST_KO ? String(matchNum + 1) : null}
+        />
       </div>
 
       {!match.resolved && <KnockoutSurvivorsList actualMatch={match} users={users} />}

@@ -13,16 +13,22 @@ vi.mock('./koMatch', async (importOriginal) => {
   return { ...actual, findKnockoutMatch: vi.fn(actual.findKnockoutMatch) }
 })
 
-// Groups A and B aren't complete yet, so match 73's two slots are both
-// unresolved: we show the descriptors ("סגנית א" / "סגנית ב") rather than
-// team names, with no flags. The round and kickoff are fixed regardless.
-test('shows descriptors for both unresolved slots of match 73', () => {
+// When one slot has resolved to a real team but the other is still pending, the
+// header mixes a flagged team name with a bare descriptor. Use a fixture so this
+// doesn't depend on which groups happen to be complete in the live results.
+test('shows a descriptor for the pending slot and the resolved team', () => {
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce({
+    matchNum: 73, home: 'סגנית א', away: 'Canada', resolved: false,
+    scores: { home: null, away: null }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  })
   render(<KnockoutMatchPage matchNum={73} />)
-  expect(screen.getByText('סגנית א')).toBeInTheDocument()
-  expect(screen.getByText('סגנית ב')).toBeInTheDocument()
+  const teamNames = Array.from(document.querySelectorAll('.match-team__name')).map(n => n.textContent)
+  expect(teamNames).toEqual(expect.arrayContaining(['סגנית א', 'קנדה']))
   expect(screen.getByText(/שלב ה-32/)).toBeInTheDocument()
   expect(screen.getByText('28 ביוני')).toBeInTheDocument()
-  expect(document.querySelector('.fi')).toBeNull()
+  // The pending slot has no flag; the resolved one shows Canada's.
+  expect(document.querySelector('.match-header__teams .fi-ca')).toBeInTheDocument()
+  expect(document.querySelectorAll('.match-header__teams .fi')).toHaveLength(1)
 })
 
 // Match 74's away slot is a 3rd-place/allocation slot: before the qualification
@@ -45,4 +51,34 @@ test('shows Hebrew team names and flags for a resolved match', () => {
   expect(screen.getByText('קנדה')).toBeInTheDocument()
   expect(document.querySelector('.fi-kr')).toBeInTheDocument()
   expect(document.querySelector('.fi-ca')).toBeInTheDocument()
+})
+
+// Parity with the group header: a finished knockout match shows its real score in
+// the header, with the "נגמר" badge — not a bare dash.
+test('shows the real score in the header for a finished match', () => {
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce({
+    matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true,
+    scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  })
+  render(<KnockoutMatchPage matchNum={73} />)
+  const score = screen.getByTestId('real-score')
+  // Away (Canada) digit first, then home (South Korea) — same orientation as the
+  // rest of the page.
+  expect(score.textContent).toContain('0')
+  expect(score.textContent).toContain('1')
+  expect(screen.getByText('נגמר')).toBeInTheDocument()
+})
+
+// Parity with the group header: step to the neighbouring knockout matches. The
+// first knockout match (73) has no previous; later ones have both.
+test('links prev/next to the neighbouring knockout matches', () => {
+  render(<KnockoutMatchPage matchNum={74} />)
+  expect(screen.getByLabelText('המשחק הקודם')).toHaveAttribute('href', '/matches/73')
+  expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/75')
+})
+
+test('omits the previous chevron on the first knockout match', () => {
+  render(<KnockoutMatchPage matchNum={73} />)
+  expect(screen.queryByLabelText('המשחק הקודם')).not.toBeInTheDocument()
+  expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/74')
 })
