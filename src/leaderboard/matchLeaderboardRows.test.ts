@@ -77,9 +77,10 @@ const dated = (id: string, matchDate: string, kickoffIST: string, scores: MatchS
 // Group B's final round (B5 + B6) kicks off simultaneously at 24 ביוני 22:00.
 // A group's advancement + position points are credited to its single completing
 // match — the chronologically-last played match, which on a twin kickoff breaks
-// to the later-listed fixture (B6). So B6's row carries the whole group's
-// qualification points while B5's carries none, even though both jointly decide
-// the table.
+// to the later-listed fixture (B6). Advancement points are surfaced in their own
+// column; position points stay folded into matchPoints. So B6's row carries the
+// whole group's qualification points while B5's carries none, even though both
+// jointly decide the table.
 test('twin final matches: advancement + position land on the completing match (B6), not B5', () => {
   const table = [grpRow('Switzerland', 0), grpRow('Canada', 1), grpRow('Bosnia', 2), grpRow('Qatar', 3)]
   const completedGroupB: TournamentResults = {
@@ -97,14 +98,15 @@ test('twin final matches: advancement + position land on the completing match (B
     groupTables: { B: table },
   }
   // Dana nails the final table exactly: 2 correct advancers + 4 correct positions,
-  // and predicts no individual scorelines, so match-bet points stay 0 and the
-  // matchPoints figure is purely the qualification lump.
+  // and predicts no individual scorelines. Advancement (the 2 correct advancers)
+  // surfaces in its own column; position points stay in matchPoints.
   const dana = makeUser({ label: 'Dana', groupTables: { B: table } })
-  const qualPoints = 2 * OLEH_POINTS.group + 4 * PLACE_POINT
 
   const [b6Row] = buildMatchLeaderboardRows([dana], completedGroupB, 'B6')
-  expect(b6Row.matchPoints).toBe(qualPoints)
+  expect(b6Row.advancementPoints).toBe(2 * OLEH_POINTS.group)
+  expect(b6Row.matchPoints).toBe(4 * PLACE_POINT)
 
   const [b5Row] = buildMatchLeaderboardRows([dana], completedGroupB, 'B5')
+  expect(b5Row.advancementPoints).toBe(0)
   expect(b5Row.matchPoints).toBe(0)
 })

@@ -21,6 +21,10 @@ function Movement({ value }: { value: number | null }) {
 export default function MatchLeaderboardTable({ rows, me }: Props) {
   if (rows.length === 0) return null
 
+  // The advancement column only earns its width once someone has been credited —
+  // most group matches award nothing, so a row of zeros is just clutter.
+  const showAdv = rows.some(r => r.advancementPoints > 0)
+
   // Standings position from the total — co-leaders share rank 1 (the gold row).
   let rank = 0
   const ranked = rows.map((row, i) => {
@@ -37,6 +41,7 @@ export default function MatchLeaderboardTable({ rows, me }: Props) {
             <th className="match-lb__th match-lb__th--name">שם</th>
             <th className="match-lb__th">ניחוש</th>
             <th className="match-lb__th">נקודות</th>
+            {showAdv && <th className="match-lb__th">עלייה</th>}
             <th className="match-lb__th">שינוי</th>
             <th className="match-lb__th match-lb__th--total">סה״כ</th>
           </tr>
@@ -58,6 +63,7 @@ export default function MatchLeaderboardTable({ rows, me }: Props) {
               </td>
               <td className="match-lb__pred">{row.prediction ? showScore(row.prediction) : '—'}</td>
               <td className="match-lb__pts">{row.matchPoints > 0 ? row.matchPoints : <span className="match-lb__pts-zero">0</span>}</td>
+              {showAdv && <td className="match-lb__adv">{row.advancementPoints > 0 ? <span className="match-lb__adv-on">+{row.advancementPoints}</span> : <span className="match-lb__pts-zero">0</span>}</td>}
               <td className="match-lb__movement"><Movement value={row.placeMovement} /></td>
               <td className="match-lb__total">{row.total}</td>
             </tr>

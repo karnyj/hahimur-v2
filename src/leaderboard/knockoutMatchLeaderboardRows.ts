@@ -1,7 +1,7 @@
 import { isUnpredicted, type KnockoutMatch, type MatchScores, type TournamentResults } from '../shared/types'
 import type { User } from '../users'
 import { matchSortKey } from '../shared/matchOrder'
-import { singleMatchPoints, POINTS_PER_GOAL } from './points'
+import { singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS } from './points'
 import { playedGroupMatchesChrono, rowsForMatches } from './leaderboardRows'
 import { competitionRanks } from './rank'
 import type { MatchLeaderRow } from './matchLeaderboardRows'
@@ -40,6 +40,40 @@ function koMatchPointsFor(user: User, actual: KnockoutMatch, results: Tournament
   return betPoints + goals
 }
 
+function roundTeams(matches: KnockoutMatch[]): string[] {
+  return matches.flatMap(m => [m.home, m.away]).filter(Boolean) as string[]
+}
+
+// The team that advanced out of a played knockout fixture — the higher score, or
+// the penalty winner on a level scoreline. Null if the match isn't decided.
+function advancingTeam(m: KnockoutMatch): string | null {
+  const s = m.scores!
+  if (s.home! > s.away!) return m.home
+  if (s.away! > s.home!) return m.away
+  return s.drawWinner === 'away' ? m.away : s.drawWinner === 'home' ? m.home : null
+}
+
+// Advancement bonus this match's winner earns a bettor who foresaw them moving on:
+// the round's OLEH points if the actual advancer is in the bettor's next-round set
+// (or named as their third-place winner / champion). Mirrors computeRoundBreakdown
+// but attributed to the single fixture that produced the advancer, credited as
+// soon as the match is played.
+function koAdvancementFor(user: User, match: KnockoutMatch): number {
+  if (!match.scores || isUnpredicted(match.scores) || !match.home || !match.away) return 0
+  const advancer = advancingTeam(match)
+  if (!advancer) return 0
+  const n = match.matchNum
+  const uko = user.knockoutStages
+  if (n === 104) return user.predictedChampion === advancer ? OLEH_POINTS.champion : 0
+  if (n === 103) return user.predictedThirdPlaceWinner === advancer ? OLEH_POINTS.thirdPlaceWinner : 0
+  const { pts, predicted } =
+    n <= 88  ? { pts: OLEH_POINTS.r32, predicted: user.predictedR16Teams   ?? roundTeams(uko.r16) }   :
+    n <= 96  ? { pts: OLEH_POINTS.r16, predicted: user.predictedQFTeams    ?? roundTeams(uko.qf) }    :
+    n <= 100 ? { pts: OLEH_POINTS.qf,  predicted: user.predictedSFTeams    ?? roundTeams(uko.sf) }    :
+               { pts: OLEH_POINTS.sf,  predicted: user.predictedFinalTeams ?? roundTeams(uko.final) }
+  return predicted.includes(advancer) ? pts : 0
+}
+
 // Played knockout matches in schedule order. The requested `match` is folded in
 // using its own score when the baked knockoutStages doesn't carry it yet — so a
 // fixture resolved from the bracket still scores before results are baked in.
@@ -59,9 +93,9 @@ function ranksByLabel(totals: { label: string; total: number }[]): Record<string
 
 // A per-match leaderboard for a knockout fixture, mirroring the group one but
 // continuing each bettor's running total into the bracket: the base is their
-// full played-group total, then knockout matches accrue chronologically.
-// Knockout-specific advancement bonuses are excluded here (same as the group
-// per-match table) — this row is about the scoreline you called.
+// full played-group total, then knockout matches accrue chronologically. The
+// scoreline points and the winner's advancement bonus are surfaced separately,
+// but both roll into the running total.
 export function buildKnockoutMatchLeaderboardRows(
   users: User[],
   results: TournamentResults,
@@ -78,9 +112,13 @@ export function buildKnockoutMatchLeaderboardRows(
   const refKey = matchSortKey(match.matchDate, match.kickoffIST)
   const upTo = played ? idx + 1 : chrono.filter(m => matchSortKey(m.matchDate, m.kickoffIST) < refKey).length
 
+  // Every point a played knockout match awards a bettor — the oriented scoreline
+  // bet plus the advancement bonus for its winner.
+  const koPointsFor = (user: User, m: KnockoutMatch) => koMatchPointsFor(user, m, results) + koAdvancementFor(user, m)
+
   // Each bettor's cumulative total through the first `count` knockout matches.
   const totalThrough = (user: User, count: number) =>
-    base.get(user.label)! + chrono.slice(0, count).reduce((sum, m) => sum + koMatchPointsFor(user, m, results), 0)
+    base.get(user.label)! + chrono.slice(0, count).reduce((sum, m) => sum + koPointsFor(user, m), 0)
 
   // Movement is the rank change this match caused: the standings just before it
   // (group-final standings for the very first knockout match) vs after it.
@@ -92,8 +130,9 @@ export function buildKnockoutMatchLeaderboardRows(
       label: user.label,
       prediction: orientedPrediction(user, match.home, match.away),
       matchPoints: played ? koMatchPointsFor(user, chrono[idx], results) : 0,
+      advancementPoints: played ? koAdvancementFor(user, chrono[idx]) : 0,
       total: totalThrough(user, upTo),
       placeMovement: before && after ? before[user.label] - after[user.label] : null,
     }))
-    .sort((a, b) => b.total - a.total || b.matchPoints - a.matchPoints || a.label.localeCompare(b.label, 'he'))
+    .sort((a, b) => b.total - a.total || (b.matchPoints + b.advancementPoints) - (a.matchPoints + a.advancementPoints) || a.label.localeCompare(b.label, 'he'))
 }

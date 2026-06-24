@@ -2,6 +2,7 @@
 import { expect, test } from 'vitest'
 import type { GroupMatch, KnockoutMatch, MatchScores, TournamentResults } from '../shared/types'
 import { buildKnockoutMatchLeaderboardRows } from './knockoutMatchLeaderboardRows'
+import { OLEH_POINTS } from './points'
 import { EMPTY_RESULTS, makeUser } from './testFixtures'
 
 // One group match sets each bettor's pre-knockout base, then two R32 matches on
@@ -81,6 +82,29 @@ test('lists every bettor — a non-predictor shows no prediction and zero points
   expect(carolRow.prediction).toBeNull()
   expect(carolRow.matchPoints).toBe(0)
   expect(carolRow.total).toBe(0)
+})
+
+test('credits advancement when this match\'s winner was predicted to reach the next round', () => {
+  // Eve nails A1 (base 4) and the 73 scoreline (tzelifa 7), and foresaw KOR — the
+  // actual 73 winner — reaching the R16, so she earns the R32 advancement bonus.
+  const eve = makeUser({
+    label: 'Eve',
+    predictions: { A1: { home: 2, away: 1 } },
+    groupMatches: { A: [{ ...A1, scores: { home: 2, away: 1 } }] },
+    knockoutStages: { r32: [ko(73, 'KOR', 'CAN', { home: 1, away: 0 })], r16: [], qf: [], sf: [], thirdPlace: [], final: [] },
+    predictedR16Teams: ['KOR'],
+  })
+  const row = buildKnockoutMatchLeaderboardRows([eve], results, m73).find(r => r.label === 'Eve')!
+  expect(row.matchPoints).toBe(7)
+  expect(row.advancementPoints).toBe(OLEH_POINTS.r32)
+  // Advancement folds into the running total: base 4 + scoreline 7 + advancement 7.
+  expect(row.total).toBe(18)
+})
+
+test('no advancement bonus when the winner was not among the predicted advancers', () => {
+  // Alice predicted no R16 bracket, so her correct 73 scoreline earns no advancement.
+  const row = buildKnockoutMatchLeaderboardRows([alice], results, m73).find(r => r.label === 'Alice')!
+  expect(row.advancementPoints).toBe(0)
 })
 
 test('before the match is played points are zero, total holds the standing so far, no movement', () => {
