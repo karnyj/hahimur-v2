@@ -1,6 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { join, dirname } from 'node:path'
+import type { MatchScores } from '../src/shared/types.ts'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -50,6 +51,36 @@ export function readRealGoals(): Record<string, Record<string, number>> {
 export function writeRealGoals(goals: Record<string, Record<string, number>>): void {
   const content = readFileSync(RESULTS_PATH, 'utf-8')
   writeFileSync(RESULTS_PATH, renderRealGoals(content, goals), 'utf-8')
+}
+
+// Knockout scores are the regulation (90') score, keyed by matchNum. drawWinner
+// names the advancer when regulation ended level (ET/penalties decide who goes
+// through) — the results-side mirror of a prediction's drawWinner.
+export function parseKoScores(content: string): Record<string, MatchScores> {
+  const block = content.match(/const koScores: Record<string, MatchScores> = \{([^]*?)\n\}/)
+  const scores: Record<string, MatchScores> = {}
+  for (const m of (block?.[1] ?? '').matchAll(
+    /(\d+): \{ home: (\d+), away: (\d+)(?:, drawWinner: '(home|away)')? \}/g,
+  )) {
+    scores[m[1]] = { home: parseInt(m[2]), away: parseInt(m[3]) }
+    if (m[4]) scores[m[1]].drawWinner = m[4] as 'home' | 'away'
+  }
+  return scores
+}
+
+export function renderKoScores(content: string, scores: Record<string, MatchScores>): string {
+  const lines = Object.entries(scores)
+    .map(([id, s]) => {
+      const adv = s.drawWinner ? `, drawWinner: '${s.drawWinner}'` : ''
+      return `  ${id}: { home: ${s.home}, away: ${s.away}${adv} },`
+    })
+    .join('\n')
+  return content.replace(
+    /const koScores: Record<string, MatchScores> = \{[^]*?\n\}/,
+    lines
+      ? `const koScores: Record<string, MatchScores> = {\n${lines}\n}`
+      : `const koScores: Record<string, MatchScores> = {\n}`,
+  )
 }
 
 export function writeGroupScores(scores: Record<string, { home: number; away: number }>): void {
