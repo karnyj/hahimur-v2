@@ -18,7 +18,8 @@ const users = [
 test('shows the real score of a played match', () => {
   render(<RecentMatchesCard users={users} now={NOW} matches={MATCHES} />)
   const results = screen.getAllByTestId('match-result').map(e => e.textContent)
-  expect(results).toContain('1–2') // A1: away–home, matching the prediction display order
+  // A2 is the most recent matchday's match, so its 0–0 is what the card shows.
+  expect(results).toContain('0–0')
 })
 
 test('shows the date and time of each played match, like the next-match card', () => {

@@ -6,7 +6,13 @@ import { scoreFrequencies } from '../match/matchUtils'
 
 // Group-stage matches only for now: knockout fixtures have a different shape
 // (matchNum, unresolved team slots) and their own resolution logic.
-const MAX_MATCHES = 5
+//
+// The home page shows a 24-hour burst of matches rather than a fixed count: it
+// anchors on the closest match and includes every match within 24h of it. This
+// keeps a day's fixtures together even across midnight — a 23:00 match and the
+// 02:00 one three hours later belong to the same burst, which calendar-date
+// grouping would wrongly split — while a match a full day away stays out.
+const ONE_DAY_MS = 24 * 60 * 60 * 1000
 
 // The default match pool the home-page cards select from: every group match,
 // carrying whatever scores have been recorded so far.
@@ -26,25 +32,32 @@ function hasFinalScore(m: GroupMatch): boolean {
   return m.scores?.home != null && m.scores?.away != null
 }
 
-// In chronological order, the next few matches (up to MAX_MATCHES) so the home
-// page shows what's coming up. A started match still counts until its score is in.
+// Every upcoming match within 24h of the closest one, in chronological order,
+// so the home page shows the coming burst of fixtures. A started match still
+// counts until its score is in.
 export function nextMatches(matches: GroupMatch[], now: Date): GroupMatch[] {
-  return timed(matches)
+  const upcoming = timed(matches)
     .filter(x => !hasFinalScore(x.m) && now.getTime() < x.kickoff + MATCH_WINDOW_MS)
     .sort((a, b) => a.kickoff - b.kickoff)
-    .slice(0, MAX_MATCHES)
-    .map(x => x.m)
+  return within24hOfFirst(upcoming)
 }
 
-// The mirror image of nextMatches: the last few matches that already have a
-// final score, most recent first, so the home page shows "how it went" without
+// The mirror image of nextMatches: every played match within 24h of the most
+// recent one, newest first, so the home page shows "how it went" without
 // digging into each match page.
 export function recentMatches(matches: GroupMatch[], now: Date): GroupMatch[] {
-  return timed(matches)
+  const played = timed(matches)
     .filter(x => hasFinalScore(x.m) && x.kickoff <= now.getTime())
     .sort((a, b) => b.kickoff - a.kickoff)
-    .slice(0, MAX_MATCHES)
-    .map(x => x.m)
+  return within24hOfFirst(played)
+}
+
+// Given matches already sorted in the desired order, keeps just those whose
+// kickoff is within 24h of the first (anchor) match. Empty in, empty out.
+function within24hOfFirst(sorted: Timed[]): GroupMatch[] {
+  const anchor = sorted[0]?.kickoff
+  if (anchor === undefined) return []
+  return sorted.filter(x => Math.abs(x.kickoff - anchor) < ONE_DAY_MS).map(x => x.m)
 }
 
 export interface TopPrediction {
