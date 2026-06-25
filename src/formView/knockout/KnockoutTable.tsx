@@ -31,10 +31,9 @@ export default function KnockoutTable({ matches, predictions, onChange, readOnly
         return (
           <div key={m.matchNum} className={`ko-card${m.resolved ? ' ko-card--resolved' : ''}${needsDrawWinner ? ' ko-card--draw-pending' : ''}`}>
             {(m.matchDate || m.kickoffIST) && (
-              <div className="match-meta">
-                {m.matchDate && <span>{dayOfWeek(m.matchDate)}, {m.matchDate}</span>}
-                {m.matchDate && m.kickoffIST && <span className="match-meta-sep">|</span>}
-                {m.kickoffIST && <span>{m.kickoffIST}</span>}
+              <div className="match-meta ko-meta">
+                {m.matchDate && <span className="ko-meta-date">{dayOfWeek(m.matchDate)}, {m.matchDate}</span>}
+                {m.kickoffIST && <span className="match-meta-time">{m.kickoffIST}</span>}
               </div>
             )}
             <div className="ko-matchnum-row">

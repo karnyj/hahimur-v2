@@ -902,6 +902,35 @@ a.match-card-hint {
   animation: ko-border-pulse 1.4s ease-in-out infinite;
 }
 
+/* Knockout cards sit two-up on a narrow viewport, so the kickoff line
+   wraps the time onto its own row instead of overflowing the card. */
+.ko-meta {
+  flex-wrap: wrap;
+  row-gap: 4px;
+  column-gap: 7px;
+  padding-bottom: 8px;
+}
+
+.ko-meta-date {
+  white-space: nowrap;
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+}
+
+.match-meta-time {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  line-height: 1.4;
+  color: var(--gold);
+  border: 1px solid rgba(200, 184, 122, 0.5);
+  border-radius: 2px;
+  padding: 0 5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .ko-matchnum {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 10px;
