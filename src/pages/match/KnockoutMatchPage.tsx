@@ -5,17 +5,14 @@ import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
 import { useLiveResults } from '../../shared/useLiveResults'
 import { useCurrentUser } from '../../shared/useCurrentUser'
-import { findKnockoutMatch, roundLabel, vennStage } from './koMatch'
+import { findKnockoutMatch, roundLabel, vennStage, knockoutChronoNav } from './koMatch'
+import { LAST_GROUP_MATCH } from './matchUtils'
 import MatchHeader from './MatchHeader'
 import KnockoutMatchLeaderboard from './KnockoutMatchLeaderboard'
 import KnockoutParticipantsList from './KnockoutParticipantsList'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import KnockoutVenn from './KnockoutVenn'
 import './MatchPredictionsPage.css'
-
-// The knockout matches are numbered 73–104, in kickoff order.
-const FIRST_KO = 73
-const LAST_KO = 104
 
 // A resolved slot is a real team → flag + Hebrew name; an unresolved slot is a
 // descriptor string ("סגנית א", "שלישית א/ב/ג/ד/ו"), shown as-is with no flag.
@@ -46,6 +43,12 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
   // Which "who predicted each team this far" Venn this match feeds, if any.
   const venn = vennStage(matchNum)
 
+  // Step the prev/next arrows through the bracket in kickoff order, not by number.
+  // The opener's "previous" steps back into the group stage's final match.
+  const { prevNum, nextNum } = knockoutChronoNav(matchNum)
+  const prevId = prevNum !== null ? String(prevNum) : LAST_GROUP_MATCH.id
+  const nextId = nextNum !== null ? String(nextNum) : null
+
   return (
     <PageLayout title="ההימור 2026">
       <div data-testid="knockout-match-page">
@@ -55,8 +58,8 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
           homeScore={homeScore} awayScore={awayScore} onHomeScore={setHomeScore} onAwayScore={setAwayScore}
           realScore={realScore}
           badge={{ label: `${roundLabel(matchNum)} · משחק ${matchNum}` }}
-          prevId={matchNum > FIRST_KO ? String(matchNum - 1) : null}
-          nextId={matchNum < LAST_KO ? String(matchNum + 1) : null}
+          prevId={prevId}
+          nextId={nextId}
         />
       </div>
 

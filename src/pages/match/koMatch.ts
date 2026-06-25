@@ -1,5 +1,6 @@
 import { buildKnockoutBracket } from '../../formView/knockout/knockout'
 import { tournamentResults } from '../../tournament-results'
+import { matchSortKey } from '../../shared/matchOrder'
 import type { KnockoutMatch, PredictionsState } from '../../shared/types'
 
 // The actual group scores, flattened into the predictions-shaped map the bracket
@@ -77,4 +78,22 @@ const VENN_STAGES: { upTo: number; stage: VennStage; label: string }[] = [
 export function vennStage(matchNum: number): { stage: VennStage; label: string } | null {
   const match = VENN_STAGES.find(v => matchNum <= v.upTo)
   return match ? { stage: match.stage, label: match.label } : null
+}
+
+// The knockout opener (Jun 28, 22:00) — chronologically the first KO match and the
+// one whose "previous" arrow steps back into the group stage.
+export const FIRST_KO_MATCH_NUM = 73
+
+// Previous/next knockout match in kickoff order. The numbers run by round, not by
+// clock (76 kicks off before 74), so the nav arrows step through the bracket in the
+// order matches are actually played. Null at the schedule's edges.
+export function knockoutChronoNav(matchNum: number): { prevNum: number | null; nextNum: number | null } {
+  const sorted = buildKnockoutBracket(realGroupScores())
+    .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
+  const i = sorted.findIndex(m => m.matchNum === matchNum)
+  if (i === -1) return { prevNum: null, nextNum: null }
+  return {
+    prevNum: i > 0 ? sorted[i - 1].matchNum : null,
+    nextNum: i < sorted.length - 1 ? sorted[i + 1].matchNum : null,
+  }
 }

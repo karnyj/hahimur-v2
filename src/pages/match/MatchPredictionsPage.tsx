@@ -6,7 +6,8 @@ import { isLive } from '../../shared/matchOrder'
 import { useLiveResults } from '../../shared/useLiveResults'
 import { useCurrentUser } from '../../shared/useCurrentUser'
 import { GROUP_HEBREW, GROUP_MATCHES } from '../../shared/groups'
-import { adjacentMatches } from './matchUtils'
+import { adjacentMatches, LAST_GROUP_MATCH } from './matchUtils'
+import { FIRST_KO_MATCH_NUM } from './koMatch'
 import { calculateStandings, liveGroupScores } from '../../shared/standings'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
 import MatchHeader from './MatchHeader'
@@ -88,8 +89,10 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
       })
     : null
 
-  // Step to the chronologically adjacent matches.
+  // Step to the chronologically adjacent matches. The last group match steps
+  // forward into the knockout opener.
   const { prev, next } = adjacentMatches(match.id)
+  const nextId = next?.id ?? (match.id === LAST_GROUP_MATCH.id ? String(FIRST_KO_MATCH_NUM) : null)
 
   return (
     <PageLayout title="ההימור 2026">
@@ -98,7 +101,7 @@ export default function MatchPredictionsPage({ match, home, away, users, now = n
         homeScore={homeScore} awayScore={awayScore}
         onHomeScore={setHomeScore} onAwayScore={setAwayScore}
         realScore={realScore} live={live} liveScore={liveScore}
-        prevId={prev?.id ?? null} nextId={next?.id ?? null}
+        prevId={prev?.id ?? null} nextId={nextId}
       />
 
       <div className="match-predictions">

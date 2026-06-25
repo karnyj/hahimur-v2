@@ -57,6 +57,13 @@ test('shows not found message for unknown matchId', () => {
   expect(screen.getByText('משחק לא נמצא')).toBeInTheDocument()
 })
 
+// The last group match played (J6) is the seam with the knockouts: its "next"
+// arrow steps forward into the knockout opener (match 73).
+test('the last group match links forward to the knockout opener', () => {
+  renderPage('J6', [])
+  expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/73')
+})
+
 test('shows Hebrew message when there are no users', () => {
   renderPage('A1', [])
   expect(screen.getByText('אין תחזיות למשחק זה')).toBeInTheDocument()

@@ -11,6 +11,9 @@ export const ORDERED_MATCHES = [...ALL_MATCHES].sort((a, b) =>
   matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST)
 )
 
+// The last group match played — its "next" arrow steps forward into the knockouts.
+export const LAST_GROUP_MATCH = ORDERED_MATCHES[ORDERED_MATCHES.length - 1]
+
 export function findMatch(matchId: string) {
   return ALL_MATCHES.find(m => m.id === matchId) ?? null
 }

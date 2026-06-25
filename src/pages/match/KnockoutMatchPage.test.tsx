@@ -78,18 +78,21 @@ test('shows the real score in the header for a finished match', () => {
   expect(screen.getByText('נגמר')).toBeInTheDocument()
 })
 
-// Parity with the group header: step to the neighbouring knockout matches. The
-// first knockout match (73) has no previous; later ones have both.
-test('links prev/next to the neighbouring knockout matches', () => {
+// Step to the neighbouring knockout matches in kickoff order, not by number: the
+// bracket numbers run by round, so 74 (Jun 29 23:30) sits between 76 (Jun 29 20:00)
+// and 75 (Jun 30 04:00) on the clock.
+test('links prev/next to the chronologically neighbouring knockout matches', () => {
   render(<KnockoutMatchPage matchNum={74} />)
-  expect(screen.getByLabelText('המשחק הקודם')).toHaveAttribute('href', '/matches/73')
+  expect(screen.getByLabelText('המשחק הקודם')).toHaveAttribute('href', '/matches/76')
   expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/75')
 })
 
-test('omits the previous chevron on the first knockout match', () => {
+// The knockout opener (73) is the seam with the group stage: its "previous" steps
+// back into the last group match played (J6), and its "next" stays in the bracket.
+test('the knockout opener links back to the last group match', () => {
   render(<KnockoutMatchPage matchNum={73} />)
-  expect(screen.queryByLabelText('המשחק הקודם')).not.toBeInTheDocument()
-  expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/74')
+  expect(screen.getByLabelText('המשחק הקודם')).toHaveAttribute('href', '/matches/j6')
+  expect(screen.getByLabelText('המשחק הבא')).toHaveAttribute('href', '/matches/76')
 })
 
 // The points table mirrors the group match page: each bettor's predicted score
