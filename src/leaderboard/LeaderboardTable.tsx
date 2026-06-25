@@ -103,7 +103,7 @@ function PickPlaque({ kicker, icon, value, iso, correct }: {
 
 // A single team that earned points, shown as a flag chip with its name and a
 // context tag (its group, or the exact place the bettor nailed).
-function TeamChip({ team, tag }: { team: string; tag: string }) {
+export function TeamChip({ team, tag }: { team: string; tag: string }) {
   const t = TEAMS[team]
   return (
     <span className="lb-bd-team">

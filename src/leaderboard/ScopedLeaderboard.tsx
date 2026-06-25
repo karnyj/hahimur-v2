@@ -1,7 +1,8 @@
 import LeaderboardTable from './LeaderboardTable'
 import GroupScopeTable from './GroupScopeTable'
+import GroupDetailView from './GroupDetailView'
 import WinProbabilityView from './winprob/WinProbabilityView'
-import { buildLeaderboardRows, buildGroupScopeRows, buildGroupSummaryRows, buildRangeRows, rangePlaceMovement, rankTrajectories, hitStats } from './leaderboardRows'
+import { buildLeaderboardRows, buildGroupScopeRows, buildGroupSummaryRows, buildGroupDetailRows, buildRangeRows, rangePlaceMovement, rankTrajectories, hitStats } from './leaderboardRows'
 import type { Scope } from './leaderboardRows'
 import type { TournamentResults } from '../shared/types'
 import type { User } from '../users'
@@ -18,6 +19,14 @@ export default function ScopedLeaderboard({ users, results, realResults, scope, 
   me?: string
 }) {
   if (scope === 'prob') return <WinProbabilityView results={realResults} me={me} />
+  if (scope === 'oleh') return (
+    <GroupDetailView
+      rows={buildGroupDetailRows(users, results)}
+      me={me}
+      actualTables={results.groupTables}
+      myTables={users.find(u => u.label === me)?.groupTables}
+    />
+  )
   if (scope === 'all') return <LeaderboardTable rows={buildLeaderboardRows(users, results)} me={me} trajectories={rankTrajectories(users, results)} hits={hitStats(users, results)} />
   if (scope === 'summary') return <GroupScopeTable key="summary" variant="summary" rows={buildGroupSummaryRows(users, results)} me={me} />
   if (scope === 'range') return (

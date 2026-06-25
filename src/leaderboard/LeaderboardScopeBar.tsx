@@ -3,7 +3,7 @@ import { GROUPS, ALL_GROUP_LETTERS } from '../shared/groups'
 import type { GroupLetter } from '../shared/groups'
 import type { Scope } from './leaderboardRows'
 
-const NON_GROUP_SCOPES = ['all', 'range', 'prob', 'summary'] as const
+const NON_GROUP_SCOPES = ['all', 'range', 'prob', 'summary', 'oleh'] as const
 const isGroupScope = (s: Scope): s is GroupLetter => !(NON_GROUP_SCOPES as readonly string[]).includes(s)
 // "summary" (all groups together) lives inside the לפי בית tab next to the groups
 const isGroupMode = (s: Scope): boolean => isGroupScope(s) || s === 'summary'
@@ -49,10 +49,10 @@ export default function LeaderboardScopeBar({ scope, onScopeChange, rangeFrom, r
         >טווח</button>
         <button
           type="button"
-          className={modeBtn(mode === 'prob')}
-          aria-pressed={mode === 'prob'}
-          onClick={() => onScopeChange('prob')}
-        >סיכויי זכייה</button>
+          className={modeBtn(mode === 'oleh')}
+          aria-pressed={mode === 'oleh'}
+          onClick={() => onScopeChange('oleh')}
+        >עולות ומיקומים</button>
       </div>
 
       {mode === 'group' && (

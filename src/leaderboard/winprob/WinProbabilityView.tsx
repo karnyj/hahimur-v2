@@ -5,7 +5,7 @@ import { realEliminations, effectiveEliminations, advancementSummaryForLabel } f
 import { playedChrono, playedStateUpTo } from './realPlayed'
 import { useWinProbabilities } from './useWinProbabilities'
 import { fmtPct, buildBettorHeadline } from './summaryText'
-import type { BettorHeadline, HeadlineSubject, PeerWin } from './summaryText'
+import type { BettorHeadline, HeadlineSubject } from './summaryText'
 
 const KO_KEYS = ['r32', 'r16', 'qf', 'sf', 'thirdPlace', 'final'] as const
 
@@ -51,7 +51,6 @@ function HeadlineBody({ h }: { h: BettorHeadline }) {
     <>
       <p className="wp-me-standing">{h.standing}</p>
       <ul className="wp-me-lines">
-        {h.peers && <li><span className="wp-me-label">מול שאר המהמרים</span><span>{h.peers}</span></li>}
         {h.route && <li><span className="wp-me-label">המסלול של {h.route.teamHe}</span><span>{h.route.ladder}</span></li>}
         {h.bigBets && <li><span className="wp-me-label">עוד קלפים גדולים</span><span>{h.bigBets}</span></li>}
         {h.strength && <li><span className="wp-me-label">החוזקות</span><span>{h.strength}</span></li>}
@@ -65,12 +64,12 @@ function HeadlineBody({ h }: { h: BettorHeadline }) {
 // Tap-to-open personal read for one bettor — the very same synthesis shown in the
 // featured card up top, just for the clicked row (named, third person; or "אתה"
 // when it's the viewer's own row).
-function RowDetail({ row, advancement, stageReach, totalPlayers, peers, isMe }: {
-  row: Row; advancement?: AdvancementSummary | null; stageReach: Record<string, StageReach>; totalPlayers: number; peers: PeerWin[]; isMe: boolean
+function RowDetail({ row, advancement, stageReach, totalPlayers, isMe }: {
+  row: Row; advancement?: AdvancementSummary | null; stageReach: Record<string, StageReach>; totalPlayers: number; isMe: boolean
 }) {
   const firstName = row.label.split(' ')[0]
   const subject: HeadlineSubject = isMe ? { self: true, firstName } : { self: false, name: row.label }
-  const h = buildBettorHeadline(row, advancement ?? null, stageReach, totalPlayers, subject, peers)
+  const h = buildBettorHeadline(row, advancement ?? null, stageReach, totalPlayers, subject)
   return (
     <div className="wp-detail-card" dir="rtl">
       <h4 className="wp-me-title wp-detail-title">{isMe ? `ההימור שלך, ${firstName}` : `ההימור של ${row.label}`}</h4>
@@ -82,11 +81,11 @@ function RowDetail({ row, advancement, stageReach, totalPlayers, peers, isMe }: 
 // The featured personal read for the identified bettor, pinned to the top of the
 // page so they don't have to find and expand their own row — identical prose to the
 // row detail. Built entirely from this bettor's own picks (no generic filler).
-function MyHeadline({ name, row, advancement, stageReach, totalPlayers, peers }: {
-  name: string; row: Row; advancement: AdvancementSummary | null; stageReach: Record<string, StageReach>; totalPlayers: number; peers: PeerWin[]
+function MyHeadline({ name, row, advancement, stageReach, totalPlayers }: {
+  name: string; row: Row; advancement: AdvancementSummary | null; stageReach: Record<string, StageReach>; totalPlayers: number
 }) {
   const firstName = name.split(' ')[0]
-  const h = buildBettorHeadline(row, advancement, stageReach, totalPlayers, { self: true, firstName }, peers)
+  const h = buildBettorHeadline(row, advancement, stageReach, totalPlayers, { self: true, firstName })
   return (
     <section className="wp-me" dir="rtl" aria-label="סיכום ההימור שלך">
       <h3 className="wp-me-title">ההימור שלך, {firstName}</h3>
@@ -142,9 +141,6 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
 
   const loading = status === 'loading' || rows.length === 0
   const maxWin = loading ? 1 : Math.max(...rows.map(r => r.winPct), 1)
-  // just the win odds of every bettor, so each personal read can frame its own
-  // number against the field (e.g. "פי 8 מהממוצע, פי 2.7 מהמהמר הבא").
-  const peers: PeerWin[] = rows.map(r => ({ label: r.label, winPct: r.winPct }))
 
   // newest match first in the picker
   const pickerOptions = chrono.slice().reverse()
@@ -197,7 +193,6 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
             advancement={advancementSummaryForLabel(me!, reachByTeam, groupFirstByTeam, eliminationsEff)}
             stageReach={stageReachByTeam}
             totalPlayers={rows.length}
-            peers={peers}
           />
         ) : null
       })()}
@@ -252,7 +247,6 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
                           advancement={advancementSummaryForLabel(r.label, reachByTeam, groupFirstByTeam, eliminationsEff)}
                           stageReach={stageReachByTeam}
                           totalPlayers={rows.length}
-                          peers={peers}
                           isMe={isMe}
                         />
                       </td>
@@ -268,7 +262,7 @@ export default function WinProbabilityView({ results, me }: { results: Tournamen
       <p className="lb-prob-note">
         <b>איך לקרוא:</b> מיון לפי הסיכוי לסיים <b>ראשון מבין כל המהמרים</b>. «מקום צפוי» = הדירוג הממוצע בסיום,
         וחץ מראה אם צפויים לעלות או לרדת. <b>לחצו על שם</b> לסיכום אישי מלא — מצב ומגמה, מסלול הקבוצה
-        שנבחרה הכי עמוק, הקלפים הגדולים, החוזקות והחולשות מול שאר המהמרים, וקבוצות שכבר נפלו.
+        שנבחרה הכי עמוק, הקלפים הגדולים, החוזקות והחולשות, וקבוצות שכבר נפלו.
         {!isLatest && <> בחרתם נקודת זמן קודמת — אפשר לחזור ל«המשחק האחרון» בבורר למעלה.</>}
       </p>
       </>

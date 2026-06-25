@@ -1,4 +1,5 @@
-import { computeUserPoints, computeGroupBreakdown, computeGroupTeamDetail, isGroupComplete, singleMatchOutcome, singleMatchPoints, POINTS_PER_GOAL } from './points'
+import { computeUserPoints, computeGroupBreakdown, computeGroupTeamDetail, isGroupComplete, singleMatchOutcome, singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS, PLACE_POINT } from './points'
+import type { GroupTeamHit } from './points'
 import { ALL_GROUP_LETTERS } from '../shared/groups'
 import type { GroupLetter } from '../shared/groups'
 import { isUnpredicted } from '../shared/types'
@@ -8,7 +9,33 @@ import { isPlayerParticipatingInKOMatch } from '../formView/knockout/knockout'
 import { competitionRanks } from './rank'
 import type { User } from '../users'
 
-export type Scope = 'all' | GroupLetter | 'range' | 'prob' | 'summary'
+export type Scope = 'all' | GroupLetter | 'range' | 'prob' | 'summary' | 'oleh'
+
+// One bettor's group-stage עולות/מיקומים story, team by team, for the dedicated
+// breakdown tab: which qualifiers they tipped right (4 pts each) and which exact
+// table positions they nailed (1 pt each). Points are derived from the hit lists
+// so a per-group filter just re-tallies the filtered hits.
+export interface GroupDetailRow {
+  label: string
+  advancement: GroupTeamHit[]
+  places: GroupTeamHit[]
+}
+
+export const OLEH_PTS = OLEH_POINTS.group
+export const PLACE_PTS = PLACE_POINT
+
+export function olehDetailPoints(advancement: GroupTeamHit[], places: GroupTeamHit[]): number {
+  return advancement.length * OLEH_PTS + places.length * PLACE_PTS
+}
+
+// Per-bettor group-stage team detail for the "עולות ומיקומים" tab. The view
+// filters these hit lists by group and re-tallies, so this stays scope-agnostic.
+export function buildGroupDetailRows(users: User[], results: TournamentResults): GroupDetailRow[] {
+  return users.map(user => {
+    const { advancement, places } = computeGroupTeamDetail(user, results)
+    return { label: user.label, advancement, places }
+  })
+}
 
 function scopeThirdPlace(q: ThirdPlaceQualification, scope: GroupLetter): ThirdPlaceQualification {
   const inScope = (teams: ThirdPlaceStanding[]) => teams.filter(t => t.group === scope)

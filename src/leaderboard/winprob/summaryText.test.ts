@@ -103,33 +103,6 @@ describe('buildBettorHeadline', () => {
     expect(h.weakness).toBe('נעל זהב −15 (נק׳ מתחת לממוצע)')
   })
 
-  test('frames a runaway leader against the equal-split baseline and the next bettor', () => {
-    const peers = [
-      { label: 'יונתן', winPct: 32.3 },
-      { label: 'קרן', winPct: 12.0 },
-      { label: 'דנה', winPct: 9.1 },
-    ]
-    const r = row({ label: 'יונתן', curRank: 1, expRank: 4, winPct: 32.3, top5Pct: 76.5, avgPts: 435 })
-    const h = buildBettorHeadline(r, null, {}, 26, { self: true, firstName: 'יונתן' }, peers)
-    // equal split of 26 ≈ 3.8%, and 32.3 / 3.8 ≈ 8×; 32.3 / 12.0 ≈ 2.7×, named
-    expect(h.peers).toBe('אם הסיכוי היה מתחלק שווה בין 26 המהמרים כל אחד היה ב-3.8% — הסיכוי שלך פי 8 מזה ופי 2.7 מהמהמר הבא בתור (קרן 12.0%).')
-  })
-
-  test('frames a trailing bettor against the current leader, in third person', () => {
-    const peers = [
-      { label: 'יונתן', winPct: 32.3 },
-      { label: 'דנה', winPct: 9.1 },
-    ]
-    const r = row({ label: 'דנה', curRank: 6, expRank: 6, winPct: 9.1 })
-    const h = buildBettorHeadline(r, null, {}, 26, { self: false, name: 'דנה' }, peers)
-    expect(h.peers).toBe('המוביל יונתן ב-32.3% — פי 4 מהסיכוי של דנה (9.1%).')
-  })
-
-  test('omits the peers line when no peer data is supplied', () => {
-    const h = buildBettorHeadline(row({ winPct: 20 }), null, {}, 26, ME)
-    expect(h.peers).toBeUndefined()
-  })
-
   test('routes a semifinal pick only as deep as it was backed', () => {
     const adv = summary([
       pick({ team: 'ספרד', predictedRank: 5, stage: 'likely' }),

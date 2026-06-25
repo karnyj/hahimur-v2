@@ -2011,3 +2011,143 @@
   .wp-points li { flex-direction: column; align-items: flex-start; gap: 1px; }
   .wp-point-label { flex: none; font-size: 11px; }
 }
+
+/* ── עולות ומיקומים — group-stage advancement/placement breakdown ──── */
+
+.gd-view { max-width: 760px; }
+
+.gd-groups { justify-content: flex-start; margin: 0 2px 14px; }
+
+/* selected-group comparison: actual final table vs the viewer's predicted one */
+.gd-compare {
+  margin: 0 0 16px;
+  padding: 12px 12px 8px;
+  border: 1px solid rgba(11, 34, 68, 0.14);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(11, 34, 68, 0.04), rgba(255, 255, 255, 0)),
+    var(--paper);
+}
+
+.gd-compare-title {
+  display: block;
+  margin-bottom: 10px;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.05rem;
+  letter-spacing: 0.06em;
+  color: var(--navy);
+  text-align: center;
+}
+
+.gd-compare-tables {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.gd-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+  gap: 12px;
+}
+
+.gd-card {
+  border: 1px solid rgba(11, 34, 68, 0.14);
+  border-radius: 10px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0)),
+    var(--paper);
+  box-shadow: 0 1px 3px rgba(11, 34, 68, 0.08);
+  overflow: hidden;
+}
+
+/* podium accents — a gold/silver/bronze edge so the top three read at a glance */
+.gd-card--rank-1 { border-color: rgba(212, 160, 22, 0.6); box-shadow: 0 2px 8px rgba(212, 160, 22, 0.18); }
+.gd-card--rank-2 { border-color: rgba(150, 150, 160, 0.55); }
+.gd-card--rank-3 { border-color: rgba(184, 133, 90, 0.55); }
+
+.gd-card--me { outline: 2px solid var(--navy); outline-offset: -1px; }
+
+.gd-card-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-bottom: 1px solid rgba(11, 34, 68, 0.1);
+  background: rgba(11, 34, 68, 0.03);
+}
+
+.gd-rank {
+  flex: none;
+  min-width: 26px;
+  text-align: center;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.15rem;
+  color: var(--navy);
+}
+
+.gd-name {
+  flex: 1 1 auto;
+  font-family: 'Heebo', sans-serif;
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--navy);
+}
+
+.gd-total {
+  flex: none;
+  font-family: 'Heebo', sans-serif;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.gd-total b {
+  font-size: 18px;
+  color: var(--navy);
+  margin-inline-end: 3px;
+}
+
+.gd-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 11px 12px 13px;
+}
+
+.gd-sec { display: flex; flex-direction: column; gap: 7px; }
+
+.gd-sec-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.gd-sec-title {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.14em;
+  color: var(--navy);
+}
+
+.gd-sec-sum {
+  font-family: 'Heebo', sans-serif;
+  font-size: 11.5px;
+  color: var(--muted);
+}
+
+.gd-sec-sum b { color: var(--gold-ink, #a9801a); font-weight: 800; }
+
+.gd-sec-empty {
+  font-family: 'Heebo', sans-serif;
+  font-size: 11px;
+  color: rgba(11, 34, 68, 0.4);
+  font-style: italic;
+}
+
+@media (max-width: 639px) {
+  .gd-cards { grid-template-columns: 1fr; }
+  .gd-name { font-size: 14px; }
+  .gd-total b { font-size: 16px; }
+}

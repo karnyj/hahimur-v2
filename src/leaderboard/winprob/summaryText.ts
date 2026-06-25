@@ -105,17 +105,12 @@ function routeLadder(team: string, predictedRank: number, stageReach: Record<str
 
 export interface BettorHeadline {
   standing: string
-  peers?: string      // the win% put in context against the rest of the field
   route?: { teamHe: string; ladder: string } // deepest live pick's simulated path
   bigBets?: string    // the other marquee depth calls (finalist/SF), with odds
   strength?: string   // top stages where the bettor beats the field, in points
   weakness?: string   // top stage where the bettor trails the field, in points
   fallen?: string     // group picks already out of the race
 }
-
-// Just the win odds of each bettor — enough to put one bettor's number in context
-// against the whole field without dragging the entire Row around.
-export interface PeerWin { label: string; winPct: number }
 
 // Who we're writing about — second person ("אתה") for the viewer's own featured
 // card, or the bettor's name in the row detail. Keeps the prose identical bar the
@@ -141,40 +136,6 @@ function chancePhrase(winPct: number): string {
   if (winPct >= 4) return 'עדיין בתמונה לזכייה'
   if (winPct > 0) return 'אאוטסיידר לזכייה'
   return 'כמעט מחוץ למרוץ על הזכייה'
-}
-
-// "פי 8" / "פי 2.7" — whole multiples once they're big enough to round cleanly,
-// one decimal while the gap is still small, so the ratio reads at a glance.
-function timesPhrase(a: number, b: number): string {
-  const r = a / b
-  return `פי ${r >= 3 ? Math.round(r) : r.toFixed(1)}`
-}
-
-// Why one bettor's win% looks the way it does, in plain terms anchored to the rest
-// of the field — the question people actually ask about a runaway leader. For the
-// front-runner: the equal-split baseline (what everyone would have if the title
-// race were a coin-flip lottery) and how many times over they beat it, plus the
-// gap to the next bettor by name. For everyone else: how far the current leader is
-// ahead of them. This is what makes a 32% feel earned rather than mysterious.
-export function peersClause(row: Row, peers: PeerWin[], totalPlayers: number, subject: HeadlineSubject): string | null {
-  const others = peers.filter(p => p.label !== row.label)
-  if (!others.length || totalPlayers < 2) return null
-  const subj = subject.self ? 'שלך' : `של ${subject.name}`
-  const avg = 100 / totalPlayers
-  const top = peers.reduce((a, b) => (b.winPct > a.winPct ? b : a))
-  const isLeader = row.winPct > 0 && row.winPct >= top.winPct - 1e-9
-
-  if (isLeader && row.winPct > avg) {
-    const next = others.reduce((a, b) => (b.winPct > a.winPct ? b : a))
-    let s = `אם הסיכוי היה מתחלק שווה בין ${totalPlayers} המהמרים כל אחד היה ב-${fmtPct(avg)} — הסיכוי ${subj} ${timesPhrase(row.winPct, avg)} מזה`
-    if (next.winPct > 0) s += ` ו${timesPhrase(row.winPct, next.winPct)} מהמהמר הבא בתור (${next.label} ${fmtPct(next.winPct)})`
-    return s + '.'
-  }
-  if (top.label !== row.label && top.winPct > 0) {
-    if (row.winPct < 0.1) return `המוביל ${top.label} ב-${fmtPct(top.winPct)}; הסיכוי ${subj} עדיין זניח.`
-    return `המוביל ${top.label} ב-${fmtPct(top.winPct)} — ${timesPhrase(top.winPct, row.winPct)} מהסיכוי ${subj} (${fmtPct(row.winPct)}).`
-  }
-  return null
 }
 
 // The opening paragraph: standing in words + place, the live title odds, and the
@@ -204,15 +165,10 @@ export function buildBettorHeadline(
   stageReach: Record<string, StageReach>,
   totalPlayers: number,
   subject: HeadlineSubject,
-  peers?: PeerWin[],
 ): BettorHeadline {
   const standing = standingText(row, totalPlayers, subject)
 
   const out: BettorHeadline = { standing }
-  if (peers && peers.length) {
-    const pc = peersClause(row, peers, totalPlayers, subject)
-    if (pc) out.peers = pc
-  }
   const sig = row.stages.filter(s => Math.abs(s.edge) >= EDGE_MIN)
   const strong = sig.filter(s => s.edge > 0).sort((a, b) => b.edge - a.edge).slice(0, 2).map(s => `${s.label} +${s.edge.toFixed(0)}`)
   const weak = sig.filter(s => s.edge < 0).sort((a, b) => a.edge - b.edge).slice(0, 1).map(s => `${s.label} −${Math.abs(s.edge).toFixed(0)}`)
