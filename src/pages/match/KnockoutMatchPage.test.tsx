@@ -120,3 +120,32 @@ test('shows a points table for the bettors on a resolved knockout match', () => 
   expect(within(aliceRow).getByText('0–1')).toBeInTheDocument()
   expect(aliceRow.querySelector('.match-lb__pts')!.textContent).toBe('7')
 })
+
+// The old per-bettor participants list is replaced by the same score-distribution
+// summary the group pages show: bettors bucketed by their (orientation-corrected)
+// scoreline, with the points recap once the match is decided.
+test('shows the score-distribution summary for the bettors on a resolved knockout match', () => {
+  const resolved: KnockoutMatch = {
+    matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true,
+    scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  }
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce(resolved)
+  const users = [
+    // exact 1–0 (oriented), stored straight
+    koUser('Alice', [{ matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true, scores: { home: 1, away: 0 }, matchDate: '28 ביוני', kickoffIST: '22:00' }]),
+    // same call, stored reversed (Canada 0 – S.Korea 1) → buckets with Alice
+    koUser('Bob', [{ matchNum: 73, home: 'Canada', away: 'South Korea', resolved: true, scores: { home: 0, away: 1 }, matchDate: '28 ביוני', kickoffIST: '22:00' }]),
+    // didn't predict this fixture → not a participant, not shown
+    koUser('Carol', []),
+  ]
+  render(<KnockoutMatchPage matchNum={73} users={users} />)
+  expect(screen.getByText('התפלגות תוצאות')).toBeInTheDocument()
+  const table = screen.getByTestId('score-freq-table')
+  // Both bettors land in one 0–1 (away–home) bucket; Carol is absent.
+  expect(within(table).getByText('Alice')).toBeInTheDocument()
+  expect(within(table).getByText('Bob')).toBeInTheDocument()
+  expect(within(table).queryByText('Carol')).not.toBeInTheDocument()
+  expect(within(table).getByText('0–1')).toBeInTheDocument()
+  // Exact R32 hit for both → "2 צליפה" in the points recap.
+  expect(screen.getByTestId('points-recap').textContent).toContain('2 צליפה')
+})

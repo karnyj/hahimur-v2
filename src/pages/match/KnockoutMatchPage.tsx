@@ -9,9 +9,10 @@ import { findKnockoutMatch, roundLabel, vennStage, knockoutChronoNav } from './k
 import { LAST_GROUP_MATCH } from './matchUtils'
 import MatchHeader from './MatchHeader'
 import KnockoutMatchLeaderboard from './KnockoutMatchLeaderboard'
-import KnockoutParticipantsList from './KnockoutParticipantsList'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import KnockoutVenn from './KnockoutVenn'
+import ScoreFrequencyTable from './ScoreFrequencyTable'
+import { knockoutParticipantScore } from './koParticipants'
 import './MatchPredictionsPage.css'
 
 // A resolved slot is a real team → flag + Hebrew name; an unresolved slot is a
@@ -49,6 +50,16 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
   const prevId = prevNum !== null ? String(prevNum) : LAST_GROUP_MATCH.id
   const nextId = nextNum !== null ? String(nextNum) : null
 
+  // The bettors playing this knockout fixture — those who predicted both teams
+  // that actually reached it — each mapped to their called score, oriented to the
+  // real home/away. Feeds the score-distribution summary below.
+  const koScoreFor = new Map(
+    users
+      .map(u => [u, knockoutParticipantScore(match, u)] as const)
+      .filter(([, score]) => score !== null),
+  )
+  const participants = users.filter(u => koScoreFor.has(u))
+
   return (
     <PageLayout title="ההימור 2026">
       <div data-testid="knockout-match-page">
@@ -78,10 +89,19 @@ export default function KnockoutMatchPage({ matchNum, users = [] }: { matchNum: 
           )}
 
           <header className="section-heading" dir="rtl">
-            <span className="section-heading__eyebrow">משתתפים</span>
-            <h2 className="section-heading__title">מי משתתף במשחק</h2>
+            <span className="section-heading__eyebrow">סטטיסטיקה</span>
+            <h2 className="section-heading__title">התפלגות תוצאות</h2>
           </header>
-          <KnockoutParticipantsList actualMatch={match} users={users} />
+          {participants.length === 0
+            ? <p className="match-predictions__empty" dir="rtl">אין משתתפים שניחשו את המשחק הזה</p>
+            : <ScoreFrequencyTable
+                matchId={String(matchNum)}
+                users={participants}
+                actualScore={realScore}
+                scoreFor={u => koScoreFor.get(u)}
+                homeLabel={teamForSlot(match.home).he}
+                awayLabel={teamForSlot(match.away).he}
+              />}
 
           {users.length > 0 && venn && (
             <>
