@@ -21,8 +21,9 @@ type Props = {
   // The live feed's in-progress matches (match id → status). When supplied, it is
   // the source of truth for "live" — a finished match drops out of it immediately,
   // so the badge can't linger like the wall-clock window does. Absent (tests /
-  // no feed) we fall back to the kickoff window.
-  liveMatches?: Record<string, { clock: string | null }>
+  // no feed) we fall back to the kickoff window. `home`/`away` carry the current
+  // live score so the card can show it without opening the match page.
+  liveMatches?: Record<string, { clock: string | null; home?: number; away?: number }>
 }
 
 export default function MatchCard({ users, match, currentUser, isNext = false, result, playerMatchGoals = {}, now = new Date(), liveMatches }: Props) {
@@ -36,7 +37,13 @@ export default function MatchCard({ users, match, currentUser, isNext = false, r
   const scorerPoints = scorerGoals * POINTS_PER_GOAL
   // The match is in progress: the live feed is authoritative when present,
   // otherwise fall back to the kickoff window. Never live once a final score is in.
-  const live = !result && (liveMatches ? !!liveMatches[match.id] : isLive(match, now))
+  const liveStatus = liveMatches?.[match.id]
+  const live = !result && (liveMatches ? !!liveStatus : isLive(match, now))
+  // The live score, shown on the card mid-match (away–home, matching consensus
+  // order). Only present once the feed reports both teams' goals.
+  const liveScore = liveStatus && liveStatus.home != null && liveStatus.away != null
+    ? { home: liveStatus.home, away: liveStatus.away }
+    : null
 
   return (
     <div dir="rtl" className={`next-match${live ? ' next-match--live' : ''}`} data-testid="next-match">
@@ -56,11 +63,16 @@ export default function MatchCard({ users, match, currentUser, isNext = false, r
           </div>
         ) : live ? (
           <div className="next-match__live" data-testid="live-indicator">
+            {liveScore && (
+              <div className="next-match__score next-match__score--live" data-testid="live-match-result" dir="ltr">
+                {liveScore.away}–{liveScore.home}
+              </div>
+            )}
             <span className="next-match__live-badge">
               <span className="next-match__live-dot" />
               משחק חי
             </span>
-            <span className="next-match__live-time">{match.kickoffIST}</span>
+            <span className="next-match__live-time">{liveStatus?.clock ?? match.kickoffIST}</span>
           </div>
         ) : (
           <div className="next-match__kickoff">

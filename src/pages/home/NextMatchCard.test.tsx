@@ -45,6 +45,14 @@ test('shows the live badge when the live feed lists the match as in progress', (
   expect(screen.getByTestId('live-indicator')).toHaveTextContent('משחק חי')
 })
 
+test('shows the live score and minute on the card while the match is in progress', () => {
+  // A2 is South Korea (home) vs Czech Republic (away); live 1–0 at 30'.
+  const live = new Date('2026-06-12T03:00:00Z')
+  render(<NextMatchCard users={users} now={live} matches={MATCHES} liveMatches={{ A2: { clock: "30'", home: 1, away: 0 } }} />)
+  expect(screen.getByTestId('live-match-result')).toHaveTextContent('0–1') // away–home, matching consensus order
+  expect(screen.getByTestId('live-indicator')).toHaveTextContent("30'")
+})
+
 test('hides the live badge once the live feed no longer lists the match, even within the kickoff window', () => {
   // A2 is still inside the kickoff window, but the live feed (liveMatches)
   // has dropped it — the match has finished — so it must not show "live" anymore.

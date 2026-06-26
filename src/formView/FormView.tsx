@@ -3,7 +3,7 @@ import '../pages/results/ResultsPage.css'
 import type { PredictionsState, Standing, ThirdPlaceQualification, KnockoutStages, MatchScores } from '../shared/types'
 import { isUnpredicted } from '../shared/types'
 import { GROUP_MATCHES, GROUPS, GROUP_HEBREW, ALL_GROUP_LETTERS, type GroupLetter } from '../shared/groups'
-import { calculateStandings } from '../shared/standings'
+import { calculateStandings, finishedGroupLetters } from '../shared/standings'
 import { useTournament } from '../shared/useTournament'
 import { reportUsage } from '../shared/reportUsage'
 import { GROUP_MATCHES_BY_DATE, nextUnplayedMatchId } from '../shared/matchesByDate'
@@ -33,6 +33,9 @@ const noop = () => {}
 
 // Frozen at load from the committed real scores — the by-date view scrolls here
 const NEXT_MATCH_ID = nextUnplayedMatchId(tournamentResults)
+
+// Groups whose real fixtures are all played out — marked "done" in the picker.
+const FINISHED_GROUPS = finishedGroupLetters(tournamentResults)
 
 export default function FormView({
   predictions,
@@ -131,10 +134,12 @@ export default function FormView({
         <div className="group-grid">
           {ALL_GROUP_LETTERS.map(letter => {
             const hasData = letter in GROUP_MATCHES
+            const isFinished = FINISHED_GROUPS.has(letter)
             const cls = [
               'group-cell',
               activeGroup === letter && 'group-cell--active',
               !hasData && 'group-cell--empty',
+              isFinished && 'group-cell--finished',
             ].filter(Boolean).join(' ')
             return (
               <button
@@ -144,6 +149,9 @@ export default function FormView({
                 disabled={!hasData}
               >
                 {GROUP_HEBREW[letter]}
+                {isFinished && (
+                  <span className="group-cell__done" aria-hidden="true" title="הבית הסתיים">✓</span>
+                )}
               </button>
             )
           })}

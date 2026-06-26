@@ -3,7 +3,7 @@ import type { User } from '../../users/index'
 import { nextMatches, SCORED_MATCHES } from './nextMatch'
 import MatchCard from './MatchCard'
 
-type Props = { users: User[]; now?: Date; matches?: GroupMatch[]; currentUser?: User; liveMatches?: Record<string, { clock: string | null }> }
+type Props = { users: User[]; now?: Date; matches?: GroupMatch[]; currentUser?: User; liveMatches?: Record<string, { clock: string | null; home?: number; away?: number }> }
 
 export default function NextMatchCard({ users, now = new Date(), matches = SCORED_MATCHES, currentUser, liveMatches }: Props) {
   const upcoming = nextMatches(matches, now)

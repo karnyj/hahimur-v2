@@ -1,8 +1,17 @@
 // @vitest-environment node
 import { describe, expect, test } from 'vitest'
-import type { Match, MatchScores, Standing } from './types'
+import type { Match, MatchScores, Standing, TournamentResults } from './types'
 import { GROUP_A_MATCHES } from './groups'
-import { calculateStandings } from './standings'
+import { calculateStandings, finishedGroupLetters } from './standings'
+
+function resultsFrom(groupMatches: TournamentResults['groupMatches']): TournamentResults {
+  return {
+    groupMatches,
+    groupTables: {},
+    thirdPlaceQualification: { resolved: false, all: [], tied: [] },
+    knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] },
+  }
+}
 
 function find(standings: Standing[], team: string) {
   const s = standings.find(s => s.team === team)
@@ -204,5 +213,32 @@ describe('calculateStandings', () => {
     expect(standings).toHaveLength(4)
     const zero = { played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 }
     expect(standings.every(s => expect(s).toMatchObject(zero))).toBeTruthy()
+  })
+})
+
+describe('finishedGroupLetters', () => {
+  test('a group counts as finished only when every match has a final score', () => {
+    const results = resultsFrom({
+      A: [
+        { id: 'A1', homeTeam: 'Mexico', awayTeam: 'South Africa', scores: { home: 2, away: 0 } },
+        { id: 'A2', homeTeam: 'South Korea', awayTeam: 'Czech Republic', scores: { home: 1, away: 1 } },
+      ],
+      B: [
+        { id: 'B1', homeTeam: 'Canada', awayTeam: 'Qatar', scores: { home: 1, away: 1 } },
+        { id: 'B2', homeTeam: 'Switzerland', awayTeam: 'Canada', scores: { home: null, away: null } },
+      ],
+    })
+    expect(finishedGroupLetters(results)).toEqual(new Set(['A']))
+  })
+
+  test('a partial score (only home filled) leaves the group unfinished', () => {
+    const results = resultsFrom({
+      C: [{ id: 'C1', homeTeam: 'Brazil', awayTeam: 'Morocco', scores: { home: 2, away: null } }],
+    })
+    expect(finishedGroupLetters(results).has('C')).toBe(false)
+  })
+
+  test('an empty group is not finished', () => {
+    expect(finishedGroupLetters(resultsFrom({ D: [] })).has('D')).toBe(false)
   })
 })

@@ -20,8 +20,10 @@ export interface LiveOverlay {
   goals: Record<string, Record<string, number>>
   // match id -> live status, present ONLY while a match is in progress (ESPN
   // state 'in', not completed). Its absence is how the UI tells "finished" from
-  // "still being played" without leaning on a wall-clock window.
-  live?: Record<string, { clock: string | null }>
+  // "still being played" without leaning on a wall-clock window. `home`/`away`
+  // carry the current score (fixture orientation) so the home feed can show it
+  // without entering the match page; absent until ESPN reports a score.
+  live?: Record<string, { clock: string | null; home?: number; away?: number }>
 }
 
 // ESPN/source team names -> the names used in shared/groups.ts. Intentionally a
@@ -79,16 +81,21 @@ export function mapLiveEvents(events: LiveEvent[]): LiveOverlay {
     const hit = pairIndex.get(`${home}|${away}`)
     if (!hit) continue
 
-    if (e.homeScore != null && e.awayScore != null) {
-      scores[hit.id] = hit.reversed
-        ? { home: e.awayScore, away: e.homeScore }
-        : { home: e.homeScore, away: e.awayScore }
-    }
+    const oriented =
+      e.homeScore != null && e.awayScore != null
+        ? hit.reversed
+          ? { home: e.awayScore, away: e.homeScore }
+          : { home: e.homeScore, away: e.awayScore }
+        : null
+    if (oriented) scores[hit.id] = oriented
 
     // Only an in-progress match (not a completed one) gets a live entry — this
-    // is what stops the "חי" badge from lingering after the final whistle.
+    // is what stops the "חי" badge from lingering after the final whistle. We
+    // attach the live score (when known) so the home feed can show it too.
     if (e.state === 'in' && !e.completed) {
-      live[hit.id] = { clock: e.clock ?? null }
+      live[hit.id] = oriented
+        ? { clock: e.clock ?? null, home: oriented.home, away: oriented.away }
+        : { clock: e.clock ?? null }
     }
 
     for (const name of e.scorers) {

@@ -480,7 +480,18 @@ export interface SimAgg {
   reachQF: Map<string, number>
   reachSF: Map<string, number>
   reachFinal: Map<string, number>
+  // Per knockout matchNum (every round, R32 through the final), how many simulated
+  // tournaments produced each team pairing, keyed by a side-agnostic canonical key
+  // "teamA|teamB" (alphabetical). Lets the crossings view read P(my predicted
+  // matchup actually happens) for any bettor, at any knockout stage.
+  koPairs: Map<number, Map<string, number>>
   series?: Map<string, number[]>
+}
+
+// Side-agnostic key for a knockout pairing, so a bettor who stored the two teams
+// in either order matches the simulated matchup.
+export function koPairKey(a: string, b: string): string {
+  return a < b ? `${a}|${b}` : `${b}|${a}`
 }
 
 // How many real matches each team has already completed (group + knockout),
@@ -512,6 +523,7 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
   const reachR32 = new Map<string, number>()
   const groupFirst = new Map<string, number>()
   const reachR16 = new Map<string, number>(), reachQF = new Map<string, number>(), reachSF = new Map<string, number>(), reachFinal = new Map<string, number>()
+  const koPairs = new Map<number, Map<string, number>>()
   const series = collect ? new Map<string, number[]>() : undefined
   for (const u of USERS) { win.set(u.label, 0); top3.set(u.label, 0); top5.set(u.label, 0); sumPts.set(u.label, 0); sumSq.set(u.label, 0); sumRank.set(u.label, 0); stages.set(u.label, zeroStages()); series?.set(u.label, []) }
   // Seed every group team at 0 so a team that *never* reaches the knockouts still
@@ -526,6 +538,16 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
     for (const m of results.knockoutStages.r32) {
       if (m.home) reachR32.set(m.home, (reachR32.get(m.home) ?? 0) + 1)
       if (m.away) reachR32.set(m.away, (reachR32.get(m.away) ?? 0) + 1)
+    }
+    // Pairing tallies for *every* knockout match, so the crossings view can quote
+    // P(matchup) at any stage the bettor predicted, not just the round of 32.
+    const ks = results.knockoutStages
+    for (const m of [...ks.r32, ...ks.r16, ...ks.qf, ...ks.sf, ...ks.thirdPlace, ...ks.final]) {
+      if (!m.home || !m.away) continue
+      const key = koPairKey(m.home, m.away)
+      let byPair = koPairs.get(m.matchNum)
+      if (!byPair) { byPair = new Map(); koPairs.set(m.matchNum, byPair) }
+      byPair.set(key, (byPair.get(key) ?? 0) + 1)
     }
     const bumpReach = (map: Map<string, number>, ms: KnockoutMatch[]) => {
       for (const m of ms) { if (m.home) map.set(m.home, (map.get(m.home) ?? 0) + 1); if (m.away) map.set(m.away, (map.get(m.away) ?? 0) + 1) }
@@ -564,7 +586,7 @@ export function runSims(played: PredictionsState, n: number, seed: number, colle
       series?.get(s.label)!.push(s.pts)
     }
   }
-  return { win, top3, top5, sumPts, sumSq, sumRank, stages, champFreq, reachR32, groupFirst, reachR16, reachQF, reachSF, reachFinal, series }
+  return { win, top3, top5, sumPts, sumSq, sumRank, stages, champFreq, reachR32, groupFirst, reachR16, reachQF, reachSF, reachFinal, koPairs, series }
 }
 
 // Add every tally of `b` into `a` (in place) and return `a`. All aggregate
@@ -581,6 +603,11 @@ export function mergeSimAgg(a: SimAgg, b: SimAgg): SimAgg {
   addMap(a.sumPts, b.sumPts); addMap(a.sumSq, b.sumSq); addMap(a.sumRank, b.sumRank)
   addMap(a.champFreq, b.champFreq); addMap(a.reachR32, b.reachR32); addMap(a.groupFirst, b.groupFirst)
   addMap(a.reachR16, b.reachR16); addMap(a.reachQF, b.reachQF); addMap(a.reachSF, b.reachSF); addMap(a.reachFinal, b.reachFinal)
+  for (const [num, bp] of b.koPairs) {
+    const cur = a.koPairs.get(num)
+    if (!cur) { a.koPairs.set(num, new Map(bp)); continue }
+    for (const [k, v] of bp) cur.set(k, (cur.get(k) ?? 0) + v)
+  }
   for (const [label, st] of b.stages) {
     const cur = a.stages.get(label)
     if (!cur) { a.stages.set(label, { ...st }); continue }

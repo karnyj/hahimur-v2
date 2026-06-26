@@ -80,11 +80,26 @@ describe('mapLiveEvents', () => {
     expect(goals).toEqual({})
   })
 
-  it('marks an in-progress match as live with its minute', () => {
+  it('marks an in-progress match as live with its minute and current score', () => {
     const { live } = mapLiveEvents([
       ev({ home: 'England', away: 'Croatia', homeScore: 1, awayScore: 0, clock: "67'" }),
     ])
-    expect(live).toEqual({ L1: { clock: "67'" } })
+    expect(live).toEqual({ L1: { clock: "67'", home: 1, away: 0 } })
+  })
+
+  it('carries the live score in fixture orientation when ESPN lists teams reversed', () => {
+    // Fixture L1 is England (home) vs Croatia (away); ESPN reversed here.
+    const { live } = mapLiveEvents([
+      ev({ home: 'Croatia', away: 'England', homeScore: 2, awayScore: 1, clock: "67'" }),
+    ])
+    expect(live).toEqual({ L1: { clock: "67'", home: 1, away: 2 } })
+  })
+
+  it('marks a live match without a reported score using just its minute', () => {
+    const { live } = mapLiveEvents([
+      ev({ home: 'England', away: 'Croatia', homeScore: null, awayScore: null, clock: "2'" }),
+    ])
+    expect(live).toEqual({ L1: { clock: "2'" } })
   })
 
   it('does not mark a completed match as live', () => {

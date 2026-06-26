@@ -11,6 +11,7 @@ export interface WinProbResult {
   reachByTeam: Record<string, number>
   groupFirstByTeam: Record<string, number>
   stageReachByTeam: Record<string, StageReach>
+  crossingProbByMatch: Record<number, Record<string, number>>
 }
 
 // A single fast pass. We dropped the second "before this match" run that powered
@@ -26,6 +27,7 @@ interface Computed {
   reachByTeam: Record<string, number>
   groupFirstByTeam: Record<string, number>
   stageReachByTeam: Record<string, StageReach>
+  crossingProbByMatch: Record<number, Record<string, number>>
 }
 
 // The engine is fully deterministic for a given (played, goals, n, seed), so every
@@ -52,7 +54,7 @@ export function useWinProbabilities(
     if (!supported || cache.has(key)) return
     const worker = new Worker(new URL('./winProbWorker.ts', import.meta.url), { type: 'module' })
     worker.onmessage = (e: MessageEvent<WinProbResponse>) => {
-      cache.set(key, { rows: e.data.rows, reachByTeam: e.data.reachByTeam, groupFirstByTeam: e.data.groupFirstByTeam, stageReachByTeam: e.data.stageReachByTeam })
+      cache.set(key, { rows: e.data.rows, reachByTeam: e.data.reachByTeam, groupFirstByTeam: e.data.groupFirstByTeam, stageReachByTeam: e.data.stageReachByTeam, crossingProbByMatch: e.data.crossingProbByMatch })
       bump(x => x + 1)
     }
     worker.postMessage({ played, playerGoals, n, seed } satisfies WinProbRequest)
@@ -61,8 +63,8 @@ export function useWinProbabilities(
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [key, supported])
 
-  if (!supported) return { status: 'unsupported', rows: [], reachByTeam: {}, groupFirstByTeam: {}, stageReachByTeam: {} }
+  if (!supported) return { status: 'unsupported', rows: [], reachByTeam: {}, groupFirstByTeam: {}, stageReachByTeam: {}, crossingProbByMatch: {} }
   const hit = cache.get(key)
-  if (hit) return { status: 'ready', rows: hit.rows, reachByTeam: hit.reachByTeam, groupFirstByTeam: hit.groupFirstByTeam, stageReachByTeam: hit.stageReachByTeam }
-  return { status: 'loading', rows: [], reachByTeam: {}, groupFirstByTeam: {}, stageReachByTeam: {} }
+  if (hit) return { status: 'ready', rows: hit.rows, reachByTeam: hit.reachByTeam, groupFirstByTeam: hit.groupFirstByTeam, stageReachByTeam: hit.stageReachByTeam, crossingProbByMatch: hit.crossingProbByMatch }
+  return { status: 'loading', rows: [], reachByTeam: {}, groupFirstByTeam: {}, stageReachByTeam: {}, crossingProbByMatch: {} }
 }

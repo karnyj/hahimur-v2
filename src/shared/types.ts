@@ -70,8 +70,9 @@ export interface TournamentResults {
   // real goals by picked players: player → match ID → goals in that match
   playerMatchGoals?: Record<string, Record<string, number>>
   // match ID → live status, present only for matches in progress right now.
-  // Absent on the baked results; populated by the live overlay merge.
-  live?: Record<string, { clock: string | null }>
+  // Absent on the baked results; populated by the live overlay merge. `home`/
+  // `away` carry the current live score (fixture orientation) when known.
+  live?: Record<string, { clock: string | null; home?: number; away?: number }>
 }
 
 export function isUnpredicted(scores: MatchScores): boolean {

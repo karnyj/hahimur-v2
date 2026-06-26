@@ -36,3 +36,34 @@
   color: #fff;
   cursor: default;
 }
+
+/* Finished groups (all real fixtures played) get a green edge + check badge. */
+.stats-group-chip--finished {
+  border-color: var(--green, #1e8e3e);
+}
+
+.stats-group-chip--finished:not(.stats-group-chip--active) {
+  color: var(--green, #1e8e3e);
+}
+
+.stats-group-chip__done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-inline-start: 0.35rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: var(--green, #1e8e3e);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.stats-group-chip--active .stats-group-chip__done,
+.stats-group-chip:hover .stats-group-chip__done,
+.stats-group-chip:focus-visible .stats-group-chip__done {
+  background: #fff;
+  color: var(--green, #1e8e3e);
+}

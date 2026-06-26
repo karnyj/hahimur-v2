@@ -23,6 +23,10 @@ export interface WinProbResponse {
   // Per-team probability of reaching each tournament depth, keyed by team code, so
   // the card can quote the odds at the exact stage each bettor backed a team to.
   stageReachByTeam: Record<string, StageReach>
+  // Per knockout matchNum (every round), P(each team pairing occurs), keyed by the
+  // side-agnostic "teamA|teamB" key. Lets the crossings view quote P(my matchup
+  // comes true) at any stage.
+  crossingProbByMatch: Record<number, Record<string, number>>
 }
 
 // `self` is the dedicated worker global; the DOM-lib `Worker` shape covers the
@@ -73,5 +77,12 @@ worker.onmessage = async (e: MessageEvent<WinProbRequest>) => {
     }
   }
 
-  worker.postMessage({ rows, reachByTeam, groupFirstByTeam, stageReachByTeam } satisfies WinProbResponse)
+  const crossingProbByMatch: Record<number, Record<string, number>> = {}
+  for (const [matchNum, byPair] of real.koPairs) {
+    const rec: Record<string, number> = {}
+    for (const [key, count] of byPair) rec[key] = count / n
+    crossingProbByMatch[matchNum] = rec
+  }
+
+  worker.postMessage({ rows, reachByTeam, groupFirstByTeam, stageReachByTeam, crossingProbByMatch } satisfies WinProbResponse)
 }

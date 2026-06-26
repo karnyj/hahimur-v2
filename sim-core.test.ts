@@ -356,6 +356,40 @@ describe('currentResults knockout resolution', () => {
   })
 })
 
+describe('runSims knockout pairings', () => {
+  test('every knockout match (R32 → final) tallies pairings that sum to the run count', () => {
+    const agg = runSims({ A1: { home: 1, away: 0 } }, 150, 12345)
+    // every knockout match number appears (73..88 R32, 89..96 R16, 97..100 QF,
+    // 101..102 SF, 103 third place, 104 final) and its pairings add up to n
+    const koNums = Array.from({ length: 104 - 73 + 1 }, (_, i) => 73 + i) // 73..104 (all KO matches)
+    for (const num of koNums) {
+      const byPair = agg.koPairs.get(num)
+      expect(byPair, `match ${num}`).toBeDefined()
+      const total = [...byPair!.values()].reduce((a, b) => a + b, 0)
+      expect(total, `match ${num}`).toBe(150)
+    }
+  })
+
+  test('pairing keys are side-agnostic (alphabetical)', () => {
+    const agg = runSims({ A1: { home: 1, away: 0 } }, 60, 99)
+    for (const byPair of agg.koPairs.values())
+      for (const key of byPair.keys()) {
+        const [a, b] = key.split('|')
+        expect(a < b).toBe(true)
+      }
+  })
+
+  test('merging batches sums each match pairing count', () => {
+    const a = runSims({ A1: { home: 1, away: 0 } }, 40, 1)
+    const b = runSims({ A1: { home: 1, away: 0 } }, 40, 2)
+    const merged = mergeSimAgg(a, b)
+    for (const num of [73, 90, 104]) {
+      const total = [...merged.koPairs.get(num)!.values()].reduce((x, y) => x + y, 0)
+      expect(total).toBe(80)
+    }
+  })
+})
+
 describe('mergeSimAgg', () => {
   // Slicing a simulation into separately-seeded batches and merging must give the
   // same tallies as adding the batches by hand — this is what lets the worker run

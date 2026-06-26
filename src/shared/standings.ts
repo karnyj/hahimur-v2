@@ -11,6 +11,19 @@ export function liveGroupScores(results: TournamentResults, groupLetter: string)
   return Object.fromEntries(groupMatches.map(m => [m.id, m.scores ?? { home: null, away: null }]))
 }
 
+// The set of group letters whose real fixtures are all played out — every match
+// has a final score. Live overlays never produce finals, so this reads the same
+// off baked or merged results. Used to flag "done" groups in the pickers.
+export function finishedGroupLetters(results: TournamentResults): Set<string> {
+  const finished = new Set<string>()
+  for (const [letter, matches] of Object.entries(results.groupMatches)) {
+    if (matches.length > 0 && matches.every(m => m.scores?.home != null && m.scores?.away != null)) {
+      finished.add(letter)
+    }
+  }
+  return finished
+}
+
 function emptyStanding(team: string): Standing {
   return { team, played: 0, won: 0, drawn: 0, lost: 0, goalsFor: 0, goalsAgainst: 0, points: 0 }
 }

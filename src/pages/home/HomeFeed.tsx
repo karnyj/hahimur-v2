@@ -16,7 +16,8 @@ type Props = {
   // The live feed's in-progress matches (match id → status). Drives the "live"
   // badge so it tracks the feed (and disappears the moment a match finishes)
   // rather than a 3h wall-clock window. Absent in tests / when no feed is wired up.
-  liveMatches?: Record<string, { clock: string | null }>
+  // `home`/`away` carry the current live score so the card can show it live.
+  liveMatches?: Record<string, { clock: string | null; home?: number; away?: number }>
 }
 
 // The home page's match feed: one tap swaps between the last few results and the

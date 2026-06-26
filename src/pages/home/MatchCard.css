@@ -93,6 +93,13 @@
   50%      { opacity: 0.45; transform: scale(0.78); }
 }
 
+/* The live score itself, shown above the badge while the match is in progress.
+   Inked red so it reads as "happening now", echoing the live badge. */
+.next-match__score--live {
+  color: var(--red);
+  margin-bottom: 0.1rem;
+}
+
 .next-match__live-time {
   color: var(--muted);
   font-size: 0.8rem;

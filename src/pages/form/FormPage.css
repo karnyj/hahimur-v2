@@ -384,6 +384,38 @@ main {
   color: var(--gold);
 }
 
+/* Group finished in reality (all real fixtures played). */
+.group-cell--finished {
+  border-color: var(--green);
+  color: var(--green);
+}
+
+.group-cell--finished.group-cell--active {
+  border-color: var(--navy);
+  color: var(--gold);
+}
+
+.group-cell__done {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 999px;
+  background: var(--green);
+  color: var(--paper);
+  font-family: sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.group-cell--active .group-cell__done {
+  background: var(--gold);
+  color: var(--navy);
+}
+
 .tie-warning {
   background: rgba(192, 57, 43, 0.08);
   border: 1px solid rgba(192, 57, 43, 0.4);
