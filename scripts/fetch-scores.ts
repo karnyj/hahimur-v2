@@ -88,7 +88,7 @@ export interface EspnScoringPlay {
 }
 
 export interface EspnEvent {
-  status: { type: { state: string; completed: boolean } }
+  status?: { type?: { state: string; completed: boolean } }
   competitions: {
     competitors: { homeAway: string; score?: string; team: { displayName: string } }[]
     details?: EspnScoringPlay[]
@@ -99,7 +99,7 @@ export interface EspnEvent {
 // it maps to (`hit` is undefined for knockout or unrecognized matchups).
 // Shared by the score and scorer extractors below.
 function resolveEspnEvent(e: EspnEvent) {
-  if (!e.status.type.completed) return null
+  if (!e.status?.type?.completed) return null
   const comp = e.competitions[0]
   const competitors = comp?.competitors ?? []
   const homeSide = competitors.find(c => c.homeAway === 'home')

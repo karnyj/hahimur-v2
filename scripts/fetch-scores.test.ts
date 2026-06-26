@@ -191,6 +191,15 @@ describe('extractEspnGroupScores', () => {
     expect(scores).toEqual({})
   })
 
+  it('skips events that have no status field instead of crashing', () => {
+    const noStatus = { competitions: espnEvent({ home: 'Mexico', away: 'South Africa' }).competitions } as EspnEvent
+    const { scores } = extractEspnGroupScores([
+      noStatus,
+      espnEvent({ home: 'South Korea', away: 'Czechia', homeScore: '2', awayScore: '1' }),
+    ])
+    expect(scores).toEqual({ A2: { home: 2, away: 1 } })
+  })
+
   it('swaps the score when ESPN home/away order is reversed', () => {
     const { scores } = extractEspnGroupScores([
       espnEvent({ home: 'South Africa', away: 'Mexico', homeScore: '1', awayScore: '3' }),
