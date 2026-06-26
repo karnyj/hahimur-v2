@@ -224,12 +224,16 @@ describe('bestRemainingResult — the unified holistic engine', () => {
     // The goal-grid caps at 2 goals/side for a 4-match group, so this used to be
     // unreachable and we wrongly suggested 1–0; your prediction must now be offered.
     const u = USERS.find(x => x.label === 'אייל ארז')!
+    // F6 has since been played for real (1–3, exactly Eyal's prediction), which
+    // would leave no remaining matches. Freeze a settled state with F6 still open
+    // so this guards the engine's behavior independently of live tournament progress.
+    const { F6: _f6, ...settledNoF6 } = settled
     const res = bestRemainingResult({
       groupLetter: 'F',
       predictions: u.predictions,
       predictedOrder: orderOf(u, 'F'),
       thirdPick: thirdPickFromQualification(u, 'F'),
-      settledAll: settled,
+      settledAll: settledNoF6,
     })!
     const f6 = res.ideal.find(m => m.id === 'F6')!
     expect(f6.predicted).toEqual({ home: 1, away: 3 }) // guards the fixture assumption
