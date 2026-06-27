@@ -11,6 +11,11 @@ export interface Match {
 export interface MatchScores {
   home: Score
   away: Score
+  // Knockout only. Set when the scoreline is level — names the team that
+  // advances. A knockout match can't end drawn, so a drawn prediction means
+  // "level after 90 minutes" and this team goes through in extra time OR on
+  // penalties. Which of the two is not recorded, so don't label it as either.
+  // Group matches never carry it.
   drawWinner?: 'home' | 'away'
 }
 

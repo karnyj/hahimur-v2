@@ -61,8 +61,9 @@ The user's predicted scoreline for a single match.
 |-------|------|-------------|
 | `home` | `Score` | Predicted goals for the home team |
 | `away` | `Score` | Predicted goals for the away team |
+| `drawWinner` | `'home' \| 'away'?` | Knockout only. Set when the scoreline is level — names the team that **advances**. A knockout match can't end drawn, so a drawn prediction means "level after 90 minutes" and the named team goes through in extra time **or** on penalties. Which of the two is *not* recorded, so nothing rendering this field may call it "penalties" or "extra time." Group matches never carry it. |
 
-Both fields are `null` until the user enters a value.
+`home`/`away` are `null` until the user enters a value. For knockout matches they hold the **90′ regulation** score — the only thing a knockout prediction is judged against — not the after-extra-time aggregate.
 
 ---
 

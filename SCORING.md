@@ -49,6 +49,20 @@ For each knockout match, a friend can earn:
 
 ---
 
+## Knockout Draws (תיקו אחרי 90')
+
+A knockout match can't actually end level — but a *prediction* can. A drawn scoreline means **"level after 90 minutes,"** and the predictor also names which team advances. That team goes through in extra time **or** on penalties; the method is neither predicted nor recorded, so the app never labels a drawn prediction as "penalties."
+
+Knockout matches are judged on the **90′ regulation** score plus the advancer:
+
+- **צליפה** — exact 90′ score *and* correct advancer
+- **פגיעה** — correct winner-over-the-tie (for a draw, the right advancing team); a different 90′ scoreline still counts
+- Predicting a draw when 90′ wasn't drawn (or vice versa) is a פספוס, even if the eventual winner matches
+
+The advancing team is also credited עולה as usual.
+
+---
+
 ## How "עולה" Works (Bracket Advancement)
 
 "עולה" is automatically computed by comparing a friend's predicted bracket to the actual bracket.
