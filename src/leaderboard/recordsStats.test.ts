@@ -106,3 +106,44 @@ describe('buildRecords', () => {
     expect(cat(mine, 'tzelifot').entries.find(e => e.label === 'Bob')).toBeUndefined()
   })
 })
+
+describe('buildRecords — crossings', () => {
+  const km = (matchNum: number, home: string, away: string) => ({ matchNum, home, away, resolved: false })
+
+  function koUser(label: string, r32: ReturnType<typeof km>[]): User {
+    return {
+      label, topGoalscorer: 'X',
+      groupMatches: {}, groupTables: {},
+      thirdPlaceQualification: { resolved: false, all: [], tied: [] },
+      knockoutStages: { ...emptyKO, r32 },
+    } as unknown as User
+  }
+
+  // Two settled R32 pairings; both teams of each are real teams.
+  const koResults = mkResults({})
+  koResults.knockoutStages = { ...emptyKO, r32: [km(73, 'Mexico', 'Canada'), km(74, 'Brazil', 'Spain')] }
+
+  test('counts the cross-bracket pairings each bettor nailed', () => {
+    const both = koUser('Both', [km(73, 'Mexico', 'Canada'), km(74, 'Brazil', 'Spain')])
+    const one = koUser('One', [km(73, 'Canada', 'Mexico')])           // reversed order still matches
+    const none = koUser('None', [km(73, 'Brazil', 'Spain')])          // wrong pairing for slot 73
+    const c = cat(buildRecords([both, one, none], koResults), 'crossings')
+    expect(c.entries[0]).toMatchObject({ label: 'Both', value: 2 })
+    expect(c.entries[1]).toMatchObject({ label: 'One', value: 1 })
+    expect(c.entries.map(e => e.label)).not.toContain('None')
+  })
+
+  test('counts a 100%-certain pairing even before its slot is formally filled', () => {
+    const res = mkResults({})
+    // Slot 75 still has an open side ("סגנית ו"), so it is not formally settled.
+    res.knockoutStages = { ...emptyKO, r32: [km(75, 'Brazil', 'סגנית ו')] }
+    const sure = koUser('Sure', [km(75, 'Brazil', 'Netherlands')])
+    const certain = { 75: { 'Brazil|Netherlands': 1 } } // simulation says inevitable
+
+    // Without the sim odds it isn't locked yet → no record entry.
+    expect(cat(buildRecords([sure], res), 'crossings').entries).toHaveLength(0)
+    // With the 100% pairing it counts as a hit.
+    expect(cat(buildRecords([sure], res, undefined, certain), 'crossings').entries[0])
+      .toMatchObject({ label: 'Sure', value: 1 })
+  })
+})

@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import './RecordsView.css'
 import { buildRecords } from './recordsStats'
 import type { RecordCategory, RecordEntry } from './recordsStats'
 import { MEDALS } from './medals'
 import { competitionRanks } from './rank'
+import { realPlayedState } from './winprob/realPlayed'
+import { useWinProbabilities } from './winprob/useWinProbabilities'
 import type { TournamentResults } from '../shared/types'
 import type { User } from '../users'
 
@@ -126,7 +128,14 @@ export default function RecordsView({ users, results, me }: {
   results: TournamentResults
   me?: string
 }) {
-  const cats = buildRecords(users, results, me)
+  // Same Monte-Carlo inputs as the crossings tab, so a 100%-certain knockout
+  // pairing counts toward the crossings record (and the cache is shared). Feed the
+  // odds in only once ready, mirroring computeUserCrossings' rule everywhere else.
+  const played = useMemo(() => realPlayedState(results), [results])
+  const { status, crossingProbByMatch } = useWinProbabilities(played, results.playerGoals ?? {})
+  const probByMatch = status === 'ready' ? crossingProbByMatch : {}
+
+  const cats = buildRecords(users, results, me, probByMatch)
   const points = cats.find(c => c.key === 'points')
   const cards = cats.filter(c => c.key !== 'points')
   const anyData = cats.some(c => c.entries.length > 0)

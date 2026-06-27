@@ -1,4 +1,6 @@
 import { computeUserPoints, computeGroupTeamDetail, singleMatchOutcome } from './points'
+import { computeUserCrossings } from './crossings'
+import type { RoundKey } from './crossings'
 import { rankTrajectories } from './leaderboardRows'
 import { isUnpredicted } from '../shared/types'
 import type { KnockoutMatch, MatchScores, TournamentResults } from '../shared/types'
@@ -64,6 +66,29 @@ function knockoutOutcomes(user: User, results: TournamentResults): Outcomes {
   return acc
 }
 
+// The knockout rounds whose cross-bracket pairings count as "הצלבות". A locked
+// crossing means both teams the bettor paired actually met in that slot.
+const CROSSING_ROUNDS: RoundKey[] = ['r32', 'r16', 'qf', 'sf', 'final']
+
+// How many cross-bracket pairings the bettor nailed. A locked crossing is one
+// whose two teams have actually met in the slot — and, once the simulation's
+// per-match pairing odds are passed in, also one the model makes inevitable
+// (100%) even before its bracket slot is formally filled.
+function crossingHits(
+  user: User,
+  results: TournamentResults,
+  crossingProbByMatch: Record<number, Record<string, number>>,
+): number {
+  return CROSSING_ROUNDS.reduce((sum, round) => {
+    const { locked } = computeUserCrossings(
+      user.knockoutStages?.[round] ?? [],
+      results.knockoutStages?.[round] ?? [],
+      crossingProbByMatch,
+    )
+    return sum + locked.length
+  }, 0)
+}
+
 // Everything we rank a bettor by, computed once per user so the record builder
 // just reads fields and sorts.
 export interface UserRecordStats {
@@ -72,11 +97,17 @@ export interface UserRecordStats {
   pgiot: number
   olot: number
   mikumim: number
+  crossings: number
   points: number
   climb: number
 }
 
-function userStats(user: User, results: TournamentResults, climb: number): UserRecordStats {
+function userStats(
+  user: User,
+  results: TournamentResults,
+  climb: number,
+  crossingProbByMatch: Record<number, Record<string, number>>,
+): UserRecordStats {
   const group = groupOutcomes(user, results)
   const ko = knockoutOutcomes(user, results)
   const detail = computeGroupTeamDetail(user, results)
@@ -86,6 +117,7 @@ function userStats(user: User, results: TournamentResults, climb: number): UserR
     pgiot: group.pgiot + ko.pgiot,
     olot: detail.advancement.length,
     mikumim: detail.places.length,
+    crossings: crossingHits(user, results, crossingProbByMatch),
     points: computeUserPoints(user, results).total,
     climb,
   }
@@ -115,14 +147,23 @@ const CATEGORY_DEFS: CatDef[] = [
   { key: 'pgiot',    title: 'שיא פגיעות',  emoji: '✅', unit: 'פגיעות', blurb: 'הכי הרבה תוצאות נכונות (מנצחת או תיקו)',     field: 'pgiot' },
   { key: 'olot',     title: 'שיא עולות',   emoji: '⬆️', unit: 'עולות',  blurb: 'הכי הרבה קבוצות שנוחשו נכון לעלות מהבתים',   field: 'olot' },
   { key: 'mikumim',  title: 'שיא מיקומים', emoji: '📊', unit: 'מיקומים', blurb: 'הכי הרבה מיקומים מדויקים בטבלאות הבתים',    field: 'mikumim' },
+  { key: 'crossings', title: 'שיא הצלבות', emoji: '🔀', unit: 'הצלבות', blurb: 'הכי הרבה הצלבות מדויקות — צמדי נוקאאוט שנוחשו נכון', field: 'crossings' },
   { key: 'climb',    title: 'שיא טיפוס',   emoji: '🚀', unit: 'מקומות', blurb: 'הזינוק הגדול ביותר בטבלה אחרי משחק בודד',    field: 'climb' },
 ]
 
 // All the headline records, each already sorted with the leader first and zero
-// scorers dropped, ready for the view to render as cards.
-export function buildRecords(users: User[], results: TournamentResults, me?: string): RecordCategory[] {
+// scorers dropped, ready for the view to render as cards. `crossingProbByMatch`
+// (from the win-prob simulation) lets 100%-certain knockout pairings count toward
+// the crossings record before their bracket slot is formally filled; omit it and
+// only formally-settled crossings count.
+export function buildRecords(
+  users: User[],
+  results: TournamentResults,
+  me?: string,
+  crossingProbByMatch: Record<number, Record<string, number>> = {},
+): RecordCategory[] {
   const trajectories = rankTrajectories(users, results)
-  const stats = users.map(u => userStats(u, results, biggestClimb(trajectories[u.label] ?? [])))
+  const stats = users.map(u => userStats(u, results, biggestClimb(trajectories[u.label] ?? []), crossingProbByMatch))
 
   return CATEGORY_DEFS.map(def => ({
     key: def.key,
