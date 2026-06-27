@@ -5,13 +5,14 @@ import PageLayout from '../../shared/PageLayout'
 import { useCurrentUser } from '../../shared/useCurrentUser'
 import PlayerSelect from './PlayerSelect'
 import PlayerCompare from './PlayerCompare'
+import SurvivorsView from './SurvivorsView'
 
 interface Props {
   users: User[]
   usersSorted: User[]
 }
 
-type Mode = 'single' | 'compare'
+type Mode = 'single' | 'alive' | 'compare'
 
 export default function FormsPage({ users, usersSorted }: Props) {
   const { me } = useCurrentUser()
@@ -52,12 +53,17 @@ export default function FormsPage({ users, usersSorted }: Props) {
           >טופס</button>
           <button
             type="button"
+            className={`pc-mode-btn${mode === 'alive' ? ' pc-mode-btn--active' : ''}`}
+            onClick={() => setMode('alive')}
+          >עוד בחיים</button>
+          <button
+            type="button"
             className={`pc-mode-btn${mode === 'compare' ? ' pc-mode-btn--active' : ''}`}
             onClick={() => setMode('compare')}
           >השוואה</button>
         </div>
 
-        {mode === 'single' ? (
+        {mode === 'single' || mode === 'alive' ? (
           <>
             <div className="user-picker" ref={pickerRef} dir="rtl">
               <button
@@ -93,15 +99,19 @@ export default function FormsPage({ users, usersSorted }: Props) {
 
             {selected && (
               <section>
-                <FormView
-                  predictions={selected.predictions}
-                  topGoalscorer={selected.topGoalscorer}
-                  groupTables={selected.groupTables}
-                  thirdPlaceQualification={selected.thirdPlaceQualification}
-                  knockoutStages={selected.knockoutStages}
-                  predictedChampion={selected.predictedChampion}
-                  user={selected}
-                />
+                {mode === 'alive' ? (
+                  <SurvivorsView user={selected} />
+                ) : (
+                  <FormView
+                    predictions={selected.predictions}
+                    topGoalscorer={selected.topGoalscorer}
+                    groupTables={selected.groupTables}
+                    thirdPlaceQualification={selected.thirdPlaceQualification}
+                    knockoutStages={selected.knockoutStages}
+                    predictedChampion={selected.predictedChampion}
+                    user={selected}
+                  />
+                )}
               </section>
             )}
           </>

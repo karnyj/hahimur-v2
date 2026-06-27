@@ -105,6 +105,22 @@ describe('Compare mode', () => {
   })
 })
 
+describe('Still-alive mode', () => {
+  test('survivors tab shows the still-alive summary for the selected player', () => {
+    localStorage.setItem('hahimur.me', 'עידן מלמד')
+    render(<FormsPage users={USERS} usersSorted={USERS_SORTED} />)
+    fireEvent.click(screen.getByRole('button', { name: 'עוד בחיים' }))
+    expect(screen.getByText('כמה מהקבוצות שבחרת לכל שלב עדיין בטורניר')).toBeInTheDocument()
+    expect(screen.getByText('שלב ה-32')).toBeInTheDocument()
+  })
+
+  test('keeps the player picker available in survivors mode', () => {
+    render(<FormsPage users={USERS} usersSorted={USERS_SORTED} />)
+    fireEvent.click(screen.getByRole('button', { name: 'עוד בחיים' }))
+    expect(screen.getByRole('button', { name: /בחר שחקן/ })).toBeInTheDocument()
+  })
+})
+
 describe('By-date toggle', () => {
   test('toggle buttons are visible after selecting a user', () => {
     selectUser('טל ליכטר')
