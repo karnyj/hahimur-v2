@@ -1,7 +1,7 @@
 import { buildKnockoutBracket } from '../../formView/knockout/knockout'
 import { tournamentResults } from '../../tournament-results'
 import { matchSortKey } from '../../shared/matchOrder'
-import type { KnockoutMatch, PredictionsState } from '../../shared/types'
+import type { KnockoutMatch, KnockoutStages, PredictionsState } from '../../shared/types'
 
 // The actual group scores, flattened into the predictions-shaped map the bracket
 // builder consumes. Unresolved knockout slots come back as descriptor strings
@@ -42,9 +42,17 @@ export function mockEnabled(): boolean {
     && new URLSearchParams(window.location.search).has('mockko')
 }
 
+// Pure lookup across every round of a derived bracket. Fixtures in knockoutStages
+// already carry their baked result (regulation score + advancer) when one's been
+// entered, so the match page renders the score straight off what this returns.
+export function findInStages(stages: KnockoutStages, matchNum: number): KnockoutMatch | null {
+  const all = [...stages.r32, ...stages.r16, ...stages.qf, ...stages.sf, ...stages.thirdPlace, ...stages.final]
+  return all.find(m => m.matchNum === matchNum) ?? null
+}
+
 export function findKnockoutMatch(matchNum: number): KnockoutMatch | null {
   if (mockEnabled() && MOCK_KO[matchNum]) return MOCK_KO[matchNum]
-  return buildKnockoutBracket(realGroupScores()).find(m => m.matchNum === matchNum) ?? null
+  return findInStages(tournamentResults.knockoutStages, matchNum)
 }
 
 const ROUND_LABELS: { upTo: number; label: string }[] = [

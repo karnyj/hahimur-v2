@@ -10,10 +10,16 @@ vi.mock('../../Nav', () => ({ default: () => null, USER_STORAGE_EVENT: 'userStor
 
 // Pin the baked results to empty so the knockout points table reflects only the
 // bettors' knockout predictions, not whatever live group scores happen to exist.
-vi.mock('../../tournament-results', () => ({
-  tournamentResults: { groupMatches: {}, groupTables: {}, playerMatchGoals: {}, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] }, thirdPlaceQualification: { resolved: false, all: [], tied: [] } },
-  derivePlayerGoals: () => ({}),
-}))
+// knockoutStages is still derived the way production does (empty groups → all-
+// placeholder fixtures, no baked scores), since findKnockoutMatch now sources the
+// match the page renders from it.
+vi.mock('../../tournament-results', async () => {
+  const { deriveKnockoutStages } = await import('../../formView/knockout/deriveKnockoutStages')
+  return {
+    tournamentResults: { groupMatches: {}, groupTables: {}, playerMatchGoals: {}, knockoutStages: deriveKnockoutStages({}, {}), thirdPlaceQualification: { resolved: false, all: [], tied: [] } },
+    derivePlayerGoals: () => ({}),
+  }
+})
 
 // Keep the real bracket/labels, but make findKnockoutMatch swappable so a test
 // can stand in a resolved fixture without the dev-only ?mockko path.

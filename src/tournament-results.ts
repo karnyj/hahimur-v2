@@ -2,6 +2,7 @@ import { GROUPS } from './shared/groups'
 import type { TournamentResults, MatchScores, PredictionsState } from './shared/types'
 import { deriveGroupStatus } from './shared/groupStatus'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from './formView/thirdPlace/thirdPlace'
+import { deriveKnockoutStages } from './formView/knockout/deriveKnockoutStages'
 
 // Fill in real scores here as matches are played, keyed by match ID
 const groupScores: Record<string, MatchScores> = {
@@ -73,6 +74,12 @@ const groupScores: Record<string, MatchScores> = {
   G5: { home: 1, away: 1 },
 }
 
+// Knockout results: the regulation (90') score keyed by matchNum. drawWinner
+// names the advancer when regulation ended level (ET/penalties decide who went
+// through). Fill in as KO matches are played; knockoutStages is derived from this.
+const koScores: Record<string, MatchScores> = {
+}
+
 // Real goals by picked players: player → match ID → goals in that match.
 // Names must match users' topGoalscorer strings exactly.
 const realGoals: Record<string, Record<string, number>> = {
@@ -113,12 +120,5 @@ export const tournamentResults: TournamentResults = {
   playerMatchGoals: realGoals,
   playerGoals: derivePlayerGoals(realGoals),
   thirdPlaceQualification,
-  knockoutStages: {
-    r32: [],
-    r16: [],
-    qf: [],
-    sf: [],
-    thirdPlace: [],
-    final: [],
-  },
+  knockoutStages: deriveKnockoutStages(groupScores, koScores),
 }

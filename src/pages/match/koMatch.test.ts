@@ -1,5 +1,33 @@
 import { describe, expect, test } from 'vitest'
-import { vennStage, knockoutChronoNav } from './koMatch'
+import { vennStage, knockoutChronoNav, findInStages } from './koMatch'
+import type { KnockoutStages } from '../../shared/types'
+
+// findKnockoutMatch sources fixtures from the derived knockoutStages, so a match
+// that has a baked result carries its score (and advancer) straight onto the
+// fixture the page renders. findInStages is the pure lookup behind it.
+describe('findInStages', () => {
+  const stages: KnockoutStages = {
+    r32: [
+      { matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true, scores: { home: 2, away: 1 } },
+      { matchNum: 74, home: 'Germany', away: 'Scotland', resolved: true },
+    ],
+    r16: [], qf: [], sf: [], thirdPlace: [], final: [],
+  }
+
+  test('returns the fixture with its baked result attached', () => {
+    expect(findInStages(stages, 73)).toEqual(
+      { matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true, scores: { home: 2, away: 1 } },
+    )
+  })
+
+  test('returns a fixture without scores when none is baked', () => {
+    expect(findInStages(stages, 74)?.scores).toBeUndefined()
+  })
+
+  test('returns null for a match not in the bracket', () => {
+    expect(findInStages(stages, 999)).toBeNull()
+  })
+})
 
 // Every knockout match feeds a "who predicted each team this far" Venn. The stage
 // it checks is the one the two teams must have reached to meet in this match:

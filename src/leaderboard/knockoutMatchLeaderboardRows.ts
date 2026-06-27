@@ -79,7 +79,11 @@ function koAdvancementFor(user: User, match: KnockoutMatch): number {
 // fixture resolved from the bracket still scores before results are baked in.
 function playedKOChrono(results: TournamentResults, match: KnockoutMatch): KnockoutMatch[] {
   const staged = allKO(results.knockoutStages)
-  const merged = staged.some(m => m.matchNum === match.matchNum) ? staged : [...staged, match]
+  // Prefer the baked fixture, but fall back to the passed match when the baked
+  // copy isn't a scored result yet (an unresolved/placeholder slot) — so a fixture
+  // resolved from the bracket still scores before its result is baked in.
+  const bakedScored = staged.some(m => m.matchNum === match.matchNum && m.scores && !isUnpredicted(m.scores))
+  const merged = bakedScored ? staged : [...staged.filter(m => m.matchNum !== match.matchNum), match]
   return merged
     .filter(m => m.home && m.away && m.scores && !isUnpredicted(m.scores))
     .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
