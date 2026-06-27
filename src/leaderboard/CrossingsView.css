@@ -37,6 +37,37 @@
   color: #fff;
 }
 
+/* view switch — your own crossings vs. the shared "who predicted what" board */
+.cx-modes {
+  display: inline-flex;
+  gap: 0.25rem;
+  padding: 0.2rem;
+  margin-bottom: 1rem;
+  border-radius: 999px;
+  background: var(--surface-2, #f1f3f7);
+}
+
+.cx-mode {
+  border: none;
+  background: none;
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7385);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+
+.cx-mode:hover { color: var(--text, #1a1d27); }
+
+.cx-mode--active {
+  background: var(--surface, #fff);
+  color: var(--text, #1a1d27);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
 .cx-caption {
   margin: 0 0 0.85rem;
   color: var(--text-muted, #6b7385);
@@ -119,6 +150,26 @@
 .cx-card--locked {
   border-color: rgba(34, 197, 94, 0.4);
   background: rgba(34, 197, 94, 0.05);
+}
+
+/* certain-by-simulation: locked styling, with a dashed edge so it reads as "sealed
+   but the slot isn't formally filled yet" rather than already-played */
+.cx-card--certain {
+  border-style: dashed;
+}
+
+.cx-certain-badge {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(34, 197, 94, 0.16);
+  color: #15803d;
+  border-radius: 999px;
+  padding: 0.1rem 0.5rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  margin-bottom: 0.1rem;
 }
 
 .cx-card-teams {
@@ -619,10 +670,195 @@
   max-width: 24rem;
 }
 
+/* --- the shared "who predicted what" board --- */
+.cx-det-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 0.6rem;
+}
+
+.cx-det-card {
+  border: 1px solid var(--border, #e3e6ee);
+  border-radius: 12px;
+  padding: 0.7rem 0.8rem;
+  background: var(--surface, #fff);
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.cx-det-card--none {
+  opacity: 0.7;
+  border-style: dashed;
+  background: var(--surface-2, #f7f8fb);
+}
+
+/* certain-by-simulation on the shared board: sealed, but not formally in the bracket
+   yet — dashed green edge + the "ודאי" badge tell it apart from a played pairing */
+.cx-det-card--certain {
+  border-style: dashed;
+  border-color: rgba(34, 197, 94, 0.45);
+  align-items: center;
+}
+
+.cx-det-count {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  border: none;
+  background: var(--surface-2, #f1f3f7);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font: inherit;
+  color: var(--text, #1a1d27);
+  cursor: pointer;
+  align-self: stretch;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.cx-det-count:hover { background: rgba(79, 124, 255, 0.12); }
+
+.cx-det-num {
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent, #4f7cff);
+  font-variant-numeric: tabular-nums;
+}
+
+.cx-det-num-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-muted, #6b7385);
+}
+
+.cx-det-foot--none {
+  text-align: center;
+  font-size: 0.78rem;
+  font-style: italic;
+  color: var(--text-muted, #8a90a0);
+}
+
+.cx-det-names {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  justify-content: center;
+}
+
+.cx-det-name {
+  background: var(--surface-2, #f1f3f7);
+  color: var(--text, #1a1d27);
+  border-radius: 999px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.74rem;
+}
+
+.cx-det-name--me {
+  background: #2563eb;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* --- live-teams stage chips --- */
+.cx-live-stages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin: 0 0 0.75rem;
+}
+
+.cx-live-stage {
+  border: 1px solid var(--border, #e3e6ee);
+  background: var(--surface, #fff);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted, #5b6472);
+  cursor: pointer;
+}
+
+.cx-live-stage--active {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: #fff;
+}
+
+/* --- live-teams breakdown chips --- */
+.cx-board-detail-h--out { color: #b54a4a; }
+
+.cx-live-teams {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+}
+
+.cx-live-team {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--surface, #fff);
+  border: 1px solid var(--border, #e3e6ee);
+  border-radius: 8px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.78rem;
+}
+
+.cx-live-team-flag {
+  border-radius: 2px;
+  width: 1.1rem;
+  height: 0.8rem;
+  object-fit: cover;
+}
+
+.cx-live-team--out {
+  opacity: 0.55;
+  filter: grayscale(0.7);
+  text-decoration: line-through;
+}
+
+/* --- collision ("they meet on the way") indicators --- */
+.cx-board-clash { color: #b45309; font-weight: 700; }
+
+.cx-board-exp-sub {
+  font-size: 0.58rem;
+  color: #b45309;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.cx-board-detail-h--clash { color: #b45309; }
+
+.cx-live-clashes {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cx-live-clash {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.5rem;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  border-radius: 8px;
+  padding: 0.3rem 0.55rem;
+}
+
+.cx-live-clash-teams { font-weight: 700; font-size: 0.8rem; color: #7c2d12; }
+.cx-live-clash-vs { color: #b45309; font-weight: 700; }
+.cx-live-clash-note { font-size: 0.72rem; color: #b45309; }
+
 /* --- mobile --- */
 @media (max-width: 639px) {
   /* one card per row reads cleaner than squeezing two narrow ones */
   .cx-cards { grid-template-columns: 1fr; }
+  .cx-det-grid { grid-template-columns: 1fr; }
 
   /* the 4-up standing row is too tight on a phone: keep rank + name + number on
      top, and give the progress bar its own full-width row underneath */

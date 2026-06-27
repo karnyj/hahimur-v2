@@ -5,8 +5,10 @@ import { buildKnockoutBracket } from '../formView/knockout/knockout'
 import { realPlayedState } from './winprob/realPlayed'
 import { useWinProbabilities } from './winprob/useWinProbabilities'
 import type { WinProbStatus } from './winprob/useWinProbabilities'
-import { computeUserCrossings, crossingProbability, crossingBreakdown, crossingParticipants, computeCrossingsLeaderboard } from './crossings'
-import type { Crossing, CrossingStanding, CrossingBreakdown, RoundKey } from './crossings'
+import { computeUserCrossings, crossingProbability, crossingBreakdown, crossingParticipants, computeCrossingsLeaderboard, computeDeterminedCrossings } from './crossings'
+import type { Crossing, CrossingStanding, CrossingBreakdown, RoundKey, DeterminedCrossing } from './crossings'
+import { buildLiveStages } from '../pages/forms/survivorsStats'
+import type { LiveTeamsStanding, LiveStage, LiveStageKey, Collision } from '../pages/forms/survivorsStats'
 import { TeamChip } from './LeaderboardTable'
 import { TEAMS } from '../shared/groups'
 import './CrossingsView.css'
@@ -139,9 +141,12 @@ function Participants({ names, expanded, onToggle }: { names: string[]; expanded
   )
 }
 
-function CrossingCard({ crossing, locked, ruledOut = false, missed = false, prob, breakdown, status, mates, expanded, onToggle }: {
+function CrossingCard({ crossing, locked, certain = false, ruledOut = false, missed = false, prob, breakdown, status, mates, expanded, onToggle }: {
   crossing: Crossing
   locked: boolean
+  // A pairing the simulation makes inevitable (100%) even though the bracket slot
+  // isn't formally filled yet — shown alongside the truly-locked pairs with a badge.
+  certain?: boolean
   ruledOut?: boolean
   missed?: boolean
   prob: number | null
@@ -152,7 +157,7 @@ function CrossingCard({ crossing, locked, ruledOut = false, missed = false, prob
   onToggle: () => void
 }) {
   const [a, b] = crossing.teams
-  const cls = locked ? ' cx-card--locked' : missed ? ' cx-card--missed' : ruledOut ? ' cx-card--dead' : ''
+  const cls = locked ? (certain ? ' cx-card--locked cx-card--certain' : ' cx-card--locked') : missed ? ' cx-card--missed' : ruledOut ? ' cx-card--dead' : ''
   const deadBlk = ruledOut ? deadBlocker(crossing, breakdown) : null
   // On a missed crossing, neither predicted team is "in as predicted", so don't
   // hand out a green "בפנים ✓" — just show them as the (failed) bet.
@@ -166,6 +171,11 @@ function CrossingCard({ crossing, locked, ruledOut = false, missed = false, prob
       </div>
       {locked ? (
         <div className="cx-card-foot cx-card-foot--locked">
+          {certain && (
+            <span className="cx-certain-badge" title="הזוג כבר ודאי — שתי הקבוצות מובטחות למשבצת גם אם הבית עוד לא נסגר רשמית">
+              ודאי · נסגר
+            </span>
+          )}
           {crossing.predicted ? (
             <span className="cx-bet">הניחוש שלך: <b dir="ltr">{crossing.predicted.away}–{crossing.predicted.home}</b></span>
           ) : (
@@ -196,6 +206,103 @@ function CrossingCard({ crossing, locked, ruledOut = false, missed = false, prob
       )}
       <Participants names={mates} expanded={expanded} onToggle={onToggle} />
     </article>
+  )
+}
+
+// One determined pairing on the shared board: the two real teams, how many of the
+// group called it, and (on tap) exactly who. The viewer is highlighted in the list.
+function DeterminedCard({ item, me, expanded, onToggle }: {
+  item: DeterminedCrossing
+  me?: string
+  expanded: boolean
+  onToggle: () => void
+}) {
+  const [a, b] = item.teams
+  const n = item.predictors.length
+  // Viewer first, then the rest as computed (Hebrew-alphabetical).
+  const names = me && item.predictors.includes(me)
+    ? [me, ...item.predictors.filter(p => p !== me)]
+    : item.predictors
+  return (
+    <article className={`cx-det-card${n === 0 ? ' cx-det-card--none' : ''}${item.certain ? ' cx-det-card--certain' : ''}`} data-testid="determined-card">
+      <div className="cx-card-teams">
+        <TeamChip team={a} tag="" />
+        <span className="cx-vs" aria-hidden="true">×</span>
+        <TeamChip team={b} tag="" />
+      </div>
+      {item.certain && (
+        <span className="cx-certain-badge" title="הזוג כבר ודאי — שתי הקבוצות מובטחות למשבצת גם אם הבית עוד לא נסגר רשמית">
+          ודאי · נסגר
+        </span>
+      )}
+      {n === 0 ? (
+        <div className="cx-det-foot cx-det-foot--none">אף אחד לא ניחש את ההצלבה</div>
+      ) : (
+        <>
+          <button type="button" className="cx-det-count" onClick={onToggle} aria-expanded={expanded}>
+            <span className="cx-det-num">{n}</span>
+            <span className="cx-det-num-label">{n === 1 ? 'ניחש את ההצלבה' : 'ניחשו את ההצלבה'}</span>
+            <span className="cx-mates-chevron" aria-hidden="true">{expanded ? '⌃' : '⌄'}</span>
+          </button>
+          {expanded && (
+            <ul className="cx-det-names">
+              {names.map(p => (
+                <li key={p} className={`cx-det-name${p === me ? ' cx-det-name--me' : ''}`}>
+                  {p}{p === me ? ' (אתה)' : ''}
+                </li>
+              ))}
+            </ul>
+          )}
+        </>
+      )}
+    </article>
+  )
+}
+
+// The shared, viewer-independent picture: every pairing already settled in this
+// round, sorted by how many people called it, each expandable to the names. Gives
+// everyone one clear overview of all the determined matches.
+function DeterminedBoard({ items, round, me }: {
+  items: DeterminedCrossing[]
+  round: RoundCfg
+  me?: string
+}) {
+  const [open, setOpen] = useState<Set<number>>(new Set())
+  const toggle = (matchNum: number) =>
+    setOpen(prev => {
+      const next = new Set(prev)
+      if (next.has(matchNum)) next.delete(matchNum)
+      else next.add(matchNum)
+      return next
+    })
+
+  if (items.length === 0) {
+    return (
+      <div className="cx-view--empty">
+        <div className="cx-empty-icon">⏳</div>
+        <p className="cx-empty-text">עדיין לא נקבעו {round.noun} ב{round.label}. הזוגות ייסגרו ככל שהשלבים הקודמים יוכרעו.</p>
+      </div>
+    )
+  }
+
+  const total = round.hi - round.lo + 1
+  return (
+    <>
+      <p className="cx-caption">
+        כל ה{round.noun} ש<b>כבר נקבעו</b> ב{round.label} — וכמה מכם ניחשו כל אחת. לחיצה על המספר חושפת מי.
+      </p>
+      <div className="cx-summary">
+        <span className="cx-summary-stat cx-summary-stat--locked"><b>{items.length}</b> מתוך {total} נקבעו</span>
+      </div>
+      <div className="cx-det-grid">
+        {items.map(it => (
+          <DeterminedCard
+            key={it.matchNum} item={it} me={me}
+            expanded={open.has(it.matchNum)} onToggle={() => toggle(it.matchNum)}
+          />
+        ))}
+      </div>
+    </>
   )
 }
 
@@ -342,6 +449,169 @@ function CrossingsLeaderboard({ standings, detailByLabel, me, status, noun, prob
   )
 }
 
+// One team's flag chip in a live-teams breakdown — full color when still in,
+// greyed with an "הודחה" note when knocked out.
+function LiveTeamChip({ team, alive }: { team: string; alive: boolean }) {
+  const iso = TEAMS[team]?.iso
+  return (
+    <span className={`cx-live-team${alive ? '' : ' cx-live-team--out'}`}>
+      {iso && <span className={`fi fi-${iso} cx-live-team-flag`} aria-hidden="true" />}
+      <span>{teamHe(team)}</span>
+    </span>
+  )
+}
+
+// One "these two meet on the way" warning: the colliding teams and the round their
+// real bracket paths cross, so only one of them can carry on to this stage.
+function CollisionNote({ collision }: { collision: Collision }) {
+  return (
+    <div className="cx-live-clash">
+      <span className="cx-live-clash-teams">
+        {collision.teams.map((t, i) => (
+          <span key={t}>
+            {i > 0 && <span className="cx-live-clash-vs"> ✕ </span>}
+            {teamHe(t)}
+          </span>
+        ))}
+      </span>
+      <span className="cx-live-clash-note">נפגשות ב{collision.roundLabel} — רק אחת תמשיך</span>
+    </div>
+  )
+}
+
+// Expand-on-tap breakdown of one bettor's bracket teams: which survived and which
+// are out, so the headline count reads as "these exact teams". When two alive picks
+// are bound to knock each other out before this stage, that clash is called out too.
+function LiveTeamsDetail({ standing }: { standing: LiveTeamsStanding }) {
+  return (
+    <div className="cx-board-detail">
+      {standing.collisions.length > 0 && (
+        <div className="cx-board-detail-sec">
+          <span className="cx-board-detail-h cx-board-detail-h--clash">⚠️ נפגשות בדרך</span>
+          <div className="cx-live-clashes">
+            {standing.collisions.map((c, i) => <CollisionNote key={i} collision={c} />)}
+          </div>
+        </div>
+      )}
+      {standing.aliveTeams.length > 0 && (
+        <div className="cx-board-detail-sec">
+          <span className="cx-board-detail-h cx-board-detail-h--locked">עדיין חיות ({standing.aliveTeams.length})</span>
+          <div className="cx-live-teams">
+            {standing.aliveTeams.map(t => <LiveTeamChip key={t} team={t} alive />)}
+          </div>
+        </div>
+      )}
+      {standing.outTeams.length > 0 && (
+        <div className="cx-board-detail-sec">
+          <span className="cx-board-detail-h cx-board-detail-h--out">הודחו ({standing.outTeams.length})</span>
+          <div className="cx-live-teams">
+            {standing.outTeams.map(t => <LiveTeamChip key={t} team={t} alive={false} />)}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// The comparative "live teams" board, sliced by stage: how many of the teams each
+// bettor sent *into the selected stage* are still in the real tournament, out of
+// the number they picked for it (the final is X/2, the champion X/1). Its own
+// stage chips cover every round plus the 3rd-place match and the champion, since
+// those have no crossing tab of their own. Tap a row to see which teams.
+function LiveTeamsBoard({ stages, defaultStageKey, me }: {
+  stages: LiveStage[]
+  defaultStageKey: LiveStageKey
+  me?: string
+}) {
+  const usable = stages.filter(st => st.standings.some(s => s.total > 0))
+  const fallbackKey = usable[0]?.key ?? defaultStageKey
+  const initialKey = usable.some(st => st.key === defaultStageKey) ? defaultStageKey : fallbackKey
+  const [stageKey, setStageKey] = useState<LiveStageKey>(initialKey)
+  const [openLabel, setOpenLabel] = useState<string | null>(null)
+  if (usable.length === 0) return null
+
+  const active = usable.find(st => st.key === stageKey) ?? usable[0]
+  const standings = active.standings
+  const meRow = me ? standings.find(s => s.label === me) : undefined
+  const beaten = meRow ? standings.filter(s => s.reachable < meRow.reachable).length : 0
+  // Standard competition ranking ("1224"): an equal *reachable* count is an equal
+  // placing, so tied players share a placing instead of one looking like it's
+  // above the other. The within-tie order is just alphabetical for stability.
+  // Only the leaders get a 🥇 — on a clustered metric medals for 2nd/3rd would
+  // mean a wall of identical medals once a dozen people tie, so everyone below
+  // the top placing reads their shared number.
+  const ranks: number[] = []
+  standings.forEach((s, i) => {
+    ranks[i] = i > 0 && standings[i - 1].reachable === s.reachable ? ranks[i - 1] : i + 1
+  })
+
+  return (
+    <section className="cx-board" dir="rtl" aria-label="קבוצות חיות">
+      <div className="cx-board-head">
+        <h3 className="cx-board-title">🛡️ קבוצות חיות</h3>
+        <p className="cx-board-sub">
+          כמה מהקבוצות שכל שחקן שלח ל{active.label} עדיין בטורניר, מתוך אלו שבחר לשלב הזה. לחצו על שם כדי לראות אילו.
+          {meRow && meRow.total > 0 && beaten > 0 && ` יש לך ${meRow.alive} מתוך ${meRow.total} — יותר מ-${beaten} שחקנים אחרים.`}
+        </p>
+      </div>
+      <div className="cx-live-stages" role="tablist" aria-label="שלב לקבוצות חיות">
+        {usable.map(st => (
+          <button
+            key={st.key}
+            type="button"
+            role="tab"
+            aria-selected={st.key === active.key}
+            className={`cx-live-stage${st.key === active.key ? ' cx-live-stage--active' : ''}`}
+            onClick={() => { setStageKey(st.key); setOpenLabel(null) }}
+          >
+            {st.label}
+          </button>
+        ))}
+      </div>
+      <ol className="cx-board-list">
+        {standings.map((s, i) => {
+          const isMe = s.label === me
+          const isOpen = openLabel === s.label
+          // Fill on what can actually still arrive (reachable), not just "not yet
+          // eliminated" — so a clash bracket doesn't read as a full bar.
+          const barW = s.total > 0 ? (s.reachable / s.total) * 100 : 0
+          const rank = ranks[i]
+          return (
+            <li key={s.label} className={`cx-board-item${isOpen ? ' cx-board-item--open' : ''}`}>
+              <button
+                type="button"
+                className={`cx-board-row${isMe ? ' cx-board-row--me' : ''}${rank === 1 ? ' cx-board-row--rank-1' : ''}`}
+                onClick={() => setOpenLabel(isOpen ? null : s.label)}
+                aria-expanded={isOpen}
+              >
+                <span className="cx-board-rank">{rank === 1 ? MEDALS[0] : rank}</span>
+                <span className="cx-board-name">
+                  {s.label}
+                  {isMe && <span className="cx-board-mebadge">אתה</span>}
+                  <span className="cx-board-chevron" aria-hidden="true">{isOpen ? '⌃' : '⌄'}</span>
+                </span>
+                <span className="cx-board-bar-wrap">
+                  <span className="cx-board-bar" style={{ width: `${barW.toFixed(1)}%` }} />
+                  <span className="cx-board-breakdown">
+                    {s.alive} חיות · {s.total - s.alive} הודחו
+                    {s.reachable < s.alive && <span className="cx-board-clash"> · ⚠️ {s.alive - s.reachable} נפגשות</span>}
+                  </span>
+                </span>
+                <span className="cx-board-exp">
+                  <b>{s.alive}/{s.total}</b>
+                  <span className="cx-board-exp-label">חיות</span>
+                  {s.reachable < s.alive && <span className="cx-board-exp-sub">עד {s.reachable} יגיעו</span>}
+                </span>
+              </button>
+              {isOpen && <LiveTeamsDetail standing={s} />}
+            </li>
+          )
+        })}
+      </ol>
+    </section>
+  )
+}
+
 // The stage switcher. Same principle, every knockout round — tap to move from the
 // round of 32 onward to the final. Rendered only when the container wires up a
 // handler (so the test harness can drive CrossingsList without tabs).
@@ -368,7 +638,7 @@ function RoundTabs({ round, onRoundChange }: { round: RoundCfg; onRoundChange: (
 // pairings for the selected round, and the field-wide standing. Exported so tests
 // can drive it without the Monte-Carlo worker (pass an empty probByMatch /
 // 'unsupported' status). `round` defaults to the round of 32.
-export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, actualMatches, probByMatch, probStatus }: {
+export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, actualMatches, probByMatch, probStatus, liveStages = [] }: {
   user?: User
   users: User[]
   round?: RoundCfg
@@ -376,7 +646,11 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
   actualMatches: KnockoutMatch[]
   probByMatch: Record<number, Record<string, number>>
   probStatus: WinProbStatus
+  liveStages?: LiveStage[]
 }) {
+  // 'mine' = the viewer's own crossings (default); 'all' = the shared board of every
+  // determined pairing and who called it.
+  const [view, setView] = useState<'mine' | 'all'>('mine')
   const [openMates, setOpenMates] = useState<Set<number>>(new Set())
   const toggleMates = (matchNum: number) =>
     setOpenMates(prev => {
@@ -386,20 +660,24 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
       return next
     })
 
+  // Feed the simulation in only once it's ready, so a 100%-certain matchup counts as
+  // locked everywhere — your pairings, the standing, and the board — and never on
+  // half-baked counts. One rule, applied at the source (computeUserCrossings).
+  const liveProb = useMemo(() => (probStatus === 'ready' ? probByMatch : {}), [probStatus, probByMatch])
   const crossings = useMemo(
-    () => (user ? computeUserCrossings(user.knockoutStages?.[round.key] ?? [], actualMatches) : null),
-    [user, round.key, actualMatches],
+    () => (user ? computeUserCrossings(user.knockoutStages?.[round.key] ?? [], actualMatches, liveProb) : null),
+    [user, round.key, actualMatches, liveProb],
   )
   const standings = useMemo(
-    () => computeCrossingsLeaderboard(users, round.key, actualMatches, probByMatch),
-    [users, round.key, actualMatches, probByMatch],
+    () => computeCrossingsLeaderboard(users, round.key, actualMatches, liveProb),
+    [users, round.key, actualMatches, liveProb],
   )
   // Per-bettor breakdown for the expand-on-tap detail in the standing: their
   // locked pairs and open pairs (each with its simulated chance attached).
   const detailByLabel = useMemo(() => {
     const map = new Map<string, StandingDetailData>()
     for (const u of users) {
-      const { locked, potential, missed } = computeUserCrossings(u.knockoutStages?.[round.key] ?? [], actualMatches)
+      const { locked, potential, missed } = computeUserCrossings(u.knockoutStages?.[round.key] ?? [], actualMatches, liveProb)
       map.set(u.label, {
         locked,
         potential: potential.map(c => ({ ...c, prob: crossingProbability(c, probByMatch) })),
@@ -407,14 +685,51 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
       })
     }
     return map
-  }, [users, round.key, actualMatches, probByMatch])
+  }, [users, round.key, actualMatches, probByMatch, liveProb])
+
+  // Same rule for the shared board: a 100%-certain matchup is a closed match even
+  // before its bracket slot is formally filled.
+  const determined = useMemo(
+    () => computeDeterminedCrossings(users, actualMatches, liveProb),
+    [users, actualMatches, liveProb],
+  )
 
   const tabs = onRoundChange && <RoundTabs round={round} onRoundChange={onRoundChange} />
+  const modeToggle = (
+    <div className="cx-modes" role="tablist" aria-label="תצוגת הצלבות">
+      <button
+        type="button" role="tab" aria-selected={view === 'mine'}
+        className={`cx-mode${view === 'mine' ? ' cx-mode--active' : ''}`}
+        onClick={() => setView('mine')}
+      >
+        ההצלבות שלי
+      </button>
+      <button
+        type="button" role="tab" aria-selected={view === 'all'}
+        className={`cx-mode${view === 'all' ? ' cx-mode--active' : ''}`}
+        onClick={() => setView('all')}
+      >
+        מי ניחש מה
+      </button>
+    </div>
+  )
+
+  if (view === 'all') {
+    return (
+      <div className="cx-view" dir="rtl">
+        {tabs}
+        {modeToggle}
+        <DeterminedBoard items={determined} round={round} me={user?.label} />
+        <LiveTeamsBoard stages={liveStages} defaultStageKey={round.key} me={user?.label} />
+      </div>
+    )
+  }
 
   if (!crossings) {
     return (
       <div className="cx-view cx-view--empty" dir="rtl">
         {tabs}
+        {modeToggle}
         <div className="cx-empty-icon">🔀</div>
         <p className="cx-empty-text">בחרו שחקן למעלה כדי לראות את הזוגות שלכם</p>
       </div>
@@ -425,7 +740,8 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
   const matesFor = (c: Crossing) =>
     crossingParticipants(users, c.matchNum, c.teams[0].team, c.teams[1].team, user?.label)
 
-  // Split the open pairings into ones the simulation still gives a chance and ones
+  // Certain pairings are already folded into `locked` by computeUserCrossings, so
+  // here we only split the still-open ones into ones the sim gives a chance and ones
   // it flatly rules out (0% once ready). The dead ones get their own section so the
   // picture is complete, without polluting "פתוחות" with confusing 0% chances.
   const potentialWithProb = potential.map(c => ({ c, prob: crossingProbability(c, probByMatch) }))
@@ -448,6 +764,7 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
   return (
     <div className="cx-view" dir="rtl">
       {tabs}
+      {modeToggle}
       {hasCrossings ? (
         <>
           <p className="cx-caption">
@@ -469,12 +786,12 @@ export function CrossingsList({ user, users, round = ROUNDS[0], onRoundChange, a
             <section className="cx-sec">
               <div className="cx-sec-head">
                 <span className="cx-sec-title cx-sec-title--locked">✓ נעולות</span>
-                <span className="cx-sec-sub">שתי הקבוצות כבר כאן — מכאן אפשר לצבור ניקוד על המשחק</span>
+                <span className="cx-sec-sub">המפגש כבר סגור — מכאן אפשר לצבור עליו ניקוד</span>
               </div>
               <div className="cx-cards">
                 {locked.map(c => (
                   <CrossingCard
-                    key={c.matchNum} crossing={c} locked prob={null} status={probStatus}
+                    key={c.matchNum} crossing={c} locked certain={c.certain} prob={null} status={probStatus}
                     mates={matesFor(c)} expanded={openMates.has(c.matchNum)} onToggle={() => toggleMates(c.matchNum)}
                   />
                 ))}
@@ -555,6 +872,11 @@ export default function CrossingsView({ user, users, results }: { user?: User; u
   // about sharing the win-prob cache; the empty default keeps it simple.
   const { status, crossingProbByMatch } = useWinProbabilities(played, results.playerGoals ?? {})
 
+  // Comparative "how many of my teams are still alive" — per stage, referenced to
+  // each player's own form for that stage, so a count is "alive out of the teams I
+  // sent here". Driven by real results, so the same picture regardless of probs.
+  const liveStages = useMemo(() => buildLiveStages(users, results, bracket), [users, results, bracket])
+
   return (
     <CrossingsList
       user={user}
@@ -564,6 +886,7 @@ export default function CrossingsView({ user, users, results }: { user?: User; u
       actualMatches={actualMatches}
       probByMatch={crossingProbByMatch}
       probStatus={status}
+      liveStages={liveStages}
     />
   )
 }

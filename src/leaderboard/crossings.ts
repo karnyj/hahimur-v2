@@ -32,6 +32,10 @@ export interface Crossing {
   // slot (at least one of which the bettor didn't pick, which is what broke it),
   // so the card can show "what happened instead". Undefined for live crossings.
   actualTeams?: string[]
+  // True for a crossing counted as locked because the simulation makes it inevitable
+  // (100%) even though the bracket slot isn't formally filled yet — the card flags it
+  // with a badge so it reads apart from a pairing whose teams have physically arrived.
+  certain?: boolean
 }
 
 export interface UserCrossings {
@@ -42,6 +46,12 @@ export interface UserCrossings {
   // account for all of the round's matches, not only the live ones.
   missed: Crossing[]
 }
+
+// A pairing the simulation makes inevitable: at/above this probability we treat the
+// matchup as already closed, even when the bracket slot is still a placeholder the
+// engine hasn't formally filled (e.g. a third-place allocation it waits on all groups
+// for). The strict 0.9999 floor keeps a merely-near-certain 99%+ pairing "open".
+export const CERTAIN_PROB = 0.9999
 
 // A resolved knockout slot holds a real team name (a TEAMS key); an unresolved
 // one holds a Hebrew placeholder like "מנצח א" / "שלישית א/ב/ג".
@@ -143,6 +153,67 @@ export function crossingParticipants(
   return out
 }
 
+// A knockout pairing that's already *determined* (both sides are real teams), plus
+// everyone who predicted exactly that pairing. This is the tournament-wide "who
+// called it" picture — independent of any selected viewer — for a clear overview
+// of all the settled matches.
+export interface DeterminedCrossing {
+  matchNum: number
+  teams: [string, string]
+  predictors: string[]
+  // True when the pairing isn't *formally* in the bracket yet but the simulation
+  // makes it inevitable (100%) — a "closed match" the card flags with a badge.
+  certain?: boolean
+}
+
+// The pairing the simulation fixes at 100% for a match, if any — the two teams that
+// are guaranteed to meet there even though the bracket slot is still a placeholder.
+// Returns the team pair (split from the engine's "a|b" key) or null when nothing is
+// certain yet for that match.
+function certainPairing(
+  matchNum: number,
+  crossingProbByMatch: Record<number, Record<string, number>>,
+): [string, string] | null {
+  const rec = crossingProbByMatch[matchNum]
+  if (!rec) return null
+  for (const [key, p] of Object.entries(rec)) {
+    if (p >= CERTAIN_PROB) {
+      const [a, b] = key.split('|')
+      if (isRealTeam(a) && isRealTeam(b)) return [a, b]
+    }
+  }
+  return null
+}
+
+export function computeDeterminedCrossings(
+  bettors: CrossingsBettor[],
+  actualMatches: KnockoutMatch[],
+  crossingProbByMatch: Record<number, Record<string, number>> = {},
+): DeterminedCrossing[] {
+  const out: DeterminedCrossing[] = []
+  for (const m of actualMatches) {
+    // Formally settled: both teams have actually reached the slot.
+    if (isRealTeam(m.home) && isRealTeam(m.away)) {
+      const predictors = crossingParticipants(bettors, m.matchNum, m.home, m.away)
+        .sort((a, b) => a.localeCompare(b, 'he'))
+      out.push({ matchNum: m.matchNum, teams: [m.home, m.away], predictors })
+      continue
+    }
+    // Not formally settled, but the simulation makes one pairing inevitable (100%) —
+    // a closed match that just hasn't been written into the bracket yet.
+    const certain = certainPairing(m.matchNum, crossingProbByMatch)
+    if (certain) {
+      const predictors = crossingParticipants(bettors, m.matchNum, certain[0], certain[1])
+        .sort((a, b) => a.localeCompare(b, 'he'))
+      out.push({ matchNum: m.matchNum, teams: certain, predictors, certain: true })
+    }
+  }
+  // Consensus first — the pairings the most people called lead the board — then by
+  // match number so ties stay in a stable order.
+  out.sort((a, b) => b.predictors.length - a.predictors.length || a.matchNum - b.matchNum)
+  return out
+}
+
 // One bettor's row in the "who'll hit the most" standing for a given knockout
 // round: how many pairings are already locked, how many are still in play, and
 // the *expected* number called correctly (locked count as 1 each, open ones
@@ -166,7 +237,7 @@ export function computeCrossingsLeaderboard(
 ): CrossingStanding[] {
   return bettors
     .map(u => {
-      const { locked, potential, missed } = computeUserCrossings(u.knockoutStages?.[roundKey] ?? [], actualMatches)
+      const { locked, potential, missed } = computeUserCrossings(u.knockoutStages?.[roundKey] ?? [], actualMatches, crossingProbByMatch)
       const expectedOpen = potential.reduce((s, c) => s + (crossingProbability(c, crossingProbByMatch) ?? 0), 0)
       // Only count open pairings the model still gives a chance — a simulated 0%
       // is effectively ruled out, so it shouldn't inflate the "open" tally.
@@ -197,6 +268,11 @@ function mkTeam(team: string, confirmed: string[], openSlots: string[]): Crossin
 export function computeUserCrossings(
   userR32: KnockoutMatch[],
   actualR32: KnockoutMatch[],
+  // The simulation's per-match pairing distribution. A crossing the sim makes
+  // inevitable (100%) is treated as locked even before its slot is formally filled,
+  // so "a closed match is closed" everywhere — your pairings, the shared board, and
+  // the standing — without each surface re-deciding it. Empty = no promotion.
+  crossingProbByMatch: Record<number, Record<string, number>> = {},
 ): UserCrossings {
   const locked: Crossing[] = []
   const potential: Crossing[] = []
@@ -234,8 +310,15 @@ export function computeUserCrossings(
 
     const crossing: Crossing = { matchNum: actual.matchNum, teams, pendingSlots, predicted }
 
-    if (pendingSlots.length === 0) locked.push(crossing)
-    else potential.push(crossing)
+    if (pendingSlots.length === 0) {
+      locked.push(crossing)
+    } else {
+      // Slot still open, but if the sim makes this exact pairing inevitable (100%),
+      // it's a closed match — lock it like the rest, flagged certain for the badge.
+      const prob = crossingProbability(crossing, crossingProbByMatch)
+      if (prob !== null && prob >= CERTAIN_PROB) locked.push({ ...crossing, certain: true })
+      else potential.push(crossing)
+    }
   }
 
   locked.sort((a, b) => a.matchNum - b.matchNum)

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { computeUserCrossings, crossingBreakdown } from './crossings'
-import type { Crossing } from './crossings'
+import { computeUserCrossings, crossingBreakdown, computeDeterminedCrossings } from './crossings'
+import type { Crossing, CrossingsBettor } from './crossings'
 import type { KnockoutMatch } from '../shared/types'
 
 // Real teams are TEAMS keys; unresolved slots are Hebrew placeholders.
@@ -32,6 +32,26 @@ describe('computeUserCrossings', () => {
     expect(potential[0].pendingSlots).toEqual(['סגנית ו'])
     const byTeam = Object.fromEntries(potential[0].teams.map(t => [t.team, t.confirmed]))
     expect(byTeam).toEqual({ Brazil: true, Netherlands: false })
+  })
+
+  it('locks a half-open crossing the sim makes inevitable (100%), flagged certain', () => {
+    const actual = [km(75, 'Brazil', 'סגנית ו')] // slot not formally filled
+    const user = [km(75, 'Brazil', 'Netherlands')]
+    const probByMatch = { 75: { 'Brazil|Netherlands': 1 } } // forced in every scenario
+    const { locked, potential } = computeUserCrossings(user, actual, probByMatch)
+    expect(potential).toHaveLength(0)
+    expect(locked).toHaveLength(1)
+    expect(locked[0].matchNum).toBe(75)
+    expect(locked[0].certain).toBe(true)
+  })
+
+  it('leaves a merely near-certain (99.9%) crossing open, not locked', () => {
+    const actual = [km(75, 'Brazil', 'סגנית ו')]
+    const user = [km(75, 'Brazil', 'Netherlands')]
+    const probByMatch = { 75: { 'Brazil|Netherlands': 0.999 } }
+    const { locked, potential } = computeUserCrossings(user, actual, probByMatch)
+    expect(locked).toHaveLength(0)
+    expect(potential).toHaveLength(1)
   })
 
   it('keeps a wide-open crossing (neither side resolved) as potential', () => {
@@ -142,5 +162,69 @@ describe('computeUserCrossings', () => {
     ]
     const { potential } = computeUserCrossings(user, actual)
     expect(potential.map(c => c.matchNum)).toEqual([75, 79, 80])
+  })
+})
+
+describe('computeDeterminedCrossings', () => {
+  const bettor = (label: string, r32: KnockoutMatch[]): CrossingsBettor => ({
+    label,
+    knockoutStages: { r32, r16: [], qf: [], sf: [], thirdPlace: [], final: [] } as never,
+  })
+
+  it('lists only pairings where both sides are real teams', () => {
+    const actual = [
+      km(73, 'Mexico', 'Canada'),    // determined
+      km(75, 'Brazil', 'סגנית ו'),   // still open -> excluded
+    ]
+    const out = computeDeterminedCrossings([bettor('דני', actual)], actual)
+    expect(out.map(d => d.matchNum)).toEqual([73])
+    expect(out[0].teams).toEqual(['Mexico', 'Canada'])
+  })
+
+  it('collects everyone who predicted the exact pairing, side-agnostic', () => {
+    const actual = [km(73, 'Mexico', 'Canada')]
+    const bettors = [
+      bettor('דני', [km(73, 'Mexico', 'Canada')]),
+      bettor('רוני', [km(73, 'Canada', 'Mexico')]),  // reversed — same crossing
+      bettor('יוסי', [km(73, 'Brazil', 'Spain')]),   // different pairing
+    ]
+    const out = computeDeterminedCrossings(bettors, actual)
+    expect(out[0].predictors).toEqual(['דני', 'רוני'])
+  })
+
+  it('sorts by predictor count, most-called first', () => {
+    const actual = [km(73, 'Mexico', 'Canada'), km(74, 'Brazil', 'Spain')]
+    const bettors = [
+      bettor('א', [km(73, 'Mexico', 'Canada'), km(74, 'Brazil', 'Spain')]),
+      bettor('ב', [km(74, 'Brazil', 'Spain')]),
+      bettor('ג', [km(74, 'Brazil', 'Spain')]),
+    ]
+    const out = computeDeterminedCrossings(bettors, actual)
+    expect(out.map(d => d.matchNum)).toEqual([74, 73]) // 74 has 3 callers, 73 has 1
+  })
+
+  it('keeps a determined pairing nobody called, with an empty predictors list', () => {
+    const actual = [km(73, 'Mexico', 'Canada')]
+    const out = computeDeterminedCrossings([bettor('דני', [km(73, 'Brazil', 'Spain')])], actual)
+    expect(out).toHaveLength(1)
+    expect(out[0].predictors).toEqual([])
+  })
+
+  it('includes a 100%-certain matchup even when the bracket slot is still open', () => {
+    const actual = [km(75, 'Brazil', 'סגנית ו')] // slot not formally filled
+    const probByMatch = { 75: { 'Brazil|Netherlands': 1 } } // the sim makes it inevitable
+    const out = computeDeterminedCrossings([bettor('דני', [km(75, 'Brazil', 'Netherlands')])], actual, probByMatch)
+    expect(out).toHaveLength(1)
+    expect(out[0].matchNum).toBe(75)
+    expect(out[0].teams.slice().sort()).toEqual(['Brazil', 'Netherlands'])
+    expect(out[0].certain).toBe(true)
+    expect(out[0].predictors).toEqual(['דני'])
+  })
+
+  it('leaves an open matchup off the board when the sim is merely near-certain (99.9%)', () => {
+    const actual = [km(75, 'Brazil', 'סגנית ו')]
+    const probByMatch = { 75: { 'Brazil|Netherlands': 0.999 } } // all but sealed, not 100%
+    const out = computeDeterminedCrossings([bettor('דני', [km(75, 'Brazil', 'Netherlands')])], actual, probByMatch)
+    expect(out).toHaveLength(0)
   })
 })

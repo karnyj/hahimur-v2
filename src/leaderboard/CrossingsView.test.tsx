@@ -97,6 +97,21 @@ test('clicking the chance explains what must happen for your own pick', () => {
   expect(calc.getByText(/הסיכוי ששתיהן/)).toBeInTheDocument()
 })
 
+test('a simulation-certain (100%) crossing moves to "נעולות" with a "ודאי" badge', () => {
+  const actual = [km(75, 'Brazil', 'סגנית ו')] // slot not formally filled yet
+  const user = userWith([km(75, 'Brazil', 'Netherlands', { home: 2, away: 1 })])
+  const probByMatch = { 75: { 'Brazil|Netherlands': 1 } } // the sim makes it inevitable
+  render(<CrossingsList user={user} users={[user]} actualMatches={actual} probByMatch={probByMatch} probStatus="ready" />)
+
+  // it's treated as closed, not as a live open chance
+  expect(screen.getByText('✓ נעולות')).toBeInTheDocument()
+  expect(screen.queryByText('⏳ עוד פתוחות')).not.toBeInTheDocument()
+  // marked with the small "certain" badge, and shows the bet (away–home), no percentage
+  expect(screen.getByText(/ודאי/)).toBeInTheDocument()
+  expect(screen.getByText('1–2')).toBeInTheDocument()
+  expect(screen.queryByText(/100%/)).not.toBeInTheDocument()
+})
+
 test('an all-but-certain open crossing never reads as 100%', () => {
   const actual = [km(75, 'Brazil', 'סגנית ו')]
   const user = userWith([km(75, 'Brazil', 'Netherlands')])
@@ -189,6 +204,176 @@ test('renders the stage tabs and switches round on click', () => {
   for (const r of ROUNDS) expect(screen.getByRole('tab', { name: r.tab })).toBeInTheDocument()
   fireEvent.click(screen.getByRole('tab', { name: 'שמינית' }))
   expect(onRoundChange).toHaveBeenCalledWith('r16')
+})
+
+test('switches to the "who predicted what" board and reveals predictors', () => {
+  const actual = [
+    km(73, 'Mexico', 'Canada'),    // determined
+    km(75, 'Brazil', 'סגנית ו'),   // still open — not on the determined board
+  ]
+  const me = userWith([km(73, 'Mexico', 'Canada')], 'אני')
+  const mate = userWith([km(73, 'Canada', 'Mexico')], 'דני')   // reversed, same pair
+  const other = userWith([km(73, 'Brazil', 'Spain')], 'יוסי')  // different pair
+  render(<CrossingsList user={me} users={[me, mate, other]} actualMatches={actual} probByMatch={{}} probStatus="ready" />)
+
+  // default view is the viewer's own crossings; the determined board is hidden
+  expect(screen.queryByTestId('determined-card')).not.toBeInTheDocument()
+
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+
+  // only the determined pairing shows up (the open one is excluded)
+  const cards = screen.getAllByTestId('determined-card')
+  expect(cards).toHaveLength(1)
+  const card = within(cards[0])
+  // 2 of the players called Mexico×Canada; names hidden until tapped
+  const toggle = card.getByRole('button', { name: /2/ })
+  expect(card.queryByText('דני')).not.toBeInTheDocument()
+  fireEvent.click(toggle)
+  expect(card.getByText('דני')).toBeInTheDocument()
+  expect(card.getByText(/אני/)).toBeInTheDocument()
+})
+
+test('shows the live-teams board on the "who predicted what" view, ranked with me highlighted', () => {
+  const me = userWith([km(73, 'Mexico', 'Canada')], 'אני')
+  const other = userWith([km(73, 'Brazil', 'Spain')], 'יוסי')
+  const liveStages = [
+    {
+      key: 'r32' as const, label: 'שלב 32', standings: [
+        { label: 'אני', alive: 9, reachable: 9, total: 12, aliveTeams: ['Mexico', 'Canada'], outTeams: ['Brazil'], collisions: [] },
+        { label: 'יוסי', alive: 5, reachable: 5, total: 12, aliveTeams: ['Spain'], outTeams: [], collisions: [] },
+      ],
+    },
+  ]
+  render(
+    <CrossingsList
+      user={me} users={[me, other]} actualMatches={[km(73, 'Mexico', 'Canada')]}
+      probByMatch={{}} probStatus="ready" liveStages={liveStages}
+    />,
+  )
+
+  // hidden on the personal view; appears once you switch to "who predicted what"
+  expect(screen.queryByText('🛡️ קבוצות חיות')).not.toBeInTheDocument()
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+
+  const board = within(screen.getByRole('region', { name: 'קבוצות חיות' }))
+  expect(board.getByText('🛡️ קבוצות חיות')).toBeInTheDocument()
+  // the viewer's own row is flagged
+  expect(board.getByText('אתה')).toBeInTheDocument()
+  // tapping a row reveals the actual teams (alive + eliminated), with section headers
+  fireEvent.click(board.getByRole('button', { name: /אני/ }))
+  expect(board.getByText(/עדיין חיות \(/)).toBeInTheDocument()
+  expect(board.getByText(/הודחו \(/)).toBeInTheDocument()
+})
+
+test('live-teams board gives tied players the same rank/medal, not one above the other', () => {
+  const a = userWith([km(73, 'Mexico', 'Canada')], 'טל')
+  const b = userWith([km(73, 'Brazil', 'Spain')], 'מאור')
+  const c = userWith([km(73, 'France', 'England')], 'דנה')
+  const liveStages = [
+    {
+      key: 'r32' as const, label: 'שלב 32', standings: [
+        { label: 'טל', alive: 31, reachable: 31, total: 32, aliveTeams: ['Mexico'], outTeams: [], collisions: [] },
+        { label: 'מאור', alive: 31, reachable: 31, total: 32, aliveTeams: ['Brazil'], outTeams: [], collisions: [] },
+        { label: 'דנה', alive: 28, reachable: 28, total: 32, aliveTeams: ['France'], outTeams: [], collisions: [] },
+      ],
+    },
+  ]
+  render(
+    <CrossingsList
+      user={a} users={[a, b, c]} actualMatches={[km(73, 'Mexico', 'Canada')]}
+      probByMatch={{}} probStatus="ready" liveStages={liveStages}
+    />,
+  )
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+  const board = within(screen.getByRole('region', { name: 'קבוצות חיות' }))
+
+  // both 31-team players share gold; the lone 28 reads its shared placing (3rd),
+  // and no misleading silver/bronze medals appear on a clustered metric
+  expect(board.getAllByText('🥇')).toHaveLength(2)
+  expect(board.queryByText('🥈')).not.toBeInTheDocument()
+  expect(board.queryByText('🥉')).not.toBeInTheDocument()
+  expect(board.getByText('3')).toBeInTheDocument()
+})
+
+test('live-teams board references each player to the selected stage (final = X/2, plus champion & 3rd-place)', () => {
+  const me = userWith([km(73, 'Mexico', 'Canada')], 'אני')
+  const liveStages = [
+    { key: 'r32' as const, label: 'שלב 32', standings: [{ label: 'אני', alive: 30, reachable: 30, total: 32, aliveTeams: ['Mexico'], outTeams: [], collisions: [] }] },
+    { key: 'final' as const, label: 'גמר', standings: [{ label: 'אני', alive: 2, reachable: 2, total: 2, aliveTeams: ['France', 'England'], outTeams: [], collisions: [] }] },
+    { key: 'thirdPlace' as const, label: 'מקום 3-4', standings: [{ label: 'אני', alive: 1, reachable: 1, total: 2, aliveTeams: ['Brazil'], outTeams: ['Spain'], collisions: [] }] },
+    { key: 'champion' as const, label: 'אלופה', standings: [{ label: 'אני', alive: 1, reachable: 1, total: 1, aliveTeams: ['France'], outTeams: [], collisions: [] }] },
+  ]
+  render(
+    <CrossingsList
+      user={me} users={[me]} actualMatches={[]}
+      probByMatch={{}} probStatus="ready" liveStages={liveStages}
+    />,
+  )
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+  const board = within(screen.getByRole('region', { name: 'קבוצות חיות' }))
+
+  // defaults to the round tab's stage (round of 32) → 30 out of 32
+  expect(board.getByText('30/32')).toBeInTheDocument()
+  // champion and the 3rd-place match get their own chips (no crossing tab exists)
+  expect(board.getByRole('tab', { name: 'אלופה' })).toBeInTheDocument()
+  expect(board.getByRole('tab', { name: 'מקום 3-4' })).toBeInTheDocument()
+  // switching to the final references the 2 finalists → 2 out of 2
+  fireEvent.click(board.getByRole('tab', { name: 'גמר' }))
+  expect(board.getByText('2/2')).toBeInTheDocument()
+  expect(board.queryByText('30/32')).not.toBeInTheDocument()
+})
+
+test('live-teams board flags picks that collide before the stage and ranks them below a clean bracket', () => {
+  const me = userWith([km(73, 'Mexico', 'Canada')], 'אני')
+  const clash = userWith([km(73, 'France', 'Brazil')], 'מתנגש')
+  const clean = userWith([km(73, 'Spain', 'Italy')], 'נקי')
+  // 'מתנגש' has both finalists alive but they meet in R32 → at most one arrives;
+  // 'נקי' has one clean finalist. Reachable (1 vs 1) ties, but the clash is flagged.
+  const liveStages = [
+    { key: 'r32' as const, label: 'שלב 32', standings: [
+      { label: 'מתנגש', alive: 2, reachable: 1, total: 2, aliveTeams: ['France', 'England'], outTeams: [], collisions: [{ teams: ['France', 'England'], roundLabel: 'שלב 32' }] },
+      { label: 'נקי', alive: 1, reachable: 1, total: 1, aliveTeams: ['Spain'], outTeams: [], collisions: [] },
+    ] },
+  ]
+  render(
+    <CrossingsList
+      user={me} users={[me, clash, clean]} actualMatches={[km(73, 'Mexico', 'Canada')]}
+      probByMatch={{}} probStatus="ready" liveStages={liveStages}
+    />,
+  )
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+  const board = within(screen.getByRole('region', { name: 'קבוצות חיות' }))
+
+  // the row shows the clash count and a "up to N will arrive" hint
+  expect(board.getByText(/נפגשות/)).toBeInTheDocument()
+  expect(board.getByText(/עד 1 יגיעו/)).toBeInTheDocument()
+  // expanding spells out which teams meet and where
+  fireEvent.click(board.getByRole('button', { name: /מתנגש/ }))
+  expect(board.getByText('⚠️ נפגשות בדרך')).toBeInTheDocument()
+  expect(board.getByText(/נפגשות בשלב 32/)).toBeInTheDocument()
+})
+
+test('the "who\'ll hit the most" standing counts a 100%-certain matchup as locked, not open', () => {
+  const actual = [km(75, 'Brazil', 'סגנית ו')]   // slot still a placeholder
+  const bettor = userWith([km(75, 'Brazil', 'Netherlands')], 'דני')
+  const probByMatch = { 75: { 'Brazil|Netherlands': 1 } } // the sim makes it inevitable
+  render(<CrossingsList user={bettor} users={[bettor]} actualMatches={actual} probByMatch={probByMatch} probStatus="ready" />)
+
+  // closed like the rest: it lands in the locked tally, not the open one
+  expect(screen.getByText('1 נעולות · 0 פתוחות · 0 אזלו')).toBeInTheDocument()
+})
+
+test('the "who predicted what" board shows a 100%-certain matchup as a closed match', () => {
+  const actual = [km(75, 'Brazil', 'סגנית ו')]   // slot still a placeholder on the bracket
+  const me = userWith([km(75, 'Brazil', 'Netherlands')], 'אני')
+  const probByMatch = { 75: { 'Brazil|Netherlands': 1 } } // the sim makes it inevitable
+  render(<CrossingsList user={me} users={[me]} actualMatches={actual} probByMatch={probByMatch} probStatus="ready" />)
+
+  fireEvent.click(screen.getByRole('tab', { name: /מי ניחש/ }))
+  const cards = screen.getAllByTestId('determined-card')
+  expect(cards).toHaveLength(1)
+  // marked as a closed-but-not-formally-filled matchup
+  expect(within(cards[0]).getByText(/ודאי/)).toBeInTheDocument()
 })
 
 test('reads the bettor predictions for the selected round', () => {
