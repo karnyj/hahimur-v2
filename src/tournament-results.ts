@@ -75,6 +75,7 @@ const groupScores: Record<string, MatchScores> = {
   L5: { home: 0, away: 2 },
   L6: { home: 2, away: 1 },
   K5: { home: 0, away: 0 },
+  K6: { home: 3, away: 1 },
 }
 
 // Knockout results: the regulation (90') score keyed by matchNum. drawWinner
