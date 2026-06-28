@@ -84,6 +84,7 @@ const groupScores: Record<string, MatchScores> = {
 // names the advancer when regulation ended level (ET/penalties decide who went
 // through). Fill in as KO matches are played; knockoutStages is derived from this.
 const koScores: Record<string, MatchScores> = {
+  73: { home: 0, away: 1 }, // South Africa 0-1 Canada
 }
 
 // Real goals by picked players: player → match ID → goals in that match.
