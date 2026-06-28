@@ -1,37 +1,65 @@
-import type { KnockoutStages } from './types'
+import type { KnockoutMatch, KnockoutStages } from './types'
 import TeamSlot from '../formView/knockout/TeamSlot'
+import { orderedRounds, type OrderedRounds } from './bracketLayout'
 import './Bracket.css'
 
-// Read-only view of the derived knockout bracket. R32 carries real teams once
-// the group stage is finished; later rounds carry placeholder strings (e.g.
-// "מנצח 74"). TeamSlot renders whichever string is present — a flag + Hebrew
-// name for a known team, the raw string otherwise — so nothing is special-cased.
-const ROUNDS: { key: keyof KnockoutStages; label: string }[] = [
-  { key: 'r32',        label: 'שלב ה-32' },
-  { key: 'r16',        label: 'שמינית גמר' },
-  { key: 'qf',         label: 'רבע גמר' },
-  { key: 'sf',         label: 'חצי גמר' },
-  { key: 'thirdPlace', label: 'מקום שלישי' },
-  { key: 'final',      label: 'גמר' },
-]
+// Read-only knockout bracket in the classic Wikipedia layout: one column per round,
+// R32 on the right funnelling left to the final, joined by connector lines. The board
+// is wider than the screen, so it scrolls horizontally. R32 carries real teams once
+// the group stage is done; later rounds carry placeholders ("מנצח 74").
+
+const ROUND_LABELS: Record<keyof OrderedRounds, string> = {
+  r32: 'שלב ה-32',
+  r16: 'שמינית גמר',
+  qf: 'רבע גמר',
+  sf: 'חצי גמר',
+}
+const ORDER: (keyof OrderedRounds)[] = ['r32', 'r16', 'qf', 'sf']
+
+function MatchCard({ m, className = '' }: { m: KnockoutMatch; className?: string }) {
+  return (
+    <div className={`bk-match ${className}`}>
+      <span className="bk-match-num">{m.matchNum}</span>
+      <TeamSlot name={m.home} />
+      <TeamSlot name={m.away} />
+    </div>
+  )
+}
+
+function Column({ rkey, matches }: { rkey: keyof OrderedRounds; matches: KnockoutMatch[] }) {
+  return (
+    <div className={`bk-col bk-col--${rkey}`}>
+      <h2 className="bk-col-title">{ROUND_LABELS[rkey]}</h2>
+      <div className="bk-col-body">
+        {matches.map(m => <MatchCard key={m.matchNum} m={m} />)}
+      </div>
+    </div>
+  )
+}
 
 export default function Bracket({ stages }: { stages: KnockoutStages }) {
+  const rounds = orderedRounds(stages)
+  const final = stages.final[0]
+  const thirdPlace = stages.thirdPlace[0]
+
   return (
-    <div className="bracket" dir="rtl">
-      {ROUNDS.map(({ key, label }) => (
-        <section key={key} className="bracket-round">
-          <h2 className="bracket-round-title">{label}</h2>
-          <div className="bracket-matches">
-            {stages[key].map(m => (
-              <div key={m.matchNum} className="bracket-match">
-                <span className="bracket-match-num">{m.matchNum}</span>
-                <TeamSlot name={m.home} />
-                <TeamSlot name={m.away} />
+    <div className="bk">
+      <div className="bk-board" dir="rtl">
+        {ORDER.map(k => <Column key={k} rkey={k} matches={rounds[k]} />)}
+
+        <div className="bk-col bk-col--final">
+          <h2 className="bk-col-title">גמר</h2>
+          <div className="bk-col-body">
+            {final && <MatchCard m={final} className="bk-match--final" />}
+            {thirdPlace && (
+              <div className="bk-third">
+                <h3 className="bk-third-title">מקום שלישי</h3>
+                <MatchCard m={thirdPlace} />
               </div>
-            ))}
+            )}
           </div>
-        </section>
-      ))}
+        </div>
+      </div>
     </div>
   )
 }
