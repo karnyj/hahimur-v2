@@ -2,6 +2,7 @@ import { TEAMS } from '../../shared/groups'
 import type { KnockoutMatch, KnockoutStages, TournamentResults } from '../../shared/types'
 import type { User } from '../../users'
 import { eliminatedTeams } from './compareStats'
+import { allKO } from '../../formView/knockout/koRounds'
 
 export interface TeamSurvival {
   team: string
@@ -95,12 +96,9 @@ function allBracketTeams(user: User): string[] {
       out.push(slot)
     }
   }
-  const s = user.knockoutStages
-  for (const stage of [s.r32, s.r16, s.qf, s.sf, s.thirdPlace, s.final]) {
-    for (const m of stage) {
-      add(m.home)
-      add(m.away)
-    }
+  for (const m of allKO(user.knockoutStages)) {
+    add(m.home)
+    add(m.away)
   }
   if (user.predictedChampion) add(user.predictedChampion)
   return out

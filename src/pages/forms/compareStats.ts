@@ -10,7 +10,7 @@ import {
   type PointsBreakdown,
 } from '../../leaderboard/points'
 import { buildLeaderboardRows } from '../../leaderboard/leaderboardRows'
-import { isPairing } from '../../formView/knockout/koRounds'
+import { isPairing, allKO } from '../../formView/knockout/koRounds'
 import { competitionRanks } from '../../leaderboard/rank'
 import type { User } from '../../users'
 
@@ -387,10 +387,8 @@ function groupStageEliminated(results: TournamentResults): Set<string> {
  *  {@link eliminatedTeams} this does NOT sweep in teams that simply never reached
  *  the real bracket — it only counts teams that demonstrably lost their way out. */
 export function knockedOutTeams(results: TournamentResults): Set<string> {
-  const s = results.knockoutStages
-  const all = [...s.r32, ...s.r16, ...s.qf, ...s.sf, ...s.thirdPlace, ...s.final]
   const out = groupStageEliminated(results)
-  for (const m of all) {
+  for (const m of allKO(results.knockoutStages)) {
     const winner = knockoutWinner(m)
     if (winner) out.add(winner === m.home ? m.away : m.home)
   }

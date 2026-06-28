@@ -1,15 +1,11 @@
 import { isUnpredicted, type KnockoutMatch, type MatchScores, type TournamentResults } from '../shared/types'
 import type { User } from '../users'
-import { predictedPairing, orientPrediction } from '../formView/knockout/koRounds'
+import { predictedPairing, orientPrediction, allKO } from '../formView/knockout/koRounds'
 import { matchSortKey } from '../shared/matchOrder'
 import { singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS } from './points'
 import { playedGroupMatchesChrono, rowsForMatches } from './leaderboardRows'
 import { competitionRanks } from './rank'
 import type { MatchLeaderRow } from './matchLeaderboardRows'
-
-function allKO(stages: TournamentResults['knockoutStages']): KnockoutMatch[] {
-  return [...stages.r32, ...stages.r16, ...stages.qf, ...stages.sf, ...stages.thirdPlace, ...stages.final]
-}
 
 // Re-express a predicted score in the actual fixture's home/away terms, so a
 // bettor who stored the two teams reversed still reads in the page's orientation

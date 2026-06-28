@@ -1,4 +1,5 @@
 import { buildKnockoutBracket } from '../../formView/knockout/knockout'
+import { allKO } from '../../formView/knockout/koRounds'
 import { tournamentResults } from '../../tournament-results'
 import { matchSortKey } from '../../shared/matchOrder'
 import type { KnockoutMatch, KnockoutStages, PredictionsState } from '../../shared/types'
@@ -46,8 +47,7 @@ export function mockEnabled(): boolean {
 // already carry their baked result (regulation score + advancer) when one's been
 // entered, so the match page renders the score straight off what this returns.
 export function findInStages(stages: KnockoutStages, matchNum: number): KnockoutMatch | null {
-  const all = [...stages.r32, ...stages.r16, ...stages.qf, ...stages.sf, ...stages.thirdPlace, ...stages.final]
-  return all.find(m => m.matchNum === matchNum) ?? null
+  return allKO(stages).find(m => m.matchNum === matchNum) ?? null
 }
 
 export function findKnockoutMatch(matchNum: number): KnockoutMatch | null {

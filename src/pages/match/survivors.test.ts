@@ -34,6 +34,22 @@ test('knownSideCallers picks bettors who predicted the known team on either side
   expect(knownSideCallers(half, users).map(u => u.label)).toEqual(['ניחש קנדה בית', 'ניחש קנדה חוץ'])
 })
 
+test('counts a bettor who advanced the team through a different slot of the same round', () => {
+  // Reality has Canada arriving in slot 73; this bettor predicted Canada into r32
+  // too, but at slot 80 (their group finishes route it differently). They still
+  // "advanced" Canada to this round, so they're alive on the known side.
+  const u = makeUser('סלוט אחר', 'Mexico', 'Switzerland')
+  u.knockoutStages.r32 = [{ matchNum: 80, home: 'Canada', away: 'Japan', resolved: true }]
+  expect(knownSideCallers(half, [u]).map(user => user.label)).toEqual(['סלוט אחר'])
+})
+
+test('does not count the team predicted in a different round', () => {
+  // Bettor put Canada in their r16, not r32 — they did not advance it to this round.
+  const u = makeUser('סיבוב אחר', 'Mexico', 'Switzerland')
+  u.knockoutStages.r16 = [{ matchNum: 89, home: 'Canada', away: 'Japan', resolved: true }]
+  expect(knownSideCallers(half, [u])).toEqual([])
+})
+
 test('a bettor with no prediction for this match is not a caller', () => {
   const empty = { label: 'ריק', knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] } } as unknown as User
   expect(knownSideCallers(half, [empty])).toEqual([])

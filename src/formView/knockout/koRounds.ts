@@ -17,6 +17,13 @@ export function roundKeyForMatch(matchNum: number): keyof KnockoutStages | undef
   return KO_ROUND_RANGES.find(r => matchNum >= r.lo && matchNum <= r.hi)?.key
 }
 
+// Every knockout fixture across all rounds, flattened in bracket order. The one
+// flattener every "walk the whole bracket" surface shares (per-match leaderboard,
+// match lookup, knocked-out teams, bracket-team sweeps).
+export function allKO(stages: KnockoutStages): KnockoutMatch[] {
+  return [...stages.r32, ...stages.r16, ...stages.qf, ...stages.sf, ...stages.thirdPlace, ...stages.final]
+}
+
 // Whether a predicted fixture is the pairing {teamA, teamB}, in either orientation.
 // Empty slots (an unfilled bracket placeholder) never match.
 export function isPairing(m: KnockoutMatch, teamA: string, teamB: string): boolean {
