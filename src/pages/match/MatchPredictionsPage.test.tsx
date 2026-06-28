@@ -5,7 +5,7 @@ import MatchPredictionsPage from './MatchPredictionsPage'
 // These tests describe the page before a real result exists. Pin the
 // results to empty so they don't change behavior as real scores land.
 vi.mock('../../tournament-results', () => ({
-  tournamentResults: { groupMatches: {}, playerMatchGoals: {} },
+  tournamentResults: { groupMatches: {}, playerMatchGoals: {}, knockoutStages: { r32: [], r16: [], qf: [], sf: [], thirdPlace: [], final: [] } },
 }))
 // Global chrome is covered by Nav.test; stub it so the nav's participant
 // picker doesn't pollute the page's name/prediction assertions.
