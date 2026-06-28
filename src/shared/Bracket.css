@@ -1,0 +1,36 @@
+.bracket {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  padding: 1rem;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.bracket-round-title {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.bracket-matches {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.bracket-match {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 0.5rem;
+}
+
+.bracket-match-num {
+  flex: 0 0 1.5rem;
+  font-size: 0.85rem;
+  opacity: 0.6;
+  text-align: center;
+}
