@@ -6,6 +6,14 @@ import ResultsPage from './ResultsPage'
 // Skip the 27 prediction files that load transitively via useCurrentUser.
 vi.mock('../../users/index', () => ({ get USERS() { return [] }, get USERS_SORTED() { return [] } }))
 
+// Pin the "next unplayed match" to a real group fixture so the autoscroll target
+// exists regardless of how far the live tournament has progressed (once every group
+// match has a score there is no next unplayed match, and nothing to scroll to).
+vi.mock('../../shared/matchesByDate', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../../shared/matchesByDate')>()
+  return { ...actual, nextUnplayedMatchId: () => 'A1' }
+})
+
 afterEach(() => {
   vi.restoreAllMocks()
 })

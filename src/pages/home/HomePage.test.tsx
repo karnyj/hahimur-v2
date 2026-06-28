@@ -2,6 +2,20 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { vi, afterEach } from 'vitest'
 import HomePage from './HomePage'
 
+// Pin the home feed to a fixed upcoming fixture so these wiring tests don't hinge
+// on how far the real tournament has progressed (once every group match has a score,
+// the live data has no "upcoming" match left to show). B1 is one עידן predicted, so
+// the your-prediction assertions still exercise a real user's pick.
+vi.mock('./nextMatch', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('./nextMatch')>()
+  return {
+    ...actual,
+    SCORED_MATCHES: [
+      { id: 'B1', homeTeam: 'Canada', awayTeam: 'Bosnia and Herzegovina', matchDate: '20 ביוני', kickoffIST: '22:00' },
+    ],
+  }
+})
+
 afterEach(() => {
   vi.useRealTimers()
   localStorage.clear()
