@@ -28,9 +28,23 @@ interface CardCtx {
   lockedMatchIds?: Set<string>
 }
 
+// The kickoff date + time, carried on each fixture from KO_DATES. Compact line at
+// the top of every card so the bracket reads as a schedule, not just a tree.
+function MatchMeta({ m }: { m: KnockoutMatch }) {
+  if (!m.matchDate && !m.kickoffIST) return null
+  return (
+    <div className="bk-meta">
+      {m.matchDate && <span>{m.matchDate}</span>}
+      {m.matchDate && m.kickoffIST && <span className="bk-meta-sep">·</span>}
+      {m.kickoffIST && <span dir="ltr">{m.kickoffIST}</span>}
+    </div>
+  )
+}
+
 function ReadOnlyCard({ m, className = '' }: { m: KnockoutMatch; className?: string }) {
   return (
     <a href={`/matches/${m.matchNum}`} className={`bk-match ${className}`}>
+      <MatchMeta m={m} />
       <TeamSlot name={m.home} />
       <TeamSlot name={m.away} />
     </a>
@@ -82,6 +96,7 @@ function EditableCard({
 
   return (
     <div className={`bk-match bk-match--editable ${className}${m.resolved ? ' bk-match--resolved' : ''}${needsDrawWinner ? ' bk-match--draw-pending' : ''}`}>
+      <MatchMeta m={m} />
       {slot('home', m.home, pred.home)}
       <div className="bk-row-divider" />
       {slot('away', m.away, pred.away)}

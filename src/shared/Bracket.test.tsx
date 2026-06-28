@@ -48,4 +48,20 @@ describe('interactive Bracket', () => {
     expect(document.querySelectorAll('input.score-input').length).toBe(0)
     expect(document.querySelector('a[href="/matches/73"]')).not.toBeNull()
   })
+
+  test('a read-only card shows the match date and kickoff time', () => {
+    const stages = withR32({ matchNum: 73, home: 'Brazil', away: 'Korea Republic', resolved: true, matchDate: '28 ביוני', kickoffIST: '22:00' })
+    const { container } = render(<Bracket stages={stages} />)
+    const meta = container.querySelector('.bk-meta')!
+    expect(meta.textContent).toContain('28 ביוני')
+    expect(meta.textContent).toContain('22:00')
+  })
+
+  test('an editable card shows the match date and kickoff time', () => {
+    const stages = withR32({ matchNum: 73, home: 'Brazil', away: 'Korea Republic', resolved: true, matchDate: '28 ביוני', kickoffIST: '22:00' })
+    const { container } = render(<Bracket stages={stages} predictions={{}} onChange={() => {}} />)
+    const meta = container.querySelector('.bk-meta')!
+    expect(meta.textContent).toContain('28 ביוני')
+    expect(meta.textContent).toContain('22:00')
+  })
 })

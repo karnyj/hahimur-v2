@@ -5,7 +5,7 @@
    board is wider than the screen and scrolls horizontally. */
 
 .bk {
-  --m-h: 44px;          /* match-card height */
+  --m-h: 58px;          /* match-card height (date/time meta + two team slots) */
   --gap-v: 16px;        /* base vertical gap between R32 matches */
   --gut: 26px;          /* horizontal gutter between columns (also the connectors) */
   --col-w: 144px;
@@ -119,6 +119,21 @@ a.bk-match:hover {
 .bk-match > .ko-slot:first-of-type { border-radius: 4px 4px 0 0; }
 .bk-match > .ko-slot:last-of-type  { border-radius: 0 0 4px 4px; }
 
+/* kickoff date + time line at the top of every card */
+.bk-meta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 3px 6px 1px;
+  font-size: 9px;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.bk-meta-sep { opacity: 0.55; }
+
 /* self-contained slot styling so the bracket renders without the form-page CSS */
 .bk .ko-slot {
   display: flex;
@@ -173,7 +188,7 @@ a.bk-match:hover {
    whole bracket is taller. Every card is the same height, so the connector
    geometry (which is driven entirely by --m-h) still lines rounds up exactly. */
 
-.bk--editable { --m-h: 70px; }
+.bk--editable { --m-h: 84px; }
 
 .bk-match--editable {
   height: var(--m-h);
