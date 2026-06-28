@@ -19,7 +19,6 @@ const ORDER: (keyof OrderedRounds)[] = ['r32', 'r16', 'qf', 'sf']
 function MatchCard({ m, className = '' }: { m: KnockoutMatch; className?: string }) {
   return (
     <div className={`bk-match ${className}`}>
-      <span className="bk-match-num">{m.matchNum}</span>
       <TeamSlot name={m.home} />
       <TeamSlot name={m.away} />
     </div>
