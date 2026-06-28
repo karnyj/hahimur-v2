@@ -1,6 +1,6 @@
 import { isUnpredicted, type KnockoutMatch, type MatchScores, type TournamentResults } from '../shared/types'
 import type { User } from '../users'
-import { predictedPairing } from '../formView/knockout/koRounds'
+import { predictedPairing, orientPrediction } from '../formView/knockout/koRounds'
 import { matchSortKey } from '../shared/matchOrder'
 import { singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS } from './points'
 import { playedGroupMatchesChrono, rowsForMatches } from './leaderboardRows'
@@ -18,12 +18,7 @@ function allKO(stages: TournamentResults['knockoutStages']): KnockoutMatch[] {
 function orientedPrediction(user: User, actual: KnockoutMatch): MatchScores | null {
   const um = predictedPairing(user.knockoutStages, actual)
   if (!um?.scores || isUnpredicted(um.scores)) return null
-  if (um.home === actual.home) return um.scores
-  const sc = um.scores
-  return {
-    home: sc.away, away: sc.home,
-    drawWinner: sc.drawWinner === 'home' ? 'away' : sc.drawWinner === 'away' ? 'home' : undefined,
-  }
+  return orientPrediction(um, actual)
 }
 
 // Points a bettor earns from one played knockout match: the oriented score bet

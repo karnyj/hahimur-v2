@@ -1,4 +1,5 @@
 import { isUnpredicted, type MatchScores, type KnockoutMatch, type TournamentResults } from '../shared/types'
+import { isPairing, orientPrediction } from '../formView/knockout/koRounds'
 
 import type { User } from '../users'
 
@@ -124,16 +125,9 @@ function koMatchPoints(userMatches: KnockoutMatch[], resultMatches: KnockoutMatc
   return resultMatches.reduce((total, resultMatch) => {
     if (!resultMatch.scores || isUnpredicted(resultMatch.scores)) return total
     if (!resultMatch.home || !resultMatch.away) return total
-    const userMatch = userMatches.find(m =>
-      m.home && m.away &&
-      ((m.home === resultMatch.home && m.away === resultMatch.away) ||
-       (m.home === resultMatch.away && m.away === resultMatch.home))
-    )
+    const userMatch = userMatches.find(m => isPairing(m, resultMatch.home, resultMatch.away))
     if (!userMatch || !userMatch.scores || isUnpredicted(userMatch.scores)) return total
-    const flipped = userMatch.home === resultMatch.away
-    const predicted: MatchScores = flipped
-      ? { home: userMatch.scores.away, away: userMatch.scores.home, drawWinner: userMatch.scores.drawWinner === 'home' ? 'away' : userMatch.scores.drawWinner === 'away' ? 'home' : undefined }
-      : userMatch.scores
+    const predicted = orientPrediction(userMatch, resultMatch)!
     return total + singleMatchPoints(String(resultMatch.matchNum), predicted, resultMatch.scores)
   }, 0)
 }

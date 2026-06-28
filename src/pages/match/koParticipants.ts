@@ -1,19 +1,12 @@
 import type { KnockoutMatch, MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
-import { predictedPairing } from '../../formView/knockout/koRounds'
+import { predictedPairing, orientPrediction } from '../../formView/knockout/koRounds'
 
 // Re-express a bettor's predicted score in the real match's home/away terms, so
 // someone who stored the two teams reversed still reads in the same orientation
 // as the page — the penalty winner flips sides along with the score.
 export function orientToActual(actualMatch: KnockoutMatch, predicted: KnockoutMatch): MatchScores | null {
-  const sc = predicted.scores
-  if (!sc) return null
-  if (predicted.home === actualMatch.home) return sc
-  return {
-    home: sc.away,
-    away: sc.home,
-    drawWinner: sc.drawWinner === 'home' ? 'away' : sc.drawWinner === 'away' ? 'home' : undefined,
-  }
+  return orientPrediction(predicted, actualMatch)
 }
 
 // A bettor "participates" in a knockout match when they predicted both teams that

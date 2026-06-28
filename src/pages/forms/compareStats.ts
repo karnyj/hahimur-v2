@@ -10,6 +10,7 @@ import {
   type PointsBreakdown,
 } from '../../leaderboard/points'
 import { buildLeaderboardRows } from '../../leaderboard/leaderboardRows'
+import { isPairing } from '../../formView/knockout/koRounds'
 import { competitionRanks } from '../../leaderboard/rank'
 import type { User } from '../../users'
 
@@ -160,7 +161,7 @@ function koWinnerTeam(m: KnockoutMatch): string | null {
 }
 
 function sameMatchup(a: KnockoutMatch, b: KnockoutMatch): boolean {
-  return (a.home === b.home && a.away === b.away) || (a.home === b.away && a.away === b.home)
+  return isPairing(a, b.home, b.away)
 }
 
 function goalsFor(m: KnockoutMatch, team: string): number | null {

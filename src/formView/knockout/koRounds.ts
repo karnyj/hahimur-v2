@@ -1,4 +1,4 @@
-import type { KnockoutMatch, KnockoutStages } from '../../shared/types'
+import type { KnockoutMatch, KnockoutStages, MatchScores } from '../../shared/types'
 
 // The matchNum span of each knockout round, in bracket order. The single source of
 // truth for "which round does this real-bracket match number belong to" — used both
@@ -42,4 +42,23 @@ export function predictedPairing(
   const key = roundKeyForMatch(actualMatch.matchNum)
   if (!key) return undefined
   return stages[key].find(m => isPairing(m, actualMatch.home, actualMatch.away))
+}
+
+// Re-express a bettor's predicted score in the actual fixture's home/away terms,
+// flipping the scoreline (and penalty winner) when they listed the same pairing
+// reversed. Null when the prediction carries no score. Assumes `predicted` is
+// already known to be the same pairing as `actual` (e.g. found via predictedPairing
+// / isPairing), so `predicted.home` is one of the actual fixture's two teams.
+export function orientPrediction(
+  predicted: KnockoutMatch,
+  actual: Pick<KnockoutMatch, 'home'>,
+): MatchScores | null {
+  const sc = predicted.scores
+  if (!sc) return null
+  if (predicted.home === actual.home) return sc
+  return {
+    home: sc.away,
+    away: sc.home,
+    drawWinner: sc.drawWinner === 'home' ? 'away' : sc.drawWinner === 'away' ? 'home' : undefined,
+  }
 }

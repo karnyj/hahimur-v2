@@ -3,7 +3,8 @@ import { computeUserCrossings } from './crossings'
 import type { RoundKey } from './crossings'
 import { rankTrajectories } from './leaderboardRows'
 import { isUnpredicted } from '../shared/types'
-import type { KnockoutMatch, MatchScores, TournamentResults } from '../shared/types'
+import type { MatchScores, TournamentResults } from '../shared/types'
+import { isPairing, orientPrediction } from '../formView/knockout/koRounds'
 import type { User } from '../users'
 
 // The biggest single-game leap up the standings: ranks are 1-based and listed
@@ -39,15 +40,6 @@ function groupOutcomes(user: User, results: TournamentResults): Outcomes {
 
 const KO_ROUNDS = ['r32', 'r16', 'qf', 'sf', 'thirdPlace', 'final'] as const
 
-// Orient a bettor's knockout prediction to the actual fixture's home/away sides,
-// flipping the scoreline (and drawWinner) when they listed the teams reversed.
-function orientPrediction(userMatch: KnockoutMatch, resultMatch: KnockoutMatch): MatchScores {
-  const flipped = userMatch.home === resultMatch.away
-  if (!flipped) return userMatch.scores!
-  const { home, away, drawWinner } = userMatch.scores!
-  return { home: away, away: home, drawWinner: drawWinner === 'home' ? 'away' : drawWinner === 'away' ? 'home' : undefined }
-}
-
 function knockoutOutcomes(user: User, results: TournamentResults): Outcomes {
   const acc: Outcomes = { tzelifot: 0, pgiot: 0 }
   for (const round of KO_ROUNDS) {
@@ -55,12 +47,9 @@ function knockoutOutcomes(user: User, results: TournamentResults): Outcomes {
     const userMatches = user.knockoutStages?.[round] ?? []
     for (const rm of resultMatches) {
       if (!rm.scores || isUnpredicted(rm.scores) || !rm.home || !rm.away) continue
-      const um = userMatches.find(m =>
-        m.home && m.away &&
-        ((m.home === rm.home && m.away === rm.away) || (m.home === rm.away && m.away === rm.home)),
-      )
+      const um = userMatches.find(m => isPairing(m, rm.home, rm.away))
       if (!um || !um.scores || isUnpredicted(um.scores)) continue
-      tally(singleMatchOutcome(orientPrediction(um, rm), rm.scores), acc)
+      tally(singleMatchOutcome(orientPrediction(um, rm)!, rm.scores), acc)
     }
   }
   return acc
