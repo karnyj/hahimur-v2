@@ -109,7 +109,7 @@
   transition: box-shadow 0.15s, border-color 0.15s;
 }
 
-.bk-match:hover {
+a.bk-match:hover {
   border-color: var(--accent, #0b2244);
   box-shadow: 0 2px 8px rgba(11, 34, 68, 0.14);
 }
@@ -168,7 +168,95 @@
 .bk-match--final::after { background: var(--gold) !important; opacity: 0.7; }
 .bk-match--final::before { background: var(--gold) !important; opacity: 0.7; }
 
-.bk-third { margin-top: 1.25rem; opacity: 0.9; }
+/* ── Editable mode ────────────────────────────────────────────
+   Cards grow to hold a score box beside each team plus a details link, so the
+   whole bracket is taller. Every card is the same height, so the connector
+   geometry (which is driven entirely by --m-h) still lines rounds up exactly. */
+
+.bk--editable { --m-h: 70px; }
+
+.bk-match--editable {
+  height: var(--m-h);
+  box-sizing: border-box;
+  cursor: default;
+}
+
+.bk-match-row {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+/* the team part keeps the self-contained .ko-slot styling; this just lets it grow
+   and gives the draw-winner click target a rounded hit area */
+.bk-team {
+  flex: 1 1 auto;
+  min-width: 0;
+  border-radius: 4px;
+}
+.bk-team--selectable { cursor: pointer; }
+.bk-team--selected { background: rgba(212, 160, 22, 0.18); }
+.bk-team--unselected { opacity: 0.5; }
+
+.bk-row-divider {
+  height: 0;
+  border-top: 1px dashed rgba(200, 184, 122, 0.55);
+  margin: 0 8px;
+}
+
+.bk .score-input {
+  flex: none;
+  width: 28px;
+  height: 22px;
+  margin-inline: 6px;
+  padding: 0;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+.bk .score-input:focus { outline: none; border-color: var(--accent, #0b2244); }
+.bk .score-input:disabled { background: rgba(11, 34, 68, 0.04); color: var(--muted); cursor: not-allowed; }
+
+.bk-score-static {
+  flex: none;
+  width: 28px;
+  margin-inline: 6px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.bk-match-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  height: 16px;
+  border-top: 1px solid var(--border);
+  font-size: 9.5px;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+  text-decoration: none;
+}
+.bk-match-hint:hover { color: var(--accent, #0b2244); }
+.bk-match-hint-chevron { font-size: 11px; }
+
+/* a level scoreline still needs a winner picked, or the match scores nothing */
+.bk-match--draw-pending { box-shadow: 0 0 0 2px var(--gold); }
+
+/* The final card is centred in a full-height column, leaving a big empty gap
+   below it. Sit the third-place block about halfway down that gap — not stranded
+   at the very bottom, but not crowding the final either. */
+.bk-third {
+  margin-top: calc(-1 * (var(--slot) - var(--m-h)) / 4);
+  opacity: 0.9;
+}
 .bk-third-title {
   font-family: 'Bebas Neue', sans-serif;
   font-size: 0.68rem;

@@ -3,7 +3,7 @@ import GoalScorerSection from './GoalScorerSection'
 import PageLayout from '../../shared/PageLayout'
 import MatchRow from '../../formView/groupStage/MatchRow'
 import StandingsTable from '../../formView/groupStage/StandingsTable'
-import KnockoutTable from '../../formView/knockout/KnockoutTable'
+import Bracket from '../../shared/Bracket'
 import ThirdPlaceTable from '../../formView/thirdPlace/ThirdPlaceTable'
 import type { User } from '../../users/index'
 import ScopedLeaderboard from '../../leaderboard/ScopedLeaderboard'
@@ -404,23 +404,13 @@ export default function ResultsPage({ users }: { users: User[] }) {
           <CollapsibleSection label="דירוג נבחרות במקום השלישי">
             <ThirdPlaceTable qualification={thirdPlaceQual} allGroupsFilled={allGroupsFilled} />
           </CollapsibleSection>
-          <CollapsibleSection label="שלב ה-32">
-            <KnockoutTable matches={round32Matches} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
-          </CollapsibleSection>
-          <CollapsibleSection label="שמינית גמר">
-            <KnockoutTable matches={knockout.r16} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
-          </CollapsibleSection>
-          <CollapsibleSection label="רבע גמר">
-            <KnockoutTable matches={knockout.qf} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
-          </CollapsibleSection>
-          <CollapsibleSection label="חצי גמר">
-            <KnockoutTable matches={knockout.sf} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
-          </CollapsibleSection>
-          <CollapsibleSection label="מקום שלישי">
-            <KnockoutTable matches={[knockout.thirdPlace]} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
-          </CollapsibleSection>
-          <CollapsibleSection label="גמר">
-            <KnockoutTable matches={[knockout.final]} predictions={editedResults} onChange={updateMatch} lockedMatchIds={LOCKED_MATCH_IDS} />
+          <CollapsibleSection label="בראקט">
+            <Bracket
+              stages={tournamentResults.knockoutStages}
+              predictions={editedResults}
+              onChange={updateMatch}
+              lockedMatchIds={LOCKED_MATCH_IDS}
+            />
           </CollapsibleSection>
           <CollapsibleSection label="מלך השערים">
             <GoalScorerSection
