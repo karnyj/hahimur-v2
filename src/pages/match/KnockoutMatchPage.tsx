@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import PageLayout from '../../shared/PageLayout'
-import type { Score } from '../../shared/types'
+import type { Score, MatchScores } from '../../shared/types'
 import type { User } from '../../users/index'
 import { TEAMS } from '../../shared/groups'
 import { isLive } from '../../shared/matchOrder'
@@ -22,6 +22,11 @@ import './MatchPredictionsPage.css'
 function teamForSlot(slot: string): { iso?: string; he: string } {
   const team = TEAMS[slot]
   return team ? { iso: team.iso, he: team.he } : { he: slot }
+}
+
+// A scoreline only counts as the "real" result once both sides are filled in.
+function completeScore(s: MatchScores | null | undefined): MatchScores | null {
+  return s && s.home !== null && s.away !== null ? s : null
 }
 
 export default function KnockoutMatchPage({ matchNum, users = [], now = new Date() }: { matchNum: number; users?: User[]; now?: Date }) {
@@ -46,12 +51,9 @@ export default function KnockoutMatchPage({ matchNum, users = [], now = new Date
   // The score to show: while in progress it's the live one overlaid onto the
   // bracket (keyed by matchNum); once final it's the match's own baked score.
   // Mirrors the group match page so a knockout fixture lights up live too.
-  const overlaidScore = liveScore ? findInStages(results.knockoutStages, matchNum)?.scores ?? null : null
-  const realScore = overlaidScore && overlaidScore.home !== null && overlaidScore.away !== null
-    ? overlaidScore
-    : match.resolved && match.scores && match.scores.home !== null && match.scores.away !== null
-      ? match.scores
-      : null
+  const realScore = liveScore
+    ? completeScore(findInStages(results.knockoutStages, matchNum)?.scores)
+    : match.resolved ? completeScore(match.scores) : null
   const live = isLive({ matchDate: match.matchDate, kickoffIST: match.kickoffIST }, now)
 
   // Which "who predicted each team this far" Venn this match feeds, if any.

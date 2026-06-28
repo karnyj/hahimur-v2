@@ -14,6 +14,10 @@ import './Bracket.css'
 //  • editable (`onChange` given) — each card holds score inputs and, for a level
 //    scoreline, lets you click the advancing team. Drives the points table on Results.
 
+// A fixture's live status as the bracket needs it: just the running minute (the
+// score itself rides on the card's overlaid result).
+type LiveClock = { clock: string | null }
+
 const ROUND_LABELS: Record<keyof OrderedRounds, string> = {
   r32: 'שלב ה-32',
   r16: 'שמינית גמר',
@@ -35,7 +39,7 @@ interface CardCtx {
   participatingPredictions?: Record<string, MatchScores>
   // match numbers (as strings) currently in progress, from the live feed → the
   // card's score is a running live one, flagged with a "חי" badge and the minute.
-  liveMatches?: Record<string, { clock: string | null }>
+  liveMatches?: Record<string, LiveClock>
 }
 
 // Corner chip flagging a match the current user participates in (they predicted
@@ -85,7 +89,7 @@ function PredDigit({ value, advancing }: { value: number; advancing: boolean }) 
 // the top of every card so the bracket reads as a schedule, not just a tree. While
 // the match is in progress the live "חי" badge (with the minute) stands in for it —
 // the running score is what matters then, not the kickoff time.
-function MatchMeta({ m, live }: { m: KnockoutMatch; live?: { clock: string | null } | null }) {
+function MatchMeta({ m, live }: { m: KnockoutMatch; live?: LiveClock | null }) {
   if (live) {
     return (
       <div className="bk-meta bk-meta--live" data-testid="bk-live" dir="rtl">
@@ -105,7 +109,7 @@ function MatchMeta({ m, live }: { m: KnockoutMatch; live?: { clock: string | nul
   )
 }
 
-function ReadOnlyCard({ m, mine, minePred, live, className = '' }: { m: KnockoutMatch; mine: boolean; minePred?: MatchScores; live?: { clock: string | null } | null; className?: string }) {
+function ReadOnlyCard({ m, mine, minePred, live, className = '' }: { m: KnockoutMatch; mine: boolean; minePred?: MatchScores; live?: LiveClock | null; className?: string }) {
   const pd = predDigits(minePred)
   const teamLine = (name: string, value: number, advancing: boolean) =>
     pd
@@ -128,7 +132,7 @@ function ReadOnlyCard({ m, mine, minePred, live, className = '' }: { m: Knockout
 
 function EditableCard({
   m, ctx, mine, minePred, live, className = '',
-}: { m: KnockoutMatch; ctx: Required<Pick<CardCtx, 'onChange'>> & CardCtx; mine: boolean; minePred?: MatchScores; live?: { clock: string | null } | null; className?: string }) {
+}: { m: KnockoutMatch; ctx: Required<Pick<CardCtx, 'onChange'>> & CardCtx; mine: boolean; minePred?: MatchScores; live?: LiveClock | null; className?: string }) {
   const { predictions, onChange, lockedMatchIds } = ctx
   const id = String(m.matchNum)
   const locked = lockedMatchIds?.has(id) ?? false

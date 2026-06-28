@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { GROUPS } from './groups'
 import { isLive } from './matchOrder'
 import { tournamentResults } from '../tournament-results'
+import { allKO } from '../formView/knockout/koRounds'
 import { mapLiveEvents, type LiveEvent, type LiveOverlay } from './espnLive'
 
 const POLL_MS = 30_000
@@ -30,8 +31,7 @@ const IS_TEST = typeof process !== 'undefined' && process.env?.VITEST === 'true'
 // satisfy the window check.
 const ALL_MATCHES = [
   ...Object.values(GROUPS).flatMap(g => g.matches),
-  ...Object.values(tournamentResults.knockoutStages ?? {})
-    .flat()
+  ...allKO(tournamentResults.knockoutStages)
     .map(m => ({ id: String(m.matchNum), matchDate: m.matchDate, kickoffIST: m.kickoffIST })),
 ]
 
@@ -42,10 +42,8 @@ function finalMatchIds(): Set<string> {
       if (m.scores?.home != null && m.scores?.away != null) ids.add(m.id)
     }
   }
-  for (const round of Object.values(tournamentResults.knockoutStages ?? {})) {
-    for (const m of round) {
-      if (m.scores?.home != null && m.scores?.away != null) ids.add(String(m.matchNum))
-    }
+  for (const m of allKO(tournamentResults.knockoutStages)) {
+    if (m.scores?.home != null && m.scores?.away != null) ids.add(String(m.matchNum))
   }
   return ids
 }

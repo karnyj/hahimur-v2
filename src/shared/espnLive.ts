@@ -1,5 +1,6 @@
 import { GROUPS } from './groups'
 import { tournamentResults } from '../tournament-results'
+import { allKO } from '../formView/knockout/koRounds'
 import { espnIdToMatchNum } from './koEventIds'
 
 // A slimmed ESPN scoreboard event, as returned by /api/live-scores. Kept
@@ -73,10 +74,8 @@ for (const group of Object.values(GROUPS)) {
 // from the baked knockout stages; later-round placeholders just won't match a
 // real team, so orientation falls back to ESPN's own order.
 const koFixtures = new Map<number, { home: string | null; away: string | null }>()
-for (const round of Object.values(tournamentResults.knockoutStages ?? {})) {
-  for (const m of round) {
-    koFixtures.set(m.matchNum, { home: canonical(m.home), away: canonical(m.away) })
-  }
+for (const m of allKO(tournamentResults.knockoutStages)) {
+  koFixtures.set(m.matchNum, { home: canonical(m.home), away: canonical(m.away) })
 }
 
 // Resolve an event to one of our match ids. Group fixtures join by team pairing;

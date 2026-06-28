@@ -1,5 +1,6 @@
 import type { TournamentResults, KnockoutStages } from './types'
 import { derivePlayerGoals } from '../tournament-results'
+import { allKO } from '../formView/knockout/koRounds'
 import type { LiveOverlay } from './espnLive'
 
 // Overlays a live {scores, goals} overlay onto the baked tournament results.
@@ -20,10 +21,8 @@ export function mergeLiveResults(base: TournamentResults, live: LiveOverlay): To
   }
   // Knockout matches are keyed by their matchNum (as a string), the same id the
   // live overlay and the home-feed cards use. A baked final KO score is final.
-  for (const round of Object.values(base.knockoutStages)) {
-    for (const m of round) {
-      if (m.scores?.home != null && m.scores?.away != null) finalIds.add(String(m.matchNum))
-    }
+  for (const m of allKO(base.knockoutStages)) {
+    if (m.scores?.home != null && m.scores?.away != null) finalIds.add(String(m.matchNum))
   }
 
   // Carry live status for in-progress matches, but never for one that already
