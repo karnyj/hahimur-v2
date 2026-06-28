@@ -121,10 +121,30 @@ group stage** — see the caveat below.
 | S3 | Pre-baked `matchNum → {espnId, fdId}` table (R32 above) | data, R32 verified |
 | S4 | Wire the cron (`scripts/fetch-scores.ts`): fetch summary for KO ids, write via S1; football-data as cross-check | parked |
 | S5a | Live **display** overlay onto `knockoutStages` — running score + "חי" via the scoreboard feed, joined by `espnId` (`koEventIds.ts`). Lights up the home feed for free. | ✅ done (2026-06-28, vs live match 73) |
-| S5b | Frozen-90' **scoring** overlay — per-event summary `linescores` so points stay correct through ET/pens | next |
+| S5b | Frozen-90' **scoring** overlay — per-event summary `linescores` so points stay correct through ET/pens | ✅ built (2026-06-28), ET-path unverified |
 
-S4 and S5b remain **parked/next**; S5a shipped against the live R32 opener. The two
-open questions below still need a match that reaches ET to fully close.
+S4 remains **parked**; S5a shipped against the live R32 opener. **S5b is built**
+(see below), but on the *assumption* that ESPN's summary `linescores` behave as
+documented — open question #1's ET-growth case still needs a match that reaches
+extra time to confirm in production.
+
+### S5b wiring (built 2026-06-28)
+
+- **`/api/ko-summary?event=<id>`** — a second dumb ESPN proxy (mirrors
+  `live-scores.ts`): fetches the per-event summary and slims it to
+  `{ homeAway, winner, team, linescores }`. Has the same `?fakeLinescores=` /
+  `?fakeWinner=` hook for end-to-end testing without a real ET match.
+- **`useLiveScores`** — for each in-progress KO match (`overlay.live` key whose
+  matchNum is in `KO_ESPN_IDS`) fetches that summary, runs the existing
+  `extractEspnKnockoutResult` (S2), orients the score to our bracket via
+  `isKoReversed`/`orientKoScore`, and writes it to a new overlay field `koReg`.
+- **`mergeLiveResults`** — for a live KO match, `knockoutStages[].scores` (what
+  the scoring engine reads) now prefers `koReg` (frozen 90'), falling back to the
+  running scoreboard score only until the summary yields one. The running score
+  stays in `results.live[]` for the **display** badge — so the leaderboard freezes
+  at the 90' result while the home feed / match page keep showing the live score
+  through ET. (`KnockoutMatchPage` now reads the running score from `results.live`
+  rather than the now-frozen `m.scores`.)
 
 ## Open questions (need a real KO match to verify)
 

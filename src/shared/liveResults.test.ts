@@ -77,6 +77,46 @@ describe('mergeLiveResults', () => {
     expect(merged.live).toEqual({ '73': { clock: "35'", home: 1, away: 0 } })
   })
 
+  it('scores a live knockout match off the frozen 90 score while the badge shows the running one', () => {
+    const b = base()
+    b.knockoutStages.r32 = [{ matchNum: 73, home: 'South Africa', away: 'Canada', resolved: true }]
+    const merged = mergeLiveResults(b, {
+      scores: { '73': { home: 2, away: 2 } }, // running score, after an extra-time goal apiece
+      koReg: { '73': { home: 1, away: 1, drawWinner: 'home' } }, // frozen regulation (90') result
+      goals: {},
+      live: { '73': { clock: "105'", home: 2, away: 2 } },
+    })
+    // Scoring reads m.scores → must be the 90' regulation result, not the ET running score.
+    expect(merged.knockoutStages.r32[0].scores).toEqual({ home: 1, away: 1, drawWinner: 'home' })
+    // Display reads results.live → keeps the running score for the "חי" badge.
+    expect(merged.live).toEqual({ '73': { clock: "105'", home: 2, away: 2 } })
+  })
+
+  it('falls back to the running score for a live knockout match with no frozen 90 score yet', () => {
+    const b = base()
+    b.knockoutStages.r32 = [{ matchNum: 73, home: 'South Africa', away: 'Canada', resolved: true }]
+    const merged = mergeLiveResults(b, {
+      scores: { '73': { home: 1, away: 0 } },
+      goals: {},
+      live: { '73': { clock: "35'", home: 1, away: 0 } },
+    })
+    expect(merged.knockoutStages.r32[0].scores).toEqual({ home: 1, away: 0 })
+  })
+
+  it('never lets a frozen 90 score override a baked final knockout score', () => {
+    const b = base()
+    b.knockoutStages.r32 = [
+      { matchNum: 73, home: 'South Africa', away: 'Canada', resolved: true, scores: { home: 2, away: 1 } },
+    ]
+    const merged = mergeLiveResults(b, {
+      scores: {},
+      koReg: { '73': { home: 1, away: 1, drawWinner: 'away' } },
+      goals: {},
+      live: { '73': { clock: "ET" } },
+    })
+    expect(merged.knockoutStages.r32[0].scores).toEqual({ home: 2, away: 1 })
+  })
+
   it('never overrides a knockout match that already has a baked final score', () => {
     const b = base()
     b.knockoutStages.r32 = [

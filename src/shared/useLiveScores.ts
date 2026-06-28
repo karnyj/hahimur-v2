@@ -3,7 +3,13 @@ import { GROUPS } from './groups'
 import { isLive } from './matchOrder'
 import { tournamentResults } from '../tournament-results'
 import { allKO } from '../formView/knockout/koRounds'
-import { mapLiveEvents, type LiveEvent, type LiveOverlay } from './espnLive'
+import { mapLiveEvents, isKoReversed, orientKoScore, type LiveEvent, type LiveOverlay } from './espnLive'
+import { KO_ESPN_IDS } from './koEventIds'
+import { extractEspnKnockoutResult, type EspnKnockoutCompetitor } from './espnKnockout'
+
+// The summary competitor as our /api/ko-summary proxy returns it: what the
+// extractor needs plus the team name, so the score can be oriented to our bracket.
+type KoSummaryCompetitor = EspnKnockoutCompetitor & { team: string | null }
 
 const POLL_MS = 30_000
 const LIVENESS_CHECK_MS = 60_000
@@ -46,6 +52,38 @@ function finalMatchIds(): Set<string> {
     if (m.scores?.home != null && m.scores?.away != null) ids.add(String(m.matchNum))
   }
   return ids
+}
+
+// For each in-progress knockout match, fetch its per-event summary and recover
+// the frozen 90' regulation score (linescores[0]+[1]) — the only score a KO
+// prediction is judged against. The scoreboard feed that drives `overlay.live`
+// gives the running (after-ET) score, fine for display but wrong for scoring
+// past 90'. Mutates the overlay in place with `koReg`. Best-effort: a failed or
+// not-yet-ready summary just leaves the match scored off its running score (which
+// equals the regulation score during the first 90' anyway).
+async function attachKoReg(overlay: LiveOverlay): Promise<void> {
+  const liveKoNums = Object.keys(overlay.live ?? {}).filter(id => KO_ESPN_IDS[Number(id)] != null)
+  if (liveKoNums.length === 0) return
+  const koReg: NonNullable<LiveOverlay['koReg']> = {}
+  await Promise.all(
+    liveKoNums.map(async num => {
+      try {
+        const espnId = KO_ESPN_IDS[Number(num)]
+        const res = await fetch(`/api/ko-summary?event=${espnId}`, { signal: AbortSignal.timeout(FETCH_TIMEOUT_MS) })
+        if (!res.ok) return
+        const data = (await res.json()) as { competitors?: KoSummaryCompetitor[] }
+        const competitors = data.competitors ?? []
+        const extracted = extractEspnKnockoutResult(competitors)
+        if (!extracted) return
+        const home = competitors.find(c => c.homeAway === 'home')?.team ?? null
+        const away = competitors.find(c => c.homeAway === 'away')?.team ?? null
+        koReg[num] = orientKoScore(extracted.scores, isKoReversed(Number(num), home, away))
+      } catch {
+        // Network/ESPN hiccup or timeout: skip this match's regulation score.
+      }
+    }),
+  )
+  if (Object.keys(koReg).length > 0) overlay.koReg = koReg
 }
 
 // Pure gate (no React) so it can be unit-tested: is any not-yet-final match
@@ -99,6 +137,10 @@ export function useLiveScores(): LiveOverlay {
         const data = (await res.json()) as { events?: LiveEvent[] }
         if (cancelled) return
         const next = mapLiveEvents(data.events ?? [])
+        // Recover each live knockout match's frozen 90' score for scoring; the
+        // scoreboard score above stays the running one (display only).
+        await attachKoReg(next)
+        if (cancelled) return
         // Only re-render when the live picture actually changed.
         if (!sameOverlay(overlayRef.current, next)) {
           overlayRef.current = next

@@ -11,7 +11,8 @@ export function mergeLiveResults(base: TournamentResults, live: LiveOverlay): To
   const hasScores = Object.keys(live.scores).length > 0
   const hasGoals = Object.keys(live.goals).length > 0
   const hasLive = Object.keys(live.live ?? {}).length > 0
-  if (!hasScores && !hasGoals && !hasLive) return base
+  const hasKoReg = Object.keys(live.koReg ?? {}).length > 0
+  if (!hasScores && !hasGoals && !hasLive && !hasKoReg) return base
 
   const finalIds = new Set<string>()
   for (const matches of Object.values(base.groupMatches)) {
@@ -43,16 +44,22 @@ export function mergeLiveResults(base: TournamentResults, live: LiveOverlay): To
     })
   }
 
-  // Overlay live KO scores onto the bracket the same way as group matches: only
-  // an in-progress, not-yet-final match, keyed by matchNum. Display only — the
-  // advancer (drawWinner) for a level live scoreline isn't known mid-match.
+  // Overlay live KO scores onto the bracket, keyed by matchNum, for an in-progress
+  // not-yet-final match. Scoring reads m.scores, so prefer the frozen regulation
+  // (90') score when we have it — that keeps a predicted draw scored correctly
+  // once a match goes to extra time / penalties (the running scoreboard score
+  // would by then include ET goals). Until the summary yields a regulation score
+  // we fall back to the running score, which equals the regulation score during
+  // the first 90' anyway. The running score stays in `live` for the display badge.
   const knockoutStages: KnockoutStages = { ...base.knockoutStages }
   for (const round of Object.keys(knockoutStages) as (keyof KnockoutStages)[]) {
     knockoutStages[round] = knockoutStages[round].map(m => {
-      const liveScore = live.scores[String(m.matchNum)]
-      return liveScore && !finalIds.has(String(m.matchNum))
-        ? { ...m, scores: { home: liveScore.home, away: liveScore.away } }
-        : m
+      const id = String(m.matchNum)
+      if (finalIds.has(id)) return m
+      const reg = live.koReg?.[id]
+      if (reg) return { ...m, scores: { ...reg } }
+      const liveScore = live.scores[id]
+      return liveScore ? { ...m, scores: { home: liveScore.home, away: liveScore.away } } : m
     })
   }
 

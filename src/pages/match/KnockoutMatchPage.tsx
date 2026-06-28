@@ -48,11 +48,16 @@ export default function KnockoutMatchPage({ matchNum, users = [], now = new Date
   // Present only while the match is actually being played (from the live feed),
   // which is how the header tells "in progress" from "finished".
   const liveScore = results.live?.[matchId] ?? null
-  // The score to show: while in progress it's the live one overlaid onto the
-  // bracket (keyed by matchNum); once final it's the match's own baked score.
+  // The score to show: while in progress it's the running live score from the
+  // feed (the home/away the badge carries) — NOT the bracket's m.scores, which
+  // for a knockout match is frozen at the 90' regulation result for scoring and
+  // would stop moving once the game reaches extra time. Falls back to the merged
+  // score until the feed reports a running score, then the baked final once over.
   // Mirrors the group match page so a knockout fixture lights up live too.
   const realScore = liveScore
-    ? completeScore(findInStages(results.knockoutStages, matchNum)?.scores)
+    ? liveScore.home != null && liveScore.away != null
+      ? { home: liveScore.home, away: liveScore.away }
+      : completeScore(findInStages(results.knockoutStages, matchNum)?.scores)
     : match.resolved ? completeScore(match.scores) : null
   const live = isLive({ matchDate: match.matchDate, kickoffIST: match.kickoffIST }, now)
 

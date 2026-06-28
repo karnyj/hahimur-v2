@@ -3,39 +3,42 @@ import type { PluginOption, ViteDevServer } from 'vite'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import react from '@vitejs/plugin-react'
 
-// Dev-only: serve the real api/live-scores.ts handler under `npm run dev`, since
-// Vite alone doesn't run Vercel functions. Production/CI are unaffected — this
-// runs only inside `configureServer`. Lets the live overlay be tested locally.
-function devLiveScoresApi(): PluginOption {
+// Dev-only: serve the real api/*.ts handlers under `npm run dev`, since Vite
+// alone doesn't run Vercel functions. Production/CI are unaffected — this runs
+// only inside `configureServer`. Lets the live overlay be tested locally.
+function devApi(): PluginOption {
+  const routes = ['/api/live-scores', '/api/ko-summary']
   return {
-    name: 'dev-live-scores-api',
+    name: 'dev-api',
     apply: 'serve',
     configureServer(server: ViteDevServer) {
-      server.middlewares.use('/api/live-scores', async (req: IncomingMessage, res: ServerResponse) => {
-        try {
-          const url = new URL(req.url ?? '', 'http://localhost')
-          const handler = (await server.ssrLoadModule('/api/live-scores.ts')).default
-          const vRes = {
-            setHeader: (k: string, v: string) => res.setHeader(k, v),
-            status(code: number) { res.statusCode = code; return this },
-            json(body: unknown) {
-              res.setHeader('Content-Type', 'application/json')
-              res.end(JSON.stringify(body))
-              return this
-            },
+      for (const route of routes) {
+        server.middlewares.use(route, async (req: IncomingMessage, res: ServerResponse) => {
+          try {
+            const url = new URL(req.url ?? '', 'http://localhost')
+            const handler = (await server.ssrLoadModule(`${route}.ts`)).default
+            const vRes = {
+              setHeader: (k: string, v: string) => res.setHeader(k, v),
+              status(code: number) { res.statusCode = code; return this },
+              json(body: unknown) {
+                res.setHeader('Content-Type', 'application/json')
+                res.end(JSON.stringify(body))
+                return this
+              },
+            }
+            await handler({ method: req.method, query: Object.fromEntries(url.searchParams) }, vRes)
+          } catch (err) {
+            res.statusCode = 500
+            res.end(JSON.stringify({ error: String(err) }))
           }
-          await handler({ method: req.method, query: Object.fromEntries(url.searchParams) }, vRes)
-        } catch (err) {
-          res.statusCode = 500
-          res.end(JSON.stringify({ events: [], error: String(err) }))
-        }
-      })
+        })
+      }
     },
   }
 }
 
 export default defineConfig({
-  plugins: [react(), devLiveScoresApi()],
+  plugins: [react(), devApi()],
   build: {
     // Downlevel to a broadly-supported baseline so older mobile browsers can
     // parse the bundle. Without this, esbuild keeps ES2021+ syntax (??=, ||=,

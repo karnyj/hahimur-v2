@@ -1,3 +1,4 @@
+import type { MatchScores } from './types'
 import { GROUPS } from './groups'
 import { tournamentResults } from '../tournament-results'
 import { allKO } from '../formView/knockout/koRounds'
@@ -28,6 +29,12 @@ export interface LiveOverlay {
   // carry the current score (fixture orientation) so the home feed can show it
   // without entering the match page; absent until ESPN reports a score.
   live?: Record<string, { clock: string | null; home?: number; away?: number }>
+  // knockout matchNum -> frozen regulation (90') score + advancer, recovered from
+  // the per-event summary's period linescores (see espnKnockout.ts). This is the
+  // ONLY thing a KO prediction is scored against, so it must not follow the
+  // running scoreboard score once a match passes 90' into extra time / penalties.
+  // Display still shows the running score (via `live`); scoring reads this.
+  koReg?: Record<string, MatchScores>
 }
 
 // ESPN/source team names -> the names used in shared/groups.ts. Intentionally a
@@ -76,6 +83,30 @@ for (const group of Object.values(GROUPS)) {
 const koFixtures = new Map<number, { home: string | null; away: string | null }>()
 for (const m of allKO(tournamentResults.knockoutStages)) {
   koFixtures.set(m.matchNum, { home: canonical(m.home), away: canonical(m.away) })
+}
+
+// Whether ESPN lists this knockout fixture's home/away the reverse of our bracket
+// — same rule resolveMatch uses for the running score. Lets a regulation score
+// recovered from the (ESPN-oriented) summary be flipped into our bracket's
+// orientation, which is what the scoring engine (koMatchPoints) compares against.
+export function isKoReversed(
+  matchNum: number,
+  espnHome: string | null,
+  espnAway: string | null,
+): boolean {
+  const fixture = koFixtures.get(matchNum)
+  const home = canonical(espnHome)
+  const away = canonical(espnAway)
+  return !!fixture && away != null && away === fixture.home && home !== fixture.home
+}
+
+// Flip a knockout regulation score into the opposite home/away orientation,
+// carrying the advancer with it. A no-op when not reversed.
+export function orientKoScore(scores: MatchScores, reversed: boolean): MatchScores {
+  if (!reversed) return scores
+  const flipped: MatchScores = { home: scores.away, away: scores.home }
+  if (scores.drawWinner) flipped.drawWinner = scores.drawWinner === 'home' ? 'away' : 'home'
+  return flipped
 }
 
 // Resolve an event to one of our match ids. Group fixtures join by team pairing;
