@@ -2,7 +2,7 @@ import { isUnpredicted, type KnockoutMatch, type MatchScores, type TournamentRes
 import type { User } from '../users'
 import { predictedPairing, orientPrediction, allKO } from '../formView/knockout/koRounds'
 import { matchSortKey } from '../shared/matchOrder'
-import { singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS } from './points'
+import { singleMatchPoints, POINTS_PER_GOAL, koAdvancementFor } from './points'
 import { playedGroupMatchesChrono, rowsForMatches } from './leaderboardRows'
 import { competitionRanks } from './rank'
 import type { MatchLeaderRow } from './matchLeaderboardRows'
@@ -24,40 +24,6 @@ function koMatchPointsFor(user: User, actual: KnockoutMatch, results: Tournament
   const betPoints = predicted ? singleMatchPoints(String(actual.matchNum), predicted, actual.scores!) : 0
   const goals = (results.playerMatchGoals?.[user.topGoalscorer]?.[String(actual.matchNum)] ?? 0) * POINTS_PER_GOAL
   return betPoints + goals
-}
-
-function roundTeams(matches: KnockoutMatch[]): string[] {
-  return matches.flatMap(m => [m.home, m.away]).filter(Boolean) as string[]
-}
-
-// The team that advanced out of a played knockout fixture — the higher score, or
-// the penalty winner on a level scoreline. Null if the match isn't decided.
-function advancingTeam(m: KnockoutMatch): string | null {
-  const s = m.scores!
-  if (s.home! > s.away!) return m.home
-  if (s.away! > s.home!) return m.away
-  return s.drawWinner === 'away' ? m.away : s.drawWinner === 'home' ? m.home : null
-}
-
-// Advancement bonus this match's winner earns a bettor who foresaw them moving on:
-// the round's OLEH points if the actual advancer is in the bettor's next-round set
-// (or named as their third-place winner / champion). Mirrors computeRoundBreakdown
-// but attributed to the single fixture that produced the advancer, credited as
-// soon as the match is played.
-function koAdvancementFor(user: User, match: KnockoutMatch): number {
-  if (!match.scores || isUnpredicted(match.scores) || !match.home || !match.away) return 0
-  const advancer = advancingTeam(match)
-  if (!advancer) return 0
-  const n = match.matchNum
-  const uko = user.knockoutStages
-  if (n === 104) return user.predictedChampion === advancer ? OLEH_POINTS.champion : 0
-  if (n === 103) return user.predictedThirdPlaceWinner === advancer ? OLEH_POINTS.thirdPlaceWinner : 0
-  const { pts, predicted } =
-    n <= 88  ? { pts: OLEH_POINTS.r32, predicted: user.predictedR16Teams   ?? roundTeams(uko.r16) }   :
-    n <= 96  ? { pts: OLEH_POINTS.r16, predicted: user.predictedQFTeams    ?? roundTeams(uko.qf) }    :
-    n <= 100 ? { pts: OLEH_POINTS.qf,  predicted: user.predictedSFTeams    ?? roundTeams(uko.sf) }    :
-               { pts: OLEH_POINTS.sf,  predicted: user.predictedFinalTeams ?? roundTeams(uko.final) }
-  return predicted.includes(advancer) ? pts : 0
 }
 
 // Played knockout matches in schedule order. The requested `match` is folded in

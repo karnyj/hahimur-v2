@@ -207,7 +207,7 @@ test('buildRangeRows scores knockout match points within the range', () => {
   expect(danaFull.matchPoints).toBe(11)
 })
 
-test('buildRangeRows credits KO advancement and the title bonus to the range with the deciding match', () => {
+test('buildRangeRows credits each KO match its own advancer and the title bonus to its match', () => {
   const results: TournamentResults = {
     ...EMPTY_RESULTS,
     knockoutStages: {
@@ -232,15 +232,53 @@ test('buildRangeRows credits KO advancement and the title bonus to the range wit
     },
   })
 
-  // Range ending before the last R32 match (#73 only): R32 advancement not yet owned
-  const [before] = buildRangeRows([dana], results, 1, 1)
-  expect(before.advancementPoints).toBe(0)
-  // Range holding the completing R32 match (#88): the R32 advancement lands here
-  const [atR32] = buildRangeRows([dana], results, 1, 2)
-  expect(atR32.advancementPoints).toBe(2 * OLEH_POINTS.r32)
+  // Each R32 fixture owns the advancement of the team it sent through, credited the
+  // moment it's played — so match #73 keeps Brazil's advancement even after #88 is
+  // entered (the bug: it used to jump onto the round's last-played match).
+  const [m73] = buildRangeRows([dana], results, 1, 1)
+  expect(m73.advancementPoints).toBe(OLEH_POINTS.r32) // Brazil only
+  const [m88] = buildRangeRows([dana], results, 2, 2)
+  expect(m88.advancementPoints).toBe(OLEH_POINTS.r32) // Italy only
+  // The whole R32 stretch still sums to both advancers
+  const [bothR32] = buildRangeRows([dana], results, 1, 2)
+  expect(bothR32.advancementPoints).toBe(2 * OLEH_POINTS.r32)
   // Range over the final only (#104): the champion bonus lands here, R32 advancement does not
   const [atFinal] = buildRangeRows([dana], results, 4, 4)
   expect(atFinal.advancementPoints).toBe(OLEH_POINTS.champion)
+})
+
+// Regression: entering a later R32 match must not blank out an earlier one's range
+// view. The bug attributed the whole round's advancement to its last-played match,
+// so once #74 was entered #73's slice dropped to zero (the reported symptom).
+test('an earlier R32 match keeps its result after a later R32 match is entered', () => {
+  const dana = makeUser({
+    label: 'Dana',
+    knockoutStages: {
+      ...EMPTY_RESULTS.knockoutStages,
+      r32: [koPick(73, 'SouthAfrica', 'Canada', { home: 0, away: 1 }), koPick(74, 'Germany', 'Scotland', { home: 2, away: 0 })],
+      r16: [koPick(89, 'Canada', 'Germany', { home: 1, away: 0 })], // tips Canada + Germany through
+    },
+  })
+  const baseKO = (extra: KnockoutMatch[]): TournamentResults => ({
+    ...EMPTY_RESULTS,
+    knockoutStages: {
+      ...EMPTY_RESULTS.knockoutStages,
+      r32: extra,
+      r16: [koResult(89, 'Canada', 'Germany', '5 ביולי', '22:00', { home: 1, away: 0 })],
+    },
+  })
+
+  // With only #73 played, its slice credits Canada's advancement.
+  const only73 = baseKO([koResult(73, 'SouthAfrica', 'Canada', '28 ביוני', '22:00', { home: 0, away: 1 })])
+  expect(buildRangeRows([dana], only73, 1, 1)[0].advancementPoints).toBe(OLEH_POINTS.r32)
+
+  // After #74 is also entered, #73's slice STILL credits Canada (it no longer jumps to #74).
+  const both = baseKO([
+    koResult(73, 'SouthAfrica', 'Canada', '28 ביוני', '22:00', { home: 0, away: 1 }),
+    koResult(74, 'Germany', 'Scotland', '29 ביוני', '22:00', { home: 2, away: 0 }),
+  ])
+  expect(buildRangeRows([dana], both, 1, 1)[0].advancementPoints).toBe(OLEH_POINTS.r32) // #73 → Canada
+  expect(buildRangeRows([dana], both, 2, 2)[0].advancementPoints).toBe(OLEH_POINTS.r32) // #74 → Germany
 })
 
 test('buildRangeRows scores only the chosen stretch of games', () => {

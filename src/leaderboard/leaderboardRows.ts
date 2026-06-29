@@ -1,9 +1,9 @@
-import { computeUserPoints, computeGroupBreakdown, computeGroupTeamDetail, isGroupComplete, singleMatchOutcome, singleMatchPoints, POINTS_PER_GOAL, OLEH_POINTS, PLACE_POINT } from './points'
-import type { GroupTeamHit, PointsBreakdown } from './points'
+import { computeUserPoints, computeGroupBreakdown, computeGroupTeamDetail, isGroupComplete, singleMatchOutcome, singleMatchPoints, koAdvancementFor, POINTS_PER_GOAL, OLEH_POINTS, PLACE_POINT } from './points'
+import type { GroupTeamHit } from './points'
 import { ALL_GROUP_LETTERS, TEAMS } from '../shared/groups'
 import type { GroupLetter } from '../shared/groups'
 import { isUnpredicted } from '../shared/types'
-import type { GroupMatch, KnockoutMatch, KnockoutStages, MatchScores, ThirdPlaceQualification, ThirdPlaceStanding, TournamentResults } from '../shared/types'
+import type { GroupMatch, KnockoutMatch, MatchScores, ThirdPlaceQualification, ThirdPlaceStanding, TournamentResults } from '../shared/types'
 import { matchSortKey, latestBySortKey } from '../shared/matchOrder'
 import { isPairing, orientPrediction } from '../formView/knockout/koRounds'
 import { competitionRanks } from './rank'
@@ -177,33 +177,13 @@ function koHits(user: User, koMatches: KnockoutMatch[]): { tzelifa: number; pgiy
   return { tzelifa, pgiya, points }
 }
 
-// The match number whose result settles a knockout round's advancement — the
-// chronologically-last played match of that round (once it's played, the next
-// round's line-up, hence who "advanced", is known). Undefined while the round
-// is still unfolding.
-function koRoundDecider(matches: KnockoutMatch[]): number | undefined {
-  return latestBySortKey(matches.filter(m => m.scores && !isUnpredicted(m.scores)))?.matchNum
-}
-
-// The bettor's non-match KO points that fall inside this stretch: per-round
-// advancement (R32–SF) plus the third-place-winner and champion bonuses. Each is
-// "owned" by the match that decides it (advancement by its round's last match,
-// the title bonuses by the third-place match / the final), so the range credits
-// it only when that deciding match is in the slice — mirroring how a group's
-// advancement is owned by its completing match.
-function koAdvancementForSlice(breakdown: PointsBreakdown, ko: KnockoutStages, koMatches: KnockoutMatch[]): number {
-  if (koMatches.length === 0) return 0
-  const inSlice = new Set(koMatches.map(m => m.matchNum))
-  const owned = (decider: number | undefined, value: number) =>
-    decider != null && inSlice.has(decider) ? value : 0
-  return (
-    owned(koRoundDecider(ko.r32), breakdown.r32.advancementPoints) +
-    owned(koRoundDecider(ko.r16), breakdown.r16.advancementPoints) +
-    owned(koRoundDecider(ko.qf), breakdown.qf.advancementPoints) +
-    owned(koRoundDecider(ko.sf), breakdown.sf.advancementPoints) +
-    owned(ko.thirdPlace[0]?.matchNum, breakdown.third.thirdPlaceWinner) +
-    owned(ko.final[0]?.matchNum, breakdown.final.champion)
-  )
+// The bettor's KO advancement/title points that fall inside this stretch. Each KO
+// fixture independently confirms one advancer, so its advancement points are owned
+// by that very match (not lumped onto the round's last-played match) — the same
+// per-fixture attribution the per-match KO leaderboard uses. This keeps an earlier
+// match's confirmed advancer credited to it even after later matches are played.
+function koAdvancementForSlice(user: User, koMatches: KnockoutMatch[]): number {
+  return koMatches.reduce((sum, m) => sum + koAdvancementFor(user, m), 0)
 }
 
 // The match that decides a group: its chronologically-last played match, but
@@ -277,12 +257,11 @@ export function rowsForPlayedMatches(users: User[], results: TournamentResults, 
     matchPoints += ko.points
     const goalsByMatch = results.playerMatchGoals?.[user.topGoalscorer]
     const goalsPoints = groupMatches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
-    // computeUserPoints drives both the full-tournament total and (per round) the
-    // KO advancement/title bonus we attribute to the round-deciding match. Compute
-    // it once when either is needed.
-    const breakdown = withTournamentTotal || koMatches.length > 0 ? computeUserPoints(user, results) : null
+    // computeUserPoints drives the full-tournament total shown alongside the slice;
+    // only compute it when that column is actually displayed.
+    const breakdown = withTournamentTotal ? computeUserPoints(user, results) : null
     const group = scoped ? computeGroupBreakdown(user, scoped) : { advancementPoints: 0, placePoints: 0 }
-    const koAdvancement = breakdown ? koAdvancementForSlice(breakdown, results.knockoutStages, koMatches) : 0
+    const koAdvancement = koAdvancementForSlice(user, koMatches)
     const advancementPoints = group.advancementPoints + koAdvancement
     const placePoints = group.placePoints
     const total = matchPoints + advancementPoints + placePoints + goalsPoints
