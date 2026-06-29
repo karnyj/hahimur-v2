@@ -3,7 +3,7 @@ import { expect, test } from 'vitest'
 import type { GroupMatch, Standing, ThirdPlaceStanding, TournamentResults } from '../shared/types'
 import { buildGroupScopeRows, buildGroupSummaryRows, countR32Participation, buildRangeRows, rangePlaceMovement, rankTrajectories, GROUP_SORTERS } from './leaderboardRows'
 import type { KnockoutMatch } from '../shared/types'
-import { OLEH_POINTS, PLACE_POINT } from './points'
+import { OLEH_POINTS, PLACE_POINT, POINTS_PER_GOAL } from './points'
 import type { GroupScopeRow } from './leaderboardRows'
 import { EMPTY_RESULTS, makeUser } from './testFixtures'
 
@@ -279,6 +279,25 @@ test('an earlier R32 match keeps its result after a later R32 match is entered',
   ])
   expect(buildRangeRows([dana], both, 1, 1)[0].advancementPoints).toBe(OLEH_POINTS.r32) // #73 → Canada
   expect(buildRangeRows([dana], both, 2, 2)[0].advancementPoints).toBe(OLEH_POINTS.r32) // #74 → Germany
+})
+
+test('buildRangeRows counts a picked scorer goals in a knockout match', () => {
+  const results: TournamentResults = {
+    ...EMPTY_RESULTS,
+    knockoutStages: {
+      ...EMPTY_RESULTS.knockoutStages,
+      r32: [koResult(73, 'Brazil', 'France', '28 ביוני', '22:00', { home: 2, away: 1 })],
+    },
+    playerMatchGoals: { Neymar: { '73': 2 } }, // 2 goals in the KO match
+  }
+  const dana = makeUser({
+    label: 'Dana',
+    topGoalscorer: 'Neymar',
+    knockoutStages: { ...EMPTY_RESULTS.knockoutStages, r32: [koPick(73, 'Brazil', 'France', { home: 2, away: 1 })] },
+  })
+
+  const [row] = buildRangeRows([dana], results, 1, 1)
+  expect(row.goalsPoints).toBe(2 * POINTS_PER_GOAL)
 })
 
 test('buildRangeRows scores only the chosen stretch of games', () => {

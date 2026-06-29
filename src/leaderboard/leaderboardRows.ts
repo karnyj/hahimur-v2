@@ -255,8 +255,12 @@ export function rowsForPlayedMatches(users: User[], results: TournamentResults, 
     tzelifaCount += ko.tzelifa
     pgiyaCount += ko.pgiya
     matchPoints += ko.points
+    // A picked scorer's goals count wherever they're netted — group matches keyed
+    // by id, knockout matches by matchNum — so the slice matches the tournament total.
     const goalsByMatch = results.playerMatchGoals?.[user.topGoalscorer]
-    const goalsPoints = groupMatches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0) * POINTS_PER_GOAL
+    const groupGoals = groupMatches.reduce((sum, m) => sum + (goalsByMatch?.[m.id] ?? 0), 0)
+    const koGoals = koMatches.reduce((sum, m) => sum + (goalsByMatch?.[String(m.matchNum)] ?? 0), 0)
+    const goalsPoints = (groupGoals + koGoals) * POINTS_PER_GOAL
     // computeUserPoints drives the full-tournament total shown alongside the slice;
     // only compute it when that column is actually displayed.
     const breakdown = withTournamentTotal ? computeUserPoints(user, results) : null
