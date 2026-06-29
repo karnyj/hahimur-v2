@@ -1,7 +1,8 @@
 import { deriveGroupStatus } from '../shared/groupStatus'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../formView/thirdPlace/thirdPlace'
 import { derivePlayerGoals } from '../tournament-results'
-import type { KnockoutMatch, PredictionsState, TournamentResults } from '../shared/types'
+import type { KnockoutMatch, KnockoutStages, PredictionsState, TournamentResults } from '../shared/types'
+import { KO_ROUND_RANGES } from '../formView/knockout/koRounds'
 import { playedMatchId } from './leaderboardRows'
 import type { PlayedMatch } from './leaderboardRows'
 
@@ -36,13 +37,9 @@ export function resultsAsOf(results: TournamentResults, chrono: PlayedMatch[], c
   // yet in the slice, so unplayed-as-of-`count` rounds award nothing.
   const clearScore = (m: KnockoutMatch): KnockoutMatch =>
     sliceIds.has(String(m.matchNum)) ? m : { ...m, scores: { home: null, away: null } }
-  const knockoutStages = {
-    r32: (results.knockoutStages.r32 ?? []).map(clearScore),
-    r16: (results.knockoutStages.r16 ?? []).map(clearScore),
-    qf: (results.knockoutStages.qf ?? []).map(clearScore),
-    sf: (results.knockoutStages.sf ?? []).map(clearScore),
-    thirdPlace: (results.knockoutStages.thirdPlace ?? []).map(clearScore),
-    final: (results.knockoutStages.final ?? []).map(clearScore),
+  const knockoutStages = {} as KnockoutStages
+  for (const { key } of KO_ROUND_RANGES) {
+    knockoutStages[key] = (results.knockoutStages[key] ?? []).map(clearScore)
   }
 
   const playerMatchGoals: Record<string, Record<string, number>> = {}

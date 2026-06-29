@@ -1,4 +1,4 @@
-import { isUnpredicted, type MatchScores, type KnockoutMatch, type TournamentResults } from '../shared/types'
+import { isUnpredicted, type MatchScores, type KnockoutMatch, type KnockoutStages, type TournamentResults } from '../shared/types'
 import { isPairing, orientPrediction } from '../formView/knockout/koRounds'
 
 import type { User } from '../users'
@@ -288,15 +288,42 @@ export function computeGoldenBootBreakdown(user: User, results: TournamentResult
   return { goalsPoints, winnerBonus, total: goalsPoints + winnerBonus }
 }
 
+// The four advancing knockout rounds (r32→r16→qf→sf) share one breakdown shape:
+// for each round we score its own matches and award advancement points for the
+// teams the bettor predicted to reach the NEXT round. Adding/altering a round is
+// a one-line table edit. `third` and `final` use different bonus rules (third-
+// place-winner / champion) and stay as their own explicit calls below.
+const ROUND_FLOW = [
+  { key: 'r32', next: 'r16',   predicted: 'predictedR16Teams',   oleh: 'r32' },
+  { key: 'r16', next: 'qf',    predicted: 'predictedQFTeams',    oleh: 'r16' },
+  { key: 'qf',  next: 'sf',    predicted: 'predictedSFTeams',    oleh: 'qf'  },
+  { key: 'sf',  next: 'final', predicted: 'predictedFinalTeams', oleh: 'sf'  },
+] as const satisfies readonly {
+  key: keyof KnockoutStages
+  next: keyof KnockoutStages
+  predicted: keyof User
+  oleh: keyof typeof OLEH_POINTS
+}[]
+
 export function computeUserPoints(user: User, results: TournamentResults): PointsBreakdown {
   const ko  = results.knockoutStages
   const uko = user.knockoutStages
 
   const group     = computeGroupBreakdown(user, results)
-  const r32       = computeRoundBreakdown(uko.r32, ko.r32, user.predictedR16Teams ?? roundTeams(uko.r16), roundTeams(ko.r16), OLEH_POINTS.r32, roundReady(ko.r16))
-  const r16       = computeRoundBreakdown(uko.r16, ko.r16, user.predictedQFTeams ?? roundTeams(uko.qf), roundTeams(ko.qf), OLEH_POINTS.r16, roundReady(ko.qf))
-  const qf        = computeRoundBreakdown(uko.qf, ko.qf, user.predictedSFTeams ?? roundTeams(uko.sf), roundTeams(ko.sf), OLEH_POINTS.qf, roundReady(ko.sf))
-  const sf        = computeRoundBreakdown(uko.sf, ko.sf, user.predictedFinalTeams ?? roundTeams(uko.final), roundTeams(ko.final), OLEH_POINTS.sf, roundReady(ko.final))
+
+  const rounds = {} as Record<(typeof ROUND_FLOW)[number]['key'], RoundBreakdown>
+  for (const { key, next, predicted, oleh } of ROUND_FLOW) {
+    rounds[key] = computeRoundBreakdown(
+      uko[key],
+      ko[key],
+      (user[predicted] as string[] | undefined) ?? roundTeams(uko[next]),
+      roundTeams(ko[next]),
+      OLEH_POINTS[oleh],
+      roundReady(ko[next]),
+    )
+  }
+  const { r32, r16, qf, sf } = rounds
+
   const third     = computeThirdBreakdown(uko.thirdPlace, ko.thirdPlace, user.predictedThirdPlaceWinner, results.thirdPlaceWinner)
   const final     = computeFinalBreakdown(uko.final, ko.final, user.predictedChampion, results.champion)
   const goldenBoot = computeGoldenBootBreakdown(user, results)
