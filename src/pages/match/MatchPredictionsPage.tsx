@@ -21,7 +21,8 @@ import MatchHeader from './MatchHeader'
 import PredictionSummary from './PredictionSummary'
 import ScoreFrequencyTable from './ScoreFrequencyTable'
 import MatchLeaderboard from './MatchLeaderboard'
-import KnockoutMatchLeaderboard from './KnockoutMatchLeaderboard'
+import MatchLeaderboardTable from './MatchLeaderboardTable'
+import { buildKnockoutMatchLeaderboardRows } from '../../leaderboard/knockoutMatchLeaderboardRows'
 import KnockoutSurvivorsList from './KnockoutSurvivorsList'
 import KnockoutVenn from './KnockoutVenn'
 import BestResultCard from '../../formView/groupStage/BestResultCard'
@@ -322,7 +323,7 @@ function KnockoutBody({ matchNum, users, now, results, me, homeScore, awayScore,
                 <span className="section-heading__eyebrow">דירוג</span>
                 <h2 className="section-heading__title">טבלת המנחשים</h2>
               </header>
-              <KnockoutMatchLeaderboard match={match} users={users} results={results} me={me} />
+              <MatchLeaderboardTable rows={buildKnockoutMatchLeaderboardRows(users, results, match)} me={me} />
             </>
           )}
 
