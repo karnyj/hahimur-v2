@@ -147,9 +147,11 @@ const KO_STAGES: [keyof TournamentResults['knockoutStages'], string][] = [
   ['final', 'גמר'],
 ]
 
-/** Winner (advancing team) of a predicted knockout match, by goals then the
- *  penalty winner (drawWinner). Null when the score isn't filled in. */
-function koWinnerTeam(m: KnockoutMatch): string | null {
+/** Advancing team of a knockout match, by goals then the penalty winner
+ *  (drawWinner). Null when the score isn't filled in. Shared by the predicted-
+ *  matchup compare (a bettor's own pick) and the real-result elimination sweep —
+ *  same rule, different sources. */
+function koAdvancer(m: KnockoutMatch): string | null {
   if (!m.scores) return null
   const { home, away, drawWinner } = m.scores
   if (home == null || away == null) return null
@@ -178,8 +180,8 @@ export function buildKnockoutDiff(userA: User, userB: User): MatchDiffRow[] {
     for (const bM of userB.knockoutStages[stage]) {
       const aM = aByNum.get(bM.matchNum)
       if (!aM || !isPairing(aM, bM.home, bM.away)) continue
-      const aWinner = koWinnerTeam(aM)
-      const bWinner = koWinnerTeam(bM)
+      const aWinner = koAdvancer(aM)
+      const bWinner = koAdvancer(bM)
       if (aWinner == null || bWinner == null) continue
       const sameResult =
         goalsFor(aM, aM.home) === goalsFor(bM, aM.home) &&
@@ -346,18 +348,6 @@ export function buildGroupStandingsDiff(userA: User, userB: User, results: Tourn
   return out
 }
 
-/** Winner of a resolved knockout match (penalties via drawWinner), else null. */
-function knockoutWinner(m: KnockoutMatch): string | null {
-  if (!m.resolved || !m.scores) return null
-  const { home, away, drawWinner } = m.scores
-  if (home == null || away == null) return null
-  if (home > away) return m.home
-  if (away > home) return m.away
-  if (drawWinner === 'home') return m.home
-  if (drawWinner === 'away') return m.away
-  return null
-}
-
 /** Teams already mathematically out during the group stage: a team is certainly
  *  eliminated once at least three other teams in its group have more current
  *  points than the team's best possible final tally — i.e. it is locked into last
@@ -385,7 +375,7 @@ function groupStageEliminated(results: TournamentResults): Set<string> {
 export function knockedOutTeams(results: TournamentResults): Set<string> {
   const out = groupStageEliminated(results)
   for (const m of allKO(results.knockoutStages)) {
-    const winner = knockoutWinner(m)
+    const winner = m.resolved ? koAdvancer(m) : null
     if (winner) out.add(winner === m.home ? m.away : m.home)
   }
   return out
