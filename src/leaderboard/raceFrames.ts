@@ -1,6 +1,5 @@
-import { computeUserPoints } from './points'
-import { resultsAsOf } from './resultsAsOf'
-import { playedMatchesChrono, playedMatchId, playedMatchScores, playedMatchHome, playedMatchAway, playedMatchDate } from './leaderboardRows'
+import { computeGoldenBootBreakdown } from './points'
+import { playedMatchesChrono, playedMatchId, playedMatchScores, playedMatchHome, playedMatchAway, playedMatchDate, rowsForPlayedMatches } from './leaderboardRows'
 import { TEAMS } from '../shared/groups'
 import type { TournamentResults } from '../shared/types'
 import type { User } from '../users'
@@ -21,17 +20,28 @@ export interface RaceFrame {
   bars: RaceBar[] // sorted descending by total
 }
 
-// Walk every played match in chronological order; at each step rebuild the
-// tournament as it stood right then (resultsAsOf) and read each bettor's total
-// straight from the canonical scorer (computeUserPoints) — the exact number the
-// leaderboard shows. No tallying is reimplemented here, so the race stays in
-// lock-step with the board and follows it automatically into the knockouts.
+// Walk every played match in chronological order; at each step score the board
+// over exactly the matches played so far with the SAME per-match scorer the rank
+// trajectory uses (rowsForPlayedMatches). That scorer credits each result the
+// moment it happens — a group's advancement/place at its completing match, and
+// each knockout fixture's advancer at that very fixture — so a team's deep-run
+// bonus never leaks into earlier frames. (The previous resultsAsOf snapshot kept
+// the full knockout bracket revealed in every frame, so computeUserPoints handed
+// out R32→SF advancement during the group stage, telling a false early story.)
+//
+// The cumulative total at the final frame equals the live leaderboard for every
+// bettor: rowsForPlayedMatches over the whole timeline already reproduces it,
+// and the golden-boot winner bonus — settled only when the tournament ends — is
+// folded onto the last frame, exactly where the leaderboard awards it.
 export function buildRaceFrames(users: User[], results: TournamentResults): RaceFrame[] {
   const chrono = playedMatchesChrono(results)
   return chrono.map((match, i) => {
-    const snapshot = resultsAsOf(results, chrono, i + 1)
-    const bars = users
-      .map(u => ({ label: u.label, total: computeUserPoints(u, snapshot).total }))
+    const last = i === chrono.length - 1
+    const winnerBonus = new Map(
+      users.map(u => [u.label, last ? computeGoldenBootBreakdown(u, results).winnerBonus : 0]),
+    )
+    const bars = rowsForPlayedMatches(users, results, chrono.slice(0, i + 1), false)
+      .map(r => ({ label: r.label, total: r.total + (winnerBonus.get(r.label) ?? 0) }))
       .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
     const homeCode = playedMatchHome(match)
     const awayCode = playedMatchAway(match)
