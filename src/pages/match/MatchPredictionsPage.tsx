@@ -263,17 +263,23 @@ function KnockoutBody({ matchNum, users, now, results, me, homeScore, awayScore,
   // Present only while the match is actually being played (from the live feed),
   // which is how the header tells "in progress" from "finished".
   const liveScore = results.live?.[matchId] ?? null
+  // The score baked into the live-merged bracket: the hand-entered final once
+  // it's in, and meanwhile the score the feed overlays. ESPN keeps reporting a
+  // just-finished match's score here even after it drops the in-progress `live`
+  // status, so reading it (not the static fixture) is what shows the result the
+  // moment the whistle blows — before the final is hand-entered into
+  // tournament-results. The static `match.scores` only carries a score for the
+  // dev `?mockko` bracket, whose fixtures never reach the merged results.
+  const mergedScore = completeScore(findInStages(results.knockoutStages, matchNum)?.scores)
   // The score to show: while in progress it's the running live score from the
   // feed (the home/away the badge carries) — NOT the bracket's m.scores, which
   // for a knockout match is frozen at the 90' regulation result for scoring and
-  // would stop moving once the game reaches extra time. Falls back to the merged
-  // score until the feed reports a running score, then the baked final once over.
-  // Mirrors the group match page so a knockout fixture lights up live too.
-  const realScore = liveScore
-    ? liveScore.home != null && liveScore.away != null
-      ? { home: liveScore.home, away: liveScore.away }
-      : completeScore(findInStages(results.knockoutStages, matchNum)?.scores)
-    : match.resolved ? completeScore(match.scores) : null
+  // would stop moving once the game reaches extra time. Otherwise the merged
+  // bracket score (the running/final result), falling back to the static fixture
+  // only for the mock bracket. Mirrors the group page's live-merged realScore.
+  const realScore = liveScore && liveScore.home != null && liveScore.away != null
+    ? { home: liveScore.home, away: liveScore.away }
+    : mergedScore ?? (match.resolved ? completeScore(match.scores) : null)
   const live = isLive({ matchDate: match.matchDate, kickoffIST: match.kickoffIST }, now)
 
   // The KO fixture flattened into the group-shaped match the shared header reads.

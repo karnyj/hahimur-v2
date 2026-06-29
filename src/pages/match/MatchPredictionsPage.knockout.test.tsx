@@ -122,6 +122,35 @@ test('shows the live score with a חי badge while a knockout match is in progre
   expect(screen.queryByText('נגמר')).not.toBeInTheDocument()
 })
 
+// When ESPN reports a knockout match finished it drops the in-progress `live`
+// status but keeps the score in the merged bracket — and the final may not be
+// hand-entered into tournament-results yet. The header must still show that
+// merged score (with "נגמר"), not fall back to the empty static fixture and
+// leave a bare "in progress" overlay while the leaderboard already reflects it.
+test('shows the merged final score once a knockout match ends, before the baked final is entered', () => {
+  // The static fixture the page resolves the match from has no score yet.
+  vi.mocked(findKnockoutMatch).mockReturnValueOnce({
+    matchNum: 73, home: 'South Korea', away: 'Canada', resolved: true,
+    scores: { home: null, away: null }, matchDate: '28 ביוני', kickoffIST: '22:00',
+  })
+  // The live feed has the finished score in the bracket but no `live` entry.
+  const stages = tournamentResults.knockoutStages
+  vi.mocked(useLiveResults).mockReturnValueOnce({
+    ...tournamentResults,
+    knockoutStages: {
+      ...stages,
+      r32: stages.r32.map(m => (m.matchNum === 73 ? { ...m, scores: { home: 1, away: 0 } } : m)),
+    },
+    live: {},
+  })
+  render(<MatchPredictionsPage koMatchNum={73} users={[]} />)
+  const score = screen.getByTestId('real-score')
+  expect(score.textContent).toContain('1')
+  expect(score.textContent).toContain('0')
+  expect(screen.getByText('נגמר')).toBeInTheDocument()
+  expect(screen.queryByTestId('live-indicator')).not.toBeInTheDocument()
+})
+
 // Step to the neighbouring knockout matches in kickoff order, not by number: the
 // bracket numbers run by round, so 74 (Jun 29 23:30) sits between 76 (Jun 29 20:00)
 // and 75 (Jun 30 04:00) on the clock.
