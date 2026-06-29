@@ -110,6 +110,19 @@ export type PlayedMatch =
   | { kind: 'group'; match: GroupMatch }
   | { kind: 'ko'; match: KnockoutMatch }
 
+// Flat accessors over the canonical tagged union, so callers that only need the
+// scalar fields (id, scores, the two team codes, the date) don't reach into the
+// underlying match and don't need their own shape. The one irreducible split: a
+// group match is keyed by its string id (e.g. 'A1'); a KO match by its matchNum.
+export const playedMatchId = (p: PlayedMatch): string =>
+  p.kind === 'group' ? p.match.id : String(p.match.matchNum)
+export const playedMatchScores = (p: PlayedMatch): MatchScores => p.match.scores!
+export const playedMatchHome = (p: PlayedMatch): string =>
+  p.kind === 'group' ? p.match.homeTeam : p.match.home
+export const playedMatchAway = (p: PlayedMatch): string =>
+  p.kind === 'group' ? p.match.awayTeam : p.match.away
+export const playedMatchDate = (p: PlayedMatch): string => p.match.matchDate ?? ''
+
 const playedSortKey = (p: PlayedMatch) => matchSortKey(p.match.matchDate, p.match.kickoffIST)
 
 // Every played match — group AND knockout — in true chronological order, the

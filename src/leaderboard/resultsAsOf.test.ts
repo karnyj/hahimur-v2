@@ -6,7 +6,8 @@ import { describe, expect, test } from 'vitest'
 import { tournamentResults as R } from '../tournament-results'
 import { USERS } from '../users'
 import { computeUserPoints } from './points'
-import { playedMatchesChrono, resultsAsOf } from './resultsAsOf'
+import { playedMatchesChrono, playedMatchId } from './leaderboardRows'
+import { resultsAsOf } from './resultsAsOf'
 import { buildRaceFrames } from './raceFrames'
 
 describe('resultsAsOf anchors the race to the leaderboard', () => {
@@ -26,7 +27,7 @@ describe('resultsAsOf anchors the race to the leaderboard', () => {
       const snap = resultsAsOf(R, chrono, i)
       const bars = new Map(frames[i - 1].bars.map(b => [b.label, b.total]))
       for (const user of USERS) {
-        expect(bars.get(user.label), `frame ${i} (${chrono[i - 1].id}) ${user.label}`).toBe(computeUserPoints(user, snap).total)
+        expect(bars.get(user.label), `frame ${i} (${playedMatchId(chrono[i - 1])}) ${user.label}`).toBe(computeUserPoints(user, snap).total)
       }
     }
   })

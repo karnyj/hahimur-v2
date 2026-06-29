@@ -7,7 +7,8 @@ import type { User } from '../../users'
 import { TEAMS } from '../../shared/groups'
 import { SCORERS } from '../../../golden-boot'
 import { computeUserCrossings, crossingProbability } from '../crossings'
-import { playedChrono, playedStateUpTo } from './realPlayed'
+import { playedChrono, playedStateUpTo, winProbMatchLabel } from './realPlayed'
+import { playedMatchId } from '../leaderboardRows'
 import { useWinProbabilities } from './useWinProbabilities'
 import { fmtPct, buildBettorHeadline } from './summaryText'
 import type { BettorHeadline, HeadlineSubject, CrossingsDigest, GoldenBootDigest, FragilityDigest } from './summaryText'
@@ -143,10 +144,10 @@ export default function WinProbabilityView({ results, me, users = [] }: { result
   const selectedPre = selId === PRE_TOURNAMENT
   const effId = selectedPre
     ? null
-    : selId && chrono.some(m => m.id === selId)
+    : selId && chrono.some(m => playedMatchId(m) === selId)
       ? selId
-      : (chrono.length ? chrono[chrono.length - 1].id : null)
-  const isLatest = !selectedPre && !!effId && chrono.length > 0 && effId === chrono[chrono.length - 1].id
+      : (chrono.length ? playedMatchId(chrono[chrono.length - 1]) : null)
+  const isLatest = !selectedPre && !!effId && chrono.length > 0 && effId === playedMatchId(chrono[chrono.length - 1])
   const played = useMemo(() => (!selectedPre && effId ? playedStateUpTo(chrono, effId) : {}), [chrono, effId, selectedPre])
   const trimmed = useMemo(() => resultsUpTo(results, played), [results, played])
   const eliminations = useMemo(() => realEliminations(trimmed), [trimmed])
@@ -273,15 +274,18 @@ export default function WinProbabilityView({ results, me, users = [] }: { result
               const v = e.target.value
               setOpenLabel(null)
               if (v === PRE_TOURNAMENT) { setSelId(PRE_TOURNAMENT); return }
-              const latestId = chrono[chrono.length - 1].id
+              const latestId = playedMatchId(chrono[chrono.length - 1])
               setSelId(v === latestId ? null : v)
             }}
           >
-            {pickerOptions.map((m, i) => (
-              <option key={m.id} value={m.id}>
-                {i === 0 ? 'המשחק האחרון — ' : ''}{m.label}
-              </option>
-            ))}
+            {pickerOptions.map((m, i) => {
+              const id = playedMatchId(m)
+              return (
+                <option key={id} value={id}>
+                  {i === 0 ? 'המשחק האחרון — ' : ''}{winProbMatchLabel(m)}
+                </option>
+              )
+            })}
             <option value={PRE_TOURNAMENT}>לפני תחילת הטורניר</option>
           </select>
         </div>

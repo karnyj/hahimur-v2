@@ -1,42 +1,9 @@
 import { deriveGroupStatus } from '../shared/groupStatus'
 import { getThirdPlaceTeams, qualifyBestThirdPlace } from '../formView/thirdPlace/thirdPlace'
 import { derivePlayerGoals } from '../tournament-results'
-import { matchSortKey } from '../shared/matchOrder'
-import { isUnpredicted } from '../shared/types'
-import type { KnockoutMatch, MatchScores, PredictionsState, TournamentResults } from '../shared/types'
-
-// One played match, normalised across stages so the race can walk the whole
-// tournament as a single timeline. `id` is the key used to slice scores.
-export interface PlayedMatch {
-  id: string
-  date: string
-  homeTeam: string
-  awayTeam: string
-  scores: MatchScores
-}
-
-const KO_ROUNDS: (keyof TournamentResults['knockoutStages'])[] = ['r32', 'r16', 'qf', 'sf', 'thirdPlace', 'final']
-
-const isPlayed = (s?: MatchScores): s is MatchScores => !!s && !isUnpredicted(s)
-
-// Every played match in chronological order, group stage first and then the
-// knockout rounds in bracket order. The group always precedes the knockouts in
-// time, so this is the true timeline; while there are no KO matches it is
-// exactly the old group-only walk.
-export function playedMatchesChrono(results: TournamentResults): PlayedMatch[] {
-  const group = Object.values(results.groupMatches).flat()
-    .filter(m => isPlayed(m.scores))
-    .sort((a, b) => matchSortKey(a.matchDate, a.kickoffIST) - matchSortKey(b.matchDate, b.kickoffIST))
-    .map(m => ({ id: m.id, date: m.matchDate ?? '', homeTeam: m.homeTeam, awayTeam: m.awayTeam, scores: m.scores! }))
-
-  const ko: PlayedMatch[] = []
-  for (const round of KO_ROUNDS) {
-    for (const m of (results.knockoutStages[round] ?? []).filter(m => isPlayed(m.scores)).sort((a, b) => a.matchNum - b.matchNum)) {
-      ko.push({ id: String(m.matchNum), date: m.matchDate ?? '', homeTeam: m.home, awayTeam: m.away, scores: m.scores! })
-    }
-  }
-  return [...group, ...ko]
-}
+import type { KnockoutMatch, PredictionsState, TournamentResults } from '../shared/types'
+import { playedMatchId } from './leaderboardRows'
+import type { PlayedMatch } from './leaderboardRows'
 
 // The tournament as it stood right after the first `count` played matches of
 // `chrono`. Built by re-running the SAME derivation pipeline that produces the
@@ -44,7 +11,7 @@ export function playedMatchesChrono(results: TournamentResults): PlayedMatch[] {
 // in-slice scores — so feeding this to computeUserPoints yields exactly the
 // leaderboard total at that moment, no scoring logic duplicated.
 export function resultsAsOf(results: TournamentResults, chrono: PlayedMatch[], count: number): TournamentResults {
-  const sliceIds = new Set(chrono.slice(0, count).map(m => m.id))
+  const sliceIds = new Set(chrono.slice(0, count).map(playedMatchId))
 
   const partial: PredictionsState = {}
   for (const m of Object.values(results.groupMatches).flat()) {

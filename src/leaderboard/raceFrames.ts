@@ -1,5 +1,6 @@
 import { computeUserPoints } from './points'
-import { playedMatchesChrono, resultsAsOf } from './resultsAsOf'
+import { resultsAsOf } from './resultsAsOf'
+import { playedMatchesChrono, playedMatchId, playedMatchScores, playedMatchHome, playedMatchAway, playedMatchDate } from './leaderboardRows'
 import { TEAMS } from '../shared/groups'
 import type { TournamentResults } from '../shared/types'
 import type { User } from '../users'
@@ -32,12 +33,15 @@ export function buildRaceFrames(users: User[], results: TournamentResults): Race
     const bars = users
       .map(u => ({ label: u.label, total: computeUserPoints(u, snapshot).total }))
       .sort((a, b) => b.total - a.total || a.label.localeCompare(b.label))
-    const home = TEAMS[match.homeTeam]?.he ?? match.homeTeam
-    const away = TEAMS[match.awayTeam]?.he ?? match.awayTeam
+    const homeCode = playedMatchHome(match)
+    const awayCode = playedMatchAway(match)
+    const scores = playedMatchScores(match)
+    const home = TEAMS[homeCode]?.he ?? homeCode
+    const away = TEAMS[awayCode]?.he ?? awayCode
     return {
-      matchId: match.id,
-      date: match.date,
-      matchLabel: `${home} ${match.scores.home}–${match.scores.away} ${away}`,
+      matchId: playedMatchId(match),
+      date: playedMatchDate(match),
+      matchLabel: `${home} ${scores.home}–${scores.away} ${away}`,
       bars,
     }
   })

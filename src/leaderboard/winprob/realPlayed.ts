@@ -1,21 +1,8 @@
-import type { MatchScores, PredictionsState, TournamentResults } from '../../shared/types'
+import type { PredictionsState, TournamentResults } from '../../shared/types'
 import { isUnpredicted } from '../../shared/types'
 import { TEAMS } from '../../shared/groups'
-import { matchSortKey } from '../../shared/matchOrder'
-
-export interface PlayedMatch {
-  id: string
-  label: string
-  // team codes (as the sim engine / predictions key them) + final score,
-  // so the win-prob view can explain who the player had backed.
-  home: string
-  away: string
-  homeScore: number
-  awayScore: number
-  // full score object (incl. knockout drawWinner) keyed as the engine expects,
-  // so we can rebuild the played-state truncated to any point in time.
-  scores: MatchScores
-}
+import { playedMatchesChrono, playedMatchId, playedMatchScores, playedMatchHome, playedMatchAway } from '../leaderboardRows'
+import type { PlayedMatch } from '../leaderboardRows'
 
 const teamHe = (team: string) => TEAMS[team]?.he ?? team
 
@@ -37,53 +24,16 @@ export function realPlayedState(results: TournamentResults): PredictionsState {
   return played
 }
 
-// Played matches in chronological order (matches without a date sort last,
-// so knockout games naturally follow the group stage).
+// The win-prob "point in time" picker label for a played match: "בית N - N חוץ".
+export function winProbMatchLabel(p: PlayedMatch): string {
+  const s = playedMatchScores(p)
+  return `${teamHe(playedMatchHome(p))} ${s.home ?? 0} - ${s.away ?? 0} ${teamHe(playedMatchAway(p))}`
+}
+
+// Played matches in chronological order — the same unified group+knockout
+// timeline the leaderboard walks, so the win-prob picker stays in lock-step.
 export function playedChrono(results: TournamentResults): PlayedMatch[] {
-  const list: (PlayedMatch & { sortKey: number })[] = []
-  for (const matches of Object.values(results.groupMatches)) {
-    for (const m of matches) {
-      if (m.scores && !isUnpredicted(m.scores)) {
-        list.push({
-          id: m.id,
-          label: `${teamHe(m.homeTeam)} ${m.scores.home} - ${m.scores.away} ${teamHe(m.awayTeam)}`,
-          home: m.homeTeam,
-          away: m.awayTeam,
-          homeScore: m.scores.home ?? 0,
-          awayScore: m.scores.away ?? 0,
-          scores: m.scores,
-          sortKey: matchSortKey(m.matchDate, m.kickoffIST),
-        })
-      }
-    }
-  }
-  for (const matches of Object.values(results.knockoutStages)) {
-    for (const m of matches) {
-      if (m.scores && !isUnpredicted(m.scores)) {
-        list.push({
-          id: String(m.matchNum),
-          label: `${teamHe(m.home)} ${m.scores.home} - ${m.scores.away} ${teamHe(m.away)}`,
-          home: m.home,
-          away: m.away,
-          homeScore: m.scores.home ?? 0,
-          awayScore: m.scores.away ?? 0,
-          scores: m.scores,
-          sortKey: matchSortKey(m.matchDate, m.kickoffIST),
-        })
-      }
-    }
-  }
-  return list
-    .sort((a, b) => a.sortKey - b.sortKey)
-    .map(({ id, label, home, away, homeScore, awayScore, scores }) => ({
-      id,
-      label,
-      home,
-      away,
-      homeScore,
-      awayScore,
-      scores,
-    }))
+  return playedMatchesChrono(results)
 }
 
 export function lastPlayedMatch(results: TournamentResults): PlayedMatch | null {
@@ -96,8 +46,8 @@ export function lastPlayedMatch(results: TournamentResults): PlayedMatch | null 
 export function playedStateUpTo(chrono: PlayedMatch[], throughId: string): PredictionsState {
   const state: PredictionsState = {}
   for (const m of chrono) {
-    state[m.id] = m.scores
-    if (m.id === throughId) break
+    state[playedMatchId(m)] = playedMatchScores(m)
+    if (playedMatchId(m) === throughId) break
   }
   return state
 }
