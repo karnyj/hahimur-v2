@@ -218,24 +218,36 @@ export function extractEspnGroupScores(events: EspnEvent[]): {
   return { scores, unmapped }
 }
 
+// The match key a completed event's goals belong to: the group pairing's id
+// (e.g. "E1") when the teams form a group fixture, else the knockout matchNum
+// (e.g. "74") when the ESPN event id is a known KO fixture — the same keying
+// the leaderboards look goals up by. Goal-counting is identical for both rounds;
+// only the key differs, so a single resolver serves the one extractor below.
+function scorerMatchKey(e: EspnEvent): string | undefined {
+  const hit = resolveEspnEvent(e)?.hit
+  if (hit) return hit.id
+  const matchNum = espnIdToMatchNum(e.id)
+  return matchNum === undefined ? undefined : String(matchNum)
+}
+
 // ESPN carries goalscorers in each competition's `details`, where every
 // scoring play (goal, header, penalty, own goal) is flagged. Unlike
 // football-data.org's free tier, these are present, so ESPN is our scorer
-// source. We only count goals in matches that map to a group pairing;
-// knockout matches between known teams aren't group pairings and are skipped.
-export function extractEspnGroupScorers(events: EspnEvent[]): Record<string, Record<string, number>> {
+// source. We count goals for any event we can key (group pairing or known KO
+// fixture); events we can't identify are skipped.
+export function extractEspnScorers(events: EspnEvent[]): Record<string, Record<string, number>> {
   const result: Record<string, Record<string, number>> = {}
   for (const e of events) {
-    const resolved = resolveEspnEvent(e)
-    if (!resolved?.hit) continue
-    const { comp, hit } = resolved
-    for (const play of comp.details ?? []) {
+    if (!e.status?.type?.completed) continue
+    const key = scorerMatchKey(e)
+    if (key === undefined) continue
+    for (const play of e.competitions[0]?.details ?? []) {
       if (!play.scoringPlay || play.ownGoal) continue
       for (const athlete of play.athletesInvolved ?? []) {
         const hePlayer = SCORER_ALIASES[athlete.displayName]
         if (!hePlayer) continue
         if (!result[hePlayer]) result[hePlayer] = {}
-        result[hePlayer][hit.id] = (result[hePlayer][hit.id] ?? 0) + 1
+        result[hePlayer][key] = (result[hePlayer][key] ?? 0) + 1
       }
     }
   }
@@ -391,7 +403,7 @@ async function main(): Promise<void> {
   }
 
   if (espnEvents) {
-    const freshScorers = extractEspnGroupScorers(espnEvents)
+    const freshScorers = extractEspnScorers(espnEvents)
     if (Object.keys(freshScorers).length > 0) {
       const existingGoals = readRealGoals()
       const mergedGoals: Record<string, Record<string, number>> = { ...existingGoals }

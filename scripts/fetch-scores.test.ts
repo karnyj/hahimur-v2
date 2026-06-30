@@ -3,7 +3,7 @@ import { vi } from 'vitest'
 import {
   extractGroupScores,
   extractEspnGroupScores,
-  extractEspnGroupScorers,
+  extractEspnScorers,
   extractEspnKnockoutScores,
   mergeScores,
   gatherScores,
@@ -30,51 +30,58 @@ function goal(scorer: string, over: Partial<EspnScoringPlay> = {}): EspnScoringP
   return { scoringPlay: true, ownGoal: false, athletesInvolved: [{ displayName: scorer }], ...over }
 }
 
-describe('extractEspnGroupScorers', () => {
+describe('extractEspnScorers', () => {
   it('records goals by a tracked player', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({ 'קאי האברץ': { E1: 1 } })
   })
 
   it('counts multiple goals by the same player in the same match', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz'), goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({ 'קאי האברץ': { E1: 2 } })
   })
 
+  it('keys knockout goals by matchNum, recognised via the ESPN event id', () => {
+    const result = extractEspnScorers([
+      espnEvent({ id: '760489', home: 'Germany', away: 'Paraguay', details: [goal('Kai Havertz')] }),
+    ])
+    expect(result).toEqual({ 'קאי האברץ': { '74': 1 } })
+  })
+
   it('skips own goals', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz', { ownGoal: true })] }),
     ])
     expect(result).toEqual({})
   })
 
   it('skips non-scoring plays such as cards', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Kai Havertz', { scoringPlay: false })] }),
     ])
     expect(result).toEqual({})
   })
 
   it('skips players not in SCORER_ALIASES', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', details: [goal('Jamal Musiala')] }),
     ])
     expect(result).toEqual({})
   })
 
   it('ignores matches that have not completed', () => {
-    const result = extractEspnGroupScorers([
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Curaçao', completed: false, state: 'in', details: [goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({})
   })
 
-  it('ignores knockout matches between known teams that are not a group pairing', () => {
-    const result = extractEspnGroupScorers([
+  it('ignores matches it cannot key — neither a group pairing nor a known KO event id', () => {
+    const result = extractEspnScorers([
       espnEvent({ home: 'Germany', away: 'Mexico', details: [goal('Kai Havertz')] }),
     ])
     expect(result).toEqual({})
@@ -157,6 +164,7 @@ describe('extractGroupScores', () => {
 })
 
 function espnEvent(over: {
+  id?: string
   home: string
   away: string
   homeScore?: string
@@ -166,6 +174,7 @@ function espnEvent(over: {
   details?: EspnScoringPlay[]
 }): EspnEvent {
   return {
+    id: over.id,
     status: { type: { state: over.state ?? 'post', completed: over.completed ?? true } },
     competitions: [{
       competitors: [
