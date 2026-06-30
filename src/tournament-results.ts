@@ -86,6 +86,7 @@ const groupScores: Record<string, MatchScores> = {
 const koScores: Record<string, MatchScores> = {
   73: { home: 0, away: 1 },
   74: { home: 1, away: 1, drawWinner: 'away' },
+  75: { home: 1, away: 1, drawWinner: 'away' },
   76: { home: 2, away: 1 },
 }
 
