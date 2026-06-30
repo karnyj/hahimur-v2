@@ -137,7 +137,7 @@ export default function KnockoutVenn({ teamA, teamB, stage, users }: Props) {
             data-testid="venn-count-both"
             style={{ left: `${bothTallyX}%` }}
           >
-            <span className="venn__tally-label">שניהם</span>
+            <span className="venn__tally-label">שתיהן</span>
             {both.length}
           </span>
         )}
@@ -161,7 +161,7 @@ export default function KnockoutVenn({ teamA, teamB, stage, users }: Props) {
 
       <div className="venn__lists">
         <RegionList testid="venn-region-a" modifier="a" team={teamA} label={`רק ${teamHe(teamA)}`} users={aOnly} />
-        <RegionList testid="venn-region-both" modifier="both" label="שניהם" users={both} />
+        <RegionList testid="venn-region-both" modifier="both" label="שתיהן" users={both} />
         <RegionList testid="venn-region-b" modifier="b" team={teamB} label={`רק ${teamHe(teamB)}`} users={bOnly} />
         <RegionList testid="venn-region-neither" modifier="neither" label="אף אחת" users={neither} />
       </div>
