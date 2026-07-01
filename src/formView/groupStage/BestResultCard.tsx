@@ -1,6 +1,7 @@
 import { useId, useState } from 'react'
 import { TEAMS } from '../../shared/groups'
 import type { BestResult } from '../../leaderboard/bestResult'
+import { OLEH_POINTS, PLACE_POINT } from '../../leaderboard/points'
 import './BestResultCard.css'
 
 const he = (team: string) => TEAMS[team]?.he ?? team
@@ -46,7 +47,7 @@ export default function BestResultCard({ result }: { result: BestResult }) {
             {cleanSlots.length > 0 ? (
               <ul className="best-result__points-list">
                 {cleanSlots.map(s => (
-                  <li key={s.position}>{he(s.team)} — מקום {s.position + 1} <span className="best-result__points-each">· 1 נק׳</span></li>
+                  <li key={s.position}>{he(s.team)} — מקום {s.position + 1} <span className="best-result__points-each">· {PLACE_POINT} נק׳</span></li>
                 ))}
               </ul>
             ) : (
@@ -60,7 +61,7 @@ export default function BestResultCard({ result }: { result: BestResult }) {
                   const conditional = result.thirdStatus === 'open' && t === result.thirdPick
                   return (
                     <li key={t}>
-                      {he(t)} <span className="best-result__points-each">· 4 נק׳</span>
+                      {he(t)} <span className="best-result__points-each">· {OLEH_POINTS.group} נק׳</span>
                       {conditional && <span className="best-result__points-cond"> (מותנה — 3 נק' לא תמיד מספיקות לעלייה כשלישית)</span>}
                     </li>
                   )

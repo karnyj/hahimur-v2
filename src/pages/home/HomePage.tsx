@@ -7,7 +7,7 @@ import RivalryEntry from './RivalryEntry'
 import { USERS } from '../../users/index'
 import { tournamentResults } from '../../tournament-results'
 import { useLiveResults } from '../../shared/useLiveResults'
-import { OLEH_POINTS, PLACE_POINT } from '../../leaderboard/points'
+import { OLEH_POINTS, PLACE_POINT, ROUND_POINTS, POINTS_PER_GOAL, GOLDEN_BOOT_BONUS } from '../../leaderboard/points'
 
 const FIRST_MATCH = new Date('2026-06-11T19:00:00Z')
 
@@ -62,18 +62,18 @@ export default function HomePage() {
               </thead>
               <tbody>
                 {[
-                  { stage: 'שלב הבתים', hit: 2, exact: 4, advance: OLEH_POINTS.group },
-                  { stage: 'שלב ה-32', hit: 5, exact: 7, advance: OLEH_POINTS.r32 },
-                  { stage: 'שמינית הגמר', hit: 6, exact: 8, advance: OLEH_POINTS.r16 },
-                  { stage: 'רבע הגמר', hit: 8, exact: 12, advance: OLEH_POINTS.qf },
-                  { stage: 'חצי הגמר', hit: 12, exact: 16, advance: OLEH_POINTS.sf },
-                  { stage: 'מקום שלישי', hit: 16, exact: 18, advance: OLEH_POINTS.thirdPlaceWinner },
-                  { stage: 'גמר', hit: 20, exact: 25, advance: OLEH_POINTS.champion },
+                  { stage: 'שלב הבתים', round: 'group', advance: OLEH_POINTS.group },
+                  { stage: 'שלב ה-32', round: 'r32', advance: OLEH_POINTS.r32 },
+                  { stage: 'שמינית הגמר', round: 'r16', advance: OLEH_POINTS.r16 },
+                  { stage: 'רבע הגמר', round: 'qf', advance: OLEH_POINTS.qf },
+                  { stage: 'חצי הגמר', round: 'sf', advance: OLEH_POINTS.sf },
+                  { stage: 'מקום שלישי', round: 'third', advance: OLEH_POINTS.thirdPlaceWinner },
+                  { stage: 'גמר', round: 'final', advance: OLEH_POINTS.champion },
                 ].map((row) => (
                   <tr key={row.stage}>
                     <td>{row.stage}</td>
-                    <td>{row.hit}</td>
-                    <td>{row.exact}</td>
+                    <td>{ROUND_POINTS[row.round].pagiya}</td>
+                    <td>{ROUND_POINTS[row.round].tzelifa}</td>
                     <td className="col-advance">{row.advance}</td>
                   </tr>
                 ))}
@@ -84,7 +84,7 @@ export default function HomePage() {
             <strong>מיקום בבית:</strong> כל קבוצה שסיימה את הבית בדיוק במקום שניחשת — {PLACE_POINT} נקודה (בנוסף לנקודות העולה).
           </div>
           <div className="scoring-section__goalscorer">
-            <strong>מלך שערים:</strong> כל שער של השחקן שניחשת — 3 נקודות. זכה בנעל הזהב — בונוס 10 נקודות.
+            <strong>מלך שערים:</strong> כל שער של השחקן שניחשת — {POINTS_PER_GOAL} נקודות. זכה בנעל הזהב — בונוס {GOLDEN_BOOT_BONUS} נקודות.
           </div>
         </div>
 

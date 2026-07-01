@@ -3,12 +3,12 @@ import { isPairing, orientPrediction } from '../formView/knockout/koRounds'
 
 import type { User } from '../users'
 
-const ROUND_POINTS: Record<string, { pagiya: number; tzelifa: number }> = {
+export const ROUND_POINTS: Record<string, { pagiya: number; tzelifa: number }> = {
   r32:   { pagiya: 5,  tzelifa: 7  },
   r16:   { pagiya: 6,  tzelifa: 8  },
   qf:    { pagiya: 8,  tzelifa: 12 },
   sf:    { pagiya: 12, tzelifa: 16 },
-  third: { pagiya: 16, tzelifa: 18 },
+  third: { pagiya: 16, tzelifa: 20 },
   final: { pagiya: 20, tzelifa: 25 },
   group: { pagiya: 2,  tzelifa: 4  },
 }
@@ -72,6 +72,8 @@ export const OLEH_POINTS: Record<'group' | 'r32' | 'r16' | 'qf' | 'sf' | 'thirdP
 }
 
 export const POINTS_PER_GOAL = 3
+
+export const GOLDEN_BOOT_BONUS = 10
 
 export const PLACE_POINT = 1
 
@@ -312,7 +314,7 @@ export function computeGoldenBootBreakdown(user: User, results: TournamentResult
   const goalsPoints = (results.playerGoals?.[user.topGoalscorer] ?? 0) * POINTS_PER_GOAL
   if (!results.goldenBootWinner) return { goalsPoints, winnerBonus: 0, total: goalsPoints }
   const winners = Array.isArray(results.goldenBootWinner) ? results.goldenBootWinner : [results.goldenBootWinner]
-  const winnerBonus = winners.includes(user.topGoalscorer) ? 10 : 0
+  const winnerBonus = winners.includes(user.topGoalscorer) ? GOLDEN_BOOT_BONUS : 0
   return { goalsPoints, winnerBonus, total: goalsPoints + winnerBonus }
 }
 
