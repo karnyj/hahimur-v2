@@ -98,4 +98,22 @@ describe('possibleParticipation', () => {
     const { ids } = possibleParticipation(u, results(bracket))
     expect(ids.has('90')).toBe(false)
   })
+
+  it('flags the third-place slot when both predicted losing semi-finalists are alive in different halves', () => {
+    // Brazil (73) sits in the left half of the draw (semi 101); England (76) in the
+    // right half (semi 102). Each can reach and lose its own semi, then meet in the
+    // third-place match — so the bettor's 103 pick is still on the table.
+    const u = user({ thirdPlace: [koMatch(103, 'Brazil', 'England')] })
+    const { ids, predictions } = possibleParticipation(u, results(realBracket()))
+    expect(ids.has('103')).toBe(true)
+    expect(predictions['103']).toMatchObject({ home: 'Brazil', away: 'England' })
+  })
+
+  it('does not flag third place when the two picks share a half (they cannot both be losing semi-finalists)', () => {
+    // Brazil (73) and Spain (74) are both in the left half — they would meet in the
+    // semi or earlier, so they can never be the two beaten semi-finalists at once.
+    const u = user({ thirdPlace: [koMatch(103, 'Brazil', 'Spain')] })
+    const { ids } = possibleParticipation(u, results(realBracket()))
+    expect(ids.has('103')).toBe(false)
+  })
 })

@@ -14,16 +14,22 @@ export interface PossiblePred {
   scores?: MatchScores
 }
 
-// The knockout rounds we can still project a meeting into, paired with their
+// The winners'-path rounds we can still project a meeting into, paired with their
 // bracket depth (r16 = 1 … final = 4). R32 (depth 0) is settled the moment the
-// groups finish, so there is never a "still possible" R32 slot; the third-place
-// match is fed by losers, not by a winners' path, so it sits outside this model.
+// groups finish, so there is never a "still possible" R32 slot. The third-place
+// match is handled separately below — it's fed by the two beaten semi-finalists,
+// not by a winners' path, so the "converge on this slot" rule doesn't apply to it.
 const PROJECTABLE_ROUNDS: { key: keyof KnockoutStages; round: number }[] = [
   { key: 'r16', round: 1 },
   { key: 'qf', round: 2 },
   { key: 'sf', round: 3 },
   { key: 'final', round: 4 },
 ]
+
+// Bracket depth of the semi-finals — the round whose losers contest third place.
+const SF_ROUND = 3
+// The real third-place fixture's match number.
+const THIRD_PLACE_MATCH = 103
 
 /**
  * Future knockout matches the bettor can *still* participate in: an unresolved
@@ -71,6 +77,24 @@ export function possibleParticipation(
       const id = String(slot)
       ids.add(id)
       predictions[id] = { home, away, scores: pm.scores ?? undefined }
+    }
+  }
+
+  // Third place is contested by the two beaten semi-finalists — one from each half
+  // of the draw. So a bettor's predicted third-place pairing is still on the table
+  // when both teams are alive and sit in *different* semi-finals: each can reach its
+  // own semi, lose it, and meet the other here. (Same-half picks would meet in the
+  // semi or earlier, so they could never both be the two losing semi-finalists.)
+  const third = user.knockoutStages.thirdPlace?.[0]
+  const realThird = realByNum.get(THIRD_PLACE_MATCH)
+  if (third && realThird && !realThird.resolved && third.home in TEAMS && third.away in TEAMS
+      && !out.has(third.home) && !out.has(third.away)) {
+    const rh = realR32.get(third.home)
+    const ra = realR32.get(third.away)
+    if (rh != null && ra != null && ancestorAt(rh, SF_ROUND) !== ancestorAt(ra, SF_ROUND)) {
+      const id = String(THIRD_PLACE_MATCH)
+      ids.add(id)
+      predictions[id] = { home: third.home, away: third.away, scores: third.scores ?? undefined }
     }
   }
 
